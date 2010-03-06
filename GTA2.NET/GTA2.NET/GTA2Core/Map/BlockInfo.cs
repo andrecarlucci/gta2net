@@ -153,6 +153,14 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
+        public bool IsHighSlope
+        {
+            get
+            {
+                return SlopeType == SlopeType.Up26High || SlopeType == SlopeType.Down26High || SlopeType == SlopeType.Left26High || SlopeType == SlopeType.Right26High;
+            }
+        }
+
         //public bool IsAir()
         //{
         //    //int Bit0 = SlopeType & 1;

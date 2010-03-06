@@ -262,7 +262,11 @@ namespace Hiale.GTA2NET.Logic
                 //direction.X = (float) Math.Round(direction.X, 4);
                 //direction.Y = (float)Math.Round(direction.Y, 4);
 
-                Position3 = new Vector3(Position3.X + direction.X, Position3.Y + direction.Y, Position3.Z);
+                float axis1 = MathHelper.Lerp(_topLeftZ, _bottomRightZ, 0.5f);
+                float axis2 = MathHelper.Lerp(_topRightZ, _bottomLeftZ, 0.5f);
+                float weightedHeight = MathHelper.Lerp(axis1, axis2, 0.5f);
+
+                Position3 = new Vector3(Position3.X + direction.X, Position3.Y + direction.Y, weightedHeight);
                 //ChangePosition(direction.X, direction.Y);
 
                 //NEW 04.03.2010
@@ -298,7 +302,7 @@ namespace Hiale.GTA2NET.Logic
             int minBlockZ = (int) Position3.Z - 1;
             int maxBlockZ = (int) Position3.Z + 1;
             if (minBlockZ < 0)
-                minBlockX = 0;
+                minBlockZ = 0;
             if (maxBlockZ > 7)
                 maxBlockZ = 7;
 
@@ -312,7 +316,7 @@ namespace Hiale.GTA2NET.Logic
                     for (int z = minBlockZ; z < maxBlockZ + 1; z++)
                     {
                         BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-                        //if (x == 50 && y == 184)
+                        //if (x == 48 && y == 184)
                         //    System.Diagnostics.Debug.WriteLine("OK");
                         bool movableSlope = false;
                         if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope))
@@ -346,7 +350,7 @@ namespace Hiale.GTA2NET.Logic
                                 //    else if (direction.Y < 0)
                                 //        System.Diagnostics.Debug.WriteLine("Collision bottom");
                                 //}
-                                if (block.IsLowSlope)
+                                if (block.IsLowSlope || block.IsHighSlope)
                                 {
                                     _topLeftZ = MainGame.GetHighestPointF(newTopLeft.X, newTopLeft.Y);
                                     _topRightZ = MainGame.GetHighestPointF(newTopRight.X, newTopRight.Y);
@@ -356,7 +360,6 @@ namespace Hiale.GTA2NET.Logic
                                     return;
                                 }
 
-
                                 //direction.X = 0;
                                 //direction.Y = 0;
                                 direction.X = resNew.MinimumTranslationVector.X;
@@ -364,6 +367,10 @@ namespace Hiale.GTA2NET.Logic
                                 return;
                             }
                         }
+                        _topLeftZ = z;
+                        _topRightZ = z;
+                        _bottomRightZ = z;
+                        _bottomLeftZ = z;
                     }
                 }
             }
@@ -383,13 +390,24 @@ namespace Hiale.GTA2NET.Logic
 
         private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope)
         {
+            if (x == 48 || x == 78)
+            {
+                System.Diagnostics.Debug.WriteLine("OK");
+                //if (z == 2)
+                //{
+                //    movableSlope = true;
+                //    return true;
+                //}
+                return false;
+            }
+
             movableSlope = false;
             int currentZ = (int) Position3.Z;
             
             BlockInfo blockAbove = MainGame.Map.CityBlocks[x, y, currentZ + 1];
 
             //if above block is a low slope, ignore equal z
-            if (z == currentZ && !blockAbove.IsLowSlope)
+            if (z == currentZ && !blockAbove.IsLowSlope && !blockAbove.IsHighSlope)
                 return true;
 
             //check 1 above only if it's a diagnoal or a low slope
@@ -399,23 +417,13 @@ namespace Hiale.GTA2NET.Logic
                 if (slope == SlopeType.DiagonalFacingDownLeft || slope == SlopeType.DiagonalFacingDownRight ||
                     slope == SlopeType.DiagonalFacingUpLeft || slope == SlopeType.DiagonalFacingUpRight)
                     return true;
-                //if (slope == SlopeType.Up26Low || slope == SlopeType.Down26Low || slope == SlopeType.Left26Low || slope == SlopeType.Right26Low)
-                if (block.IsLowSlope)
+                if (block.IsLowSlope || block.IsHighSlope)
                 {
                     movableSlope = true;
                     return true;
                 }
             }
 
-            //if we go down, check for high slops --> disabled as we can always go down...
-            //if (z == currentZ - 1)
-            //{
-            //    if (slope == SlopeType.Up26High || slope == SlopeType.Down26High || slope == SlopeType.Left26High || slope == SlopeType.Right26High)
-            //    {
-            //        movableSlope = true;
-            //        return true;
-            //    }
-            //}
             return false;
         }
 

@@ -374,13 +374,31 @@ namespace Hiale.GTA2NET
                     BlockInfo block = Map.CityBlocks[(int)x, (int)y, z];
                     if (!block.Empty)
                     {
-                        if (block.IsLowSlope)
+                        if (block.IsLowSlope || block.IsHighSlope)
                         {
                             if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26Low)
                             {
                                 int roundedX = (int)x;
                                 float offset = x - roundedX;
-                                return z + (offset / 2);
+                                return (z - 1) + (offset / 2) + 0.0001f;
+                            }
+                            else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26High)
+                            {
+                                int roundedX = (int)x;
+                                float offset = x - roundedX;
+                                return (z - 0.5f) + (offset / 2) + 0.0001f;
+                            }
+                            else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26Low)
+                            {
+                                int roundedX = (int)x + 1;
+                                float offset = x - roundedX;
+                                return (z - 1) - (offset / 2) + Epsilon;
+                            }
+                            else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26High)
+                            {
+                                int roundedX = (int)x + 1;
+                                float offset = roundedX - x;
+                                return (z - 0.5f) + (offset / 2) + Epsilon;
                             }
                         }
                         return z;
