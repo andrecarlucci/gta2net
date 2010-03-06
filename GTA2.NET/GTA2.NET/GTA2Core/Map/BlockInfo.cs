@@ -145,6 +145,14 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
+        public bool IsDiagonalSlope
+        {
+            get
+            {
+                return SlopeType == SlopeType.DiagonalFacingDownLeft || SlopeType == SlopeType.DiagonalFacingDownRight || SlopeType == SlopeType.DiagonalFacingUpLeft || SlopeType == SlopeType.DiagonalFacingUpRight;
+            }
+        }
+
         public bool IsLowSlope
         {
             get

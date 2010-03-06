@@ -244,29 +244,27 @@ namespace Hiale.GTA2NET.Logic
             if (forwardChange < 0) //Backwards
                 rotationChange *= -1;
 
+            if (forwardChange == 0)
+                return;
+
             float rotationAngleNew = RotationAngle;
             rotationAngleNew += MathHelper.ToRadians(rotationChange);
             Vector2 direction = RotatePoint(new Vector2(0, forwardChange), OriginZero, rotationAngleNew);
 
-            if (forwardChange != 0)
-            {
-                //if (CheckCollision(ref direction))
-                //    return;
-                CheckCollision(ref direction);
-                RotationAngle = rotationAngleNew;
+            CheckCollision(ref direction);
+            RotationAngle = rotationAngleNew;
 
-                //direction.X = (float) Math.Round(direction.X, 4);
-                //direction.Y = (float)Math.Round(direction.Y, 4);
+            //direction.X = (float) Math.Round(direction.X, 4);
+            //direction.Y = (float)Math.Round(direction.Y, 4);
 
-                float axis1 = MathHelper.Lerp(_topLeftZ, _bottomRightZ, 0.5f);
-                float axis2 = MathHelper.Lerp(_topRightZ, _bottomLeftZ, 0.5f);
-                float weightedHeight = MathHelper.Lerp(axis1, axis2, 0.5f);
+            float axis1 = MathHelper.Lerp(_topLeftZ, _bottomRightZ, 0.5f);
+            float axis2 = MathHelper.Lerp(_topRightZ, _bottomLeftZ, 0.5f);
+            float weightedHeight = MathHelper.Lerp(axis1, axis2, 0.5f);
 
-                Position3 = new Vector3(Position3.X + direction.X, Position3.Y + direction.Y, weightedHeight);
+            Position3 = new Vector3(Position3.X + direction.X, Position3.Y + direction.Y, weightedHeight);
 
-                if (PositionChanged != null)
-                    PositionChanged(this, EventArgs.Empty);
-            }
+            if (PositionChanged != null)
+                PositionChanged(this, EventArgs.Empty);
         }
 
 
@@ -281,18 +279,30 @@ namespace Hiale.GTA2NET.Logic
             int maxBlockX = (int)newTopLeft.X;
             int minBlockY = (int)newTopLeft.Y;
             int maxBlockY = (int)newTopLeft.Y;
-            SetMinMax(ref minBlockX, ref maxBlockX, ref minBlockY, ref maxBlockY, newTopLeft);
-            SetMinMax(ref minBlockX, ref maxBlockX, ref minBlockY, ref maxBlockY, newTopRight);
-            SetMinMax(ref minBlockX, ref maxBlockX, ref minBlockY, ref maxBlockY, newBottomRight);
-            SetMinMax(ref minBlockX, ref maxBlockX, ref minBlockY, ref maxBlockY, newBottomLeft);
+            SetMinMax(ref minBlockX, ref maxBlockX, newTopLeft.X);
+            SetMinMax(ref minBlockY, ref maxBlockY, newTopLeft.Y);
+            SetMinMax(ref minBlockX, ref maxBlockX, newTopRight.X);
+            SetMinMax(ref minBlockY, ref maxBlockY, newTopRight.Y);
+            SetMinMax(ref minBlockX, ref maxBlockX, newBottomRight.X);
+            SetMinMax(ref minBlockY, ref maxBlockY, newBottomRight.Y);
+            SetMinMax(ref minBlockX, ref maxBlockX, newBottomLeft.X);
+            SetMinMax(ref minBlockY, ref maxBlockY, newBottomLeft.Y);
 
-
-            int minBlockZ = (int) Position3.Z - 1;
-            int maxBlockZ = (int) Position3.Z + 1;
+            int minBlockZ = (int) Position3.Z;
+            int maxBlockZ = (int) Position3.Z;
+            SetMinMax(ref minBlockZ, ref maxBlockZ, _topLeftZ);
+            SetMinMax(ref minBlockZ, ref maxBlockZ, _topRightZ);
+            SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomRightZ);
+            SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomLeftZ);
+            minBlockZ = minBlockZ - 1;
+            maxBlockZ = maxBlockZ + 1;
             if (minBlockZ < 0)
                 minBlockZ = 0;
             if (maxBlockZ > 7)
                 maxBlockZ = 7;
+
+            if (maxBlockX == 80)
+                System.Diagnostics.Debug.WriteLine("OK");
 
             for (int x = minBlockX; x < maxBlockX + 1; x++)
             {
@@ -301,23 +311,20 @@ namespace Hiale.GTA2NET.Logic
                     for (int z = minBlockZ; z < maxBlockZ + 1; z++)
                     {
                         BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-                        //if (x == 48 && y == 184)
+                        //if (x == 79)
                         //    System.Diagnostics.Debug.WriteLine("OK");
                         bool movableSlope = false;
                         if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope))
                             continue;
                         if (!block.LidOnly || movableSlope)
                         {
-                            Polygon polygonA = new Polygon(); //new Rectangle
-                            polygonA.Points.Add(newTopLeft);
-                            polygonA.Points.Add(newTopRight);
-                            polygonA.Points.Add(newBottomRight);
-                            polygonA.Points.Add(newBottomLeft);
-
-                            Polygon polygonB = CreatePolygon(ref block, ref x, ref y);
-
-                            SeparatingAxisTheorem.PolygonCollisionResult resNew =
-                                SeparatingAxisTheorem.PolygonCollision(ref polygonA, ref polygonB, ref direction);
+                            Polygon polygonObject = new Polygon();
+                            polygonObject.Points.Add(newTopLeft);
+                            polygonObject.Points.Add(newTopRight);
+                            polygonObject.Points.Add(newBottomRight);
+                            polygonObject.Points.Add(newBottomLeft);
+                            Polygon polygonBlock = CreatePolygon(ref block, ref x, ref y);
+                            PolygonCollisionResult resNew = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
                             if (resNew.Intersect)
                             {
                                 //if (Math.Abs(direction.X) > Math.Abs(direction.Y))
@@ -342,6 +349,7 @@ namespace Hiale.GTA2NET.Logic
                                     _bottomRightZ = MainGame.GetHighestPointF(newBottomRight.X, newBottomRight.Y);
                                     _bottomLeftZ = MainGame.GetHighestPointF(newBottomLeft.X, newBottomLeft.Y);
                                     return;
+                                    //continue;
                                 }
 
                                 //direction.X = 0;
@@ -351,55 +359,54 @@ namespace Hiale.GTA2NET.Logic
                                 return;
                             }
                         }
-                        _topLeftZ = z;
-                        _topRightZ = z;
-                        _bottomRightZ = z;
-                        _bottomLeftZ = z;
+                        if (!block.IsDiagonalSlope) //maybe _Bug here //--> setzen wenn alle 4 Ecken auf geradem Boden sind
+                        {
+                            _topLeftZ = z;
+                            _topRightZ = z;
+                            _bottomRightZ = z;
+                            _bottomLeftZ = z;
+                        }
                     }
                 }
             }
         }
-
-        private static void SetMinMax(ref int minBlockX, ref int maxBlockX, ref int minBlockY, ref int maxBlockY, Vector2 currentVector)
+        
+        private static void SetMinMax(ref int minBlock, ref int maxBlock, float currentValue)
         {
-            if (currentVector.X < minBlockX)
-                minBlockX = (int)currentVector.X;
-            if (currentVector.X > maxBlockX)
-                maxBlockX = (int)currentVector.X;
-            if (currentVector.Y < minBlockY)
-                minBlockY = (int)currentVector.Y;
-            if (currentVector.Y > maxBlockY)
-                maxBlockY = (int)currentVector.Y;
+            if (currentValue < minBlock)
+                minBlock = (int)currentValue;
+            if (currentValue > maxBlock)
+                maxBlock = (int)currentValue;
         }
 
         private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope)
         {
-            if (x == 48 || x == 78)
-            {
-                //System.Diagnostics.Debug.WriteLine("OK");
-                //if (z == 2)
-                //{
-                //    movableSlope = true;
-                //    return true;
-                //}
-                return false;
-            }
+            //if (x == 80)
+            //{
+            //    System.Diagnostics.Debug.WriteLine("OK");
+            //    //if (z == 2)
+            //    //{
+            //    //    movableSlope = true;
+            //    //    return true;
+            //    //}
+            //    //return false;
+            //}
 
             movableSlope = false;
             int currentZ = (int) Position3.Z;
             
+            //check the block above the current block. If this block is empty, process the current block.
             BlockInfo blockAbove = MainGame.Map.CityBlocks[x, y, currentZ + 1];
-
-            //if above block is a low slope, ignore equal z
             if (z == currentZ && !blockAbove.IsLowSlope && !blockAbove.IsHighSlope)
                 return true;
 
-            //check 1 above only if it's a diagnoal or a low slope
-            SlopeType slope = block.SlopeType;
+            if (block.Empty) //new 6.3.2010
+                return false;
+
+            //check one block above only if it's a diagnoal or a low/high slope
             if (z == currentZ + 1)
             {
-                if (slope == SlopeType.DiagonalFacingDownLeft || slope == SlopeType.DiagonalFacingDownRight ||
-                    slope == SlopeType.DiagonalFacingUpLeft || slope == SlopeType.DiagonalFacingUpRight)
+                if (block.IsDiagonalSlope)
                     return true;
                 if (block.IsLowSlope || block.IsHighSlope)
                 {

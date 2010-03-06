@@ -6,16 +6,16 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Helper
 {
+    // Structure that stores the results of the PolygonCollision function
+    public struct PolygonCollisionResult
+    {
+        public bool WillIntersect; // Are the polygons going to intersect forward in time?
+        public bool Intersect; // Are the polygons currently intersecting
+        public Vector2 MinimumTranslationVector; // The translation to apply to polygon A to push the polygons appart.
+    }
+
     public class SeparatingAxisTheorem
     {
-        // Structure that stores the results of the PolygonCollision function
-        public struct PolygonCollisionResult
-        {
-            public bool WillIntersect; // Are the polygons going to intersect forward in time?
-            public bool Intersect; // Are the polygons currently intersecting
-            public Vector2 MinimumTranslationVector; // The translation to apply to polygon A to push the polygons appart.
-        }
-
         // Check if polygon A is going to collide with polygon B for the given velocity
         public static PolygonCollisionResult PolygonCollision(ref Polygon polygonA, ref Polygon polygonB, ref Vector2 velocity)
         {
