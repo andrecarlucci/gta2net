@@ -14,8 +14,6 @@ namespace Hiale.GTA2NET.Helper
             public bool WillIntersect; // Are the polygons going to intersect forward in time?
             public bool Intersect; // Are the polygons currently intersecting
             public Vector2 MinimumTranslationVector; // The translation to apply to polygon A to push the polygons appart.
-            //public int? CollidingEdgeIndexA; //Shows witch edge of polygon A is colliding.
-            //public int? CollidingEdgeIndexB; //Shows witch edge of polygon A is colliding.
         }
 
         // Check if polygon A is going to collide with polygon B for the given velocity
