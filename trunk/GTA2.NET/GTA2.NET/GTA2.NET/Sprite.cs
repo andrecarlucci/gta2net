@@ -130,13 +130,6 @@ namespace Hiale.GTA2NET
         {
             TranslatePosition(ref position);
 
-            //Mittelpunkt links oben
-            //_topLeft = (new Vector3(0.0f, 0.0f, 0.0f) + position);
-            //_topRight = (new Vector3(_scalar.X, 0.0f, 0.0f) + position);
-            //_bottomLeft = (new Vector3(0.0f, -_scalar.Y, 0.0f) + position);
-            //_bottomRight = (new Vector3(_scalar.X, -_scalar.Y, 0.0f) + position);
-
-            //Mittelpunkt zentriert
             _topLeft = (new Vector3(-0.5f * _scalar.X, 0.5f * _scalar.Y, 0.0f) + position);
             _topRight = (new Vector3(0.5f * _scalar.X, 0.5f * _scalar.Y, 0.0f) + position);
             _bottomLeft = (new Vector3(-0.5f * _scalar.X, -0.5f * _scalar.Y, 0.0f) + position);

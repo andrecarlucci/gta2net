@@ -93,20 +93,7 @@ namespace Hiale.GTA2NET.Renderer
         {
             LoadTexture();
             SetUpEffect();
-            //AddSprite();
         }
-
-        //private void AddSprite()
-        //{
-        //    //Sprite policeCar = new Sprite(new Vector2(65, 181), 11, spriteTexture, spriteAtlas);
-        //    //policeCar.Rotate(20);
-        //    //sprites.Add(policeCar);
-
-        //    //Sprite miscCar = new Sprite(new Vector2(63, 178), 26, spriteTexture, spriteAtlas);
-        //    //miscCar.Rotate(90);
-        //    //sprites.Add(miscCar);
-        //}
-
 
         private void CreateAllVertices()
         {
