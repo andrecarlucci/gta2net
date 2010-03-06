@@ -204,7 +204,7 @@ namespace Hiale.GTA2NET.Logic
         /// <summary>
         /// Helper variable to calculate the distance moved.
         /// </summary>
-        private static Vector2 OriginZero = Vector2.Zero;
+        private static readonly Vector2 OriginZero = Vector2.Zero;
 
         protected float Velocity;
 
@@ -244,13 +244,9 @@ namespace Hiale.GTA2NET.Logic
             if (forwardChange < 0) //Backwards
                 rotationChange *= -1;
 
-
             float rotationAngleNew = RotationAngle;
             rotationAngleNew += MathHelper.ToRadians(rotationChange);
-            //RotationAngle += MathHelper.ToRadians(rotationChange);
             Vector2 direction = RotatePoint(new Vector2(0, forwardChange), OriginZero, rotationAngleNew);
-
-            //Collisions check here
 
             if (forwardChange != 0)
             {
@@ -267,14 +263,6 @@ namespace Hiale.GTA2NET.Logic
                 float weightedHeight = MathHelper.Lerp(axis1, axis2, 0.5f);
 
                 Position3 = new Vector3(Position3.X + direction.X, Position3.Y + direction.Y, weightedHeight);
-                //ChangePosition(direction.X, direction.Y);
-
-                //NEW 04.03.2010
-                //_topLeftZ = Position3.Z;
-                //_topRightZ = Position3.Z;
-                //_bottomRightZ = Position3.Z;
-                //_bottomLeftZ = Position3.Z;
-
 
                 if (PositionChanged != null)
                     PositionChanged(this, EventArgs.Empty);
@@ -305,9 +293,6 @@ namespace Hiale.GTA2NET.Logic
                 minBlockZ = 0;
             if (maxBlockZ > 7)
                 maxBlockZ = 7;
-
-            //minBlockZ = 1;
-            //maxBlockZ = 1;
 
             for (int x = minBlockX; x < maxBlockX + 1; x++)
             {
@@ -356,7 +341,6 @@ namespace Hiale.GTA2NET.Logic
                                     _topRightZ = MainGame.GetHighestPointF(newTopRight.X, newTopRight.Y);
                                     _bottomRightZ = MainGame.GetHighestPointF(newBottomRight.X, newBottomRight.Y);
                                     _bottomLeftZ = MainGame.GetHighestPointF(newBottomLeft.X, newBottomLeft.Y);
-                                    //Position3.Z = Position3.Z++;
                                     return;
                                 }
 
@@ -392,7 +376,7 @@ namespace Hiale.GTA2NET.Logic
         {
             if (x == 48 || x == 78)
             {
-                System.Diagnostics.Debug.WriteLine("OK");
+                //System.Diagnostics.Debug.WriteLine("OK");
                 //if (z == 2)
                 //{
                 //    movableSlope = true;
@@ -426,11 +410,6 @@ namespace Hiale.GTA2NET.Logic
 
             return false;
         }
-
-        //private static bool IsLowSlope(ref BlockInfo block)
-        //{
-        //    return block.SlopeType == SlopeType.Up26Low || block.SlopeType == SlopeType.Down26Low || block.SlopeType == SlopeType.Left26Low || block.SlopeType == SlopeType.Right26Low;
-        //}
 
         private static Polygon CreatePolygon(ref BlockInfo block, ref int x, ref int y)
         {

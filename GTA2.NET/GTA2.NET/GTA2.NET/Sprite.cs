@@ -145,21 +145,21 @@ namespace Hiale.GTA2NET
 
         public void SetPosition(MovableObject baseObject)
         {
-            Vector3 temp = baseObject.TopLeft3;
-            TranslatePosition(ref temp);
-            TopLeft = temp;
+            Vector3 currentPoint = baseObject.TopLeft3;
+            TranslatePosition(ref currentPoint);
+            TopLeft = currentPoint;
 
-            temp = baseObject.TopRight3;
-            TranslatePosition(ref temp);
-            TopRight = temp;
+            currentPoint = baseObject.TopRight3;
+            TranslatePosition(ref currentPoint);
+            TopRight = currentPoint;
 
-            temp = baseObject.BottomLeft3;
-            TranslatePosition(ref temp);
-            BottomLeft = temp;
+            currentPoint = baseObject.BottomLeft3;
+            TranslatePosition(ref currentPoint);
+            BottomLeft = currentPoint;
 
-            temp = baseObject.BottomRight3;
-            TranslatePosition(ref temp);
-            BottomRight = temp;
+            currentPoint = baseObject.BottomRight3;
+            TranslatePosition(ref currentPoint);
+            BottomRight = currentPoint;
         }
 
 
@@ -169,6 +169,10 @@ namespace Hiale.GTA2NET
         /// <param name="position"></param>
         private static void TranslatePosition(ref Vector3 position)
         {
+            //check if object on a slope (is not an integer)
+            //display the sprite then a little above, to avoid graphical issuses.
+            if (position.Z % 1 != 0)
+                position.Z += 0.0001f;
             position.Y *= -1;
             position.Z++;
             position.Z *= MainGame.GlobalScalar.Z;
