@@ -358,7 +358,7 @@ namespace Hiale.GTA2NET
             {
                 for (int z = Map.CityBlocks.GetLength(2) - 1; z >= 0; z--)
                 {
-                    if (!Map.CityBlocks[x, y, z].Empty)
+                    if (!Map.CityBlocks[x, y, z].IsEmpty)
                         return z;
                 }
             }
@@ -372,7 +372,7 @@ namespace Hiale.GTA2NET
                 for (int z = Map.CityBlocks.GetLength(2) - 1; z >= 0; z--)
                 {
                     BlockInfo block = Map.CityBlocks[(int)x, (int)y, z];
-                    if (!block.Empty)
+                    if (!block.IsEmpty)
                     {
                         if (block.IsLowSlope || block.IsHighSlope)
                         {
