@@ -92,6 +92,8 @@ namespace Hiale.GTA2NET.Logic
 
         private float _topLeftZ;
 
+        private bool _topLeftZUpdated;
+
         /// <summary>
         /// 3D top left point of the object.
         /// </summary>
@@ -119,6 +121,8 @@ namespace Hiale.GTA2NET.Logic
 
         private float _topRightZ;
 
+        private bool _topRightZUpdated;
+
         /// <summary>
         /// 3D top right point of the object.
         /// </summary>
@@ -145,6 +149,8 @@ namespace Hiale.GTA2NET.Logic
 
         private float _bottomRightZ;
 
+        private bool _bottomRightZUpdated;
+
         /// <summary>
         /// 3D bottom right point of the object.
         /// </summary>
@@ -170,6 +176,8 @@ namespace Hiale.GTA2NET.Logic
         }
 
         private float _bottomLeftZ;
+
+        private bool _bottomLeftZUpdated;
 
         /// <summary>
         /// 3D bottom left point of the object.
@@ -293,16 +301,33 @@ namespace Hiale.GTA2NET.Logic
             SetMinMax(ref minBlockX, ref maxBlockX, newBottomLeft.X);
             SetMinMax(ref minBlockY, ref maxBlockY, newBottomLeft.Y);
 
-            int minBlockZ = (int) Position3.Z;
-            int maxBlockZ = (int) Position3.Z;
-            //SetMinMax(ref minBlockZ, ref maxBlockZ, _topLeftZ);
-            //SetMinMax(ref minBlockZ, ref maxBlockZ, _topRightZ);
-            //SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomRightZ);
-            //SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomLeftZ);
-            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newTopLeft.X, (int)newTopLeft.Y)); //Bug, if under bridge (SetCorrectHeight?)
-            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newTopRight.X, (int)newTopRight.Y));
-            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newBottomRight.X, (int)newBottomRight.Y));
-            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newBottomLeft.X, (int)newBottomLeft.Y));
+            int minBlockZ = (int)Position3.Z;
+            int maxBlockZ = (int)Position3.Z;
+            float newZ;
+            if (_topLeftZUpdated)
+            {
+                newZ = _topLeftZ;
+                SetCorrectHeight(ref newZ, newTopLeft);
+                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            }
+            if (_topRightZUpdated)
+            {
+                newZ = _topRightZ;
+                SetCorrectHeight(ref newZ, newTopRight);
+                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            }
+            if (_bottomRightZUpdated)
+            {
+                newZ = _bottomRightZ;
+                SetCorrectHeight(ref newZ, newBottomRight);
+                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            }
+            if (_bottomLeftZUpdated)
+            {
+                newZ = _bottomLeftZ;
+                SetCorrectHeight(ref newZ, newBottomLeft);
+                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            }
             minBlockZ = minBlockZ - 1;
             maxBlockZ = maxBlockZ + 1;
             if (minBlockZ < 0)
@@ -320,18 +345,17 @@ namespace Hiale.GTA2NET.Logic
                     }
                 }
             }
-
-            SetCorrectHeight(ref _topLeftZ, topLeft + direction);
-            SetCorrectHeight(ref _topRightZ, topRight + direction);
-            SetCorrectHeight(ref _bottomRightZ, bottomRight + direction);
-            SetCorrectHeight(ref _bottomLeftZ, bottomLeft + direction);
+            _topLeftZUpdated = SetCorrectHeight(ref _topLeftZ, topLeft + direction);
+            _topRightZUpdated = SetCorrectHeight(ref _topRightZ, topRight + direction);
+            _bottomRightZUpdated = SetCorrectHeight(ref _bottomRightZ, bottomRight + direction);
+            _bottomLeftZUpdated = SetCorrectHeight(ref _bottomLeftZ, bottomLeft + direction);
         }
 
         private void CheckBlock(ref int x, ref int y, ref int z, ref Vector2 newTopLeft, ref Vector2 newTopRight, ref Vector2 newBottomRight, ref Vector2 newBottomLeft, ref Vector2 direction)
         {
             BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-            //if (x == 78)
-            //    System.Diagnostics.Debug.WriteLine("OK");
+            if (x == 79 && y == 181 && z >= 3)
+                System.Diagnostics.Debug.WriteLine("OK");
 
             bool movableSlope = false; //a movable Slope is a block which actually intersecs with the object, but the object can move above it to change the height.
             if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope))
@@ -488,11 +512,15 @@ namespace Hiale.GTA2NET.Logic
             return polygon;
         }
 
-        private static void SetCorrectHeight(ref float value, Vector2 point)
+        private static bool SetCorrectHeight(ref float value, Vector2 point)
         {
             float newValue = MainGame.GetHighestPointF(point.X, point.Y);
             if (newValue != value && Math.Abs(newValue - value) < 1)
+            {
                 value = newValue;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
