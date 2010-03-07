@@ -354,46 +354,38 @@ namespace Hiale.GTA2NET.Logic
         private void CheckBlock(ref int x, ref int y, ref int z, ref Vector2 newTopLeft, ref Vector2 newTopRight, ref Vector2 newBottomRight, ref Vector2 newBottomLeft, ref Vector2 direction)
         {
             BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-            if (x == 79 && y == 181 && z >= 3)
-                System.Diagnostics.Debug.WriteLine("OK");
+            //if (x == 79 && y == 181 && z >= 3)
+            //    System.Diagnostics.Debug.WriteLine("OK");
+
+            //if (x == 66 && y == 187)
+            //    System.Diagnostics.Debug.WriteLine("OK");
+
+            //if (x == 58 && y == 195)
+            //    System.Diagnostics.Debug.WriteLine("OK");
 
             bool movableSlope = false; //a movable Slope is a block which actually intersecs with the object, but the object can move above it to change the height.
-            if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope))
+            bool blockAboveStops = false;
+            if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope, ref blockAboveStops))
                 return;
-            if (!block.LidOnly || movableSlope)
+            //if (!block.LidOnly || movableSlope || blockAboveStops)
+            if (movableSlope || blockAboveStops)
             {
                 Polygon polygonObject = new Polygon();
                 polygonObject.Points.Add(newTopLeft);
                 polygonObject.Points.Add(newTopRight);
                 polygonObject.Points.Add(newBottomRight);
                 polygonObject.Points.Add(newBottomLeft);
-                Polygon polygonBlock = CreatePolygon(ref block, ref x, ref y);
+
+                BlockInfo blockPolygon = block;
+                if (blockAboveStops)
+                    blockPolygon = MainGame.Map.CityBlocks[x, y, z + 1];
+                Polygon polygonBlock = CreateBlockPolygon(ref blockPolygon, ref x, ref y);
                 PolygonCollisionResult resNew = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
                 if (resNew.Intersect)
                 {
-                    //if (Math.Abs(direction.X) > Math.Abs(direction.Y))
-                    //{
-                    //    if (direction.X > 0)
-                    //        System.Diagnostics.Debug.WriteLine("Collision left");
-                    //    else if (direction.X < 0)
-                    //        System.Diagnostics.Debug.WriteLine("Collision right");
-                    //}
-                    //else
-                    //{
-
-                    //    if (direction.Y > 0)
-                    //        System.Diagnostics.Debug.WriteLine("Collision top");
-                    //    else if (direction.Y < 0)
-                    //        System.Diagnostics.Debug.WriteLine("Collision bottom");
-                    //}
                     if (block.IsLowSlope || block.IsHighSlope)
                     {
-                        //_topLeftZ = MainGame.GetHighestPointF(newTopLeft.X, newTopLeft.Y);
-                        //_topRightZ = MainGame.GetHighestPointF(newTopRight.X, newTopRight.Y);
-                        //_bottomRightZ = MainGame.GetHighestPointF(newBottomRight.X, newBottomRight.Y);
-                        //_bottomLeftZ = MainGame.GetHighestPointF(newBottomLeft.X, newBottomLeft.Y);
                         return;
-                        //continue;
                     }
 
                     //direction.X = 0;
@@ -403,34 +395,10 @@ namespace Hiale.GTA2NET.Logic
                     return;
                 }
             }
-            //if (!block.IsDiagonalSlope) //maybe _Bug here //--> setzen wenn alle 4 Ecken auf geradem Boden sind
-            //{
-            //    //_topLeftZ = z;
-            //    //_topRightZ = z;
-            //    //_bottomRightZ = z;
-            //    //_bottomLeftZ = z;
-
-            //    _topLeftZ = MainGame.GetHighestPointF(TopLeft2.X, TopLeft2.Y);
-            //    _topRightZ = MainGame.GetHighestPointF(TopRight2.X, TopRight2.Y);
-            //    _bottomRightZ = MainGame.GetHighestPointF(BottomRight2.X, BottomRight2.Y);
-            //    _bottomLeftZ = MainGame.GetHighestPointF(newBottomLeft.X, BottomLeft2.Y);
-
-            //}
         }
 
-        private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope)
+        private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope, ref bool blockAboveStops)
         {
-            //if (x == 80)
-            //{
-            //    System.Diagnostics.Debug.WriteLine("OK");
-            //    //if (z == 2)
-            //    //{
-            //    //    movableSlope = true;
-            //    //    return true;
-            //    //}
-            //    //return false;
-            //}
-
             if (Position3.Z % 1 != 0) //07.03.2010, let's see if it works...
                 return false;
 
@@ -441,9 +409,14 @@ namespace Hiale.GTA2NET.Logic
             //check the block above the current block. If this block is empty, process the current block.
             BlockInfo blockAbove = MainGame.Map.CityBlocks[x, y, currentZ + 1];
             if (z == currentZ && !blockAbove.IsLowSlope && !blockAbove.IsHighSlope)
+            {
+                //if (!blockAbove.IsEmpty && !blockAbove.IsDiagonalSlope)
+                if (!blockAbove.IsEmpty)
+                    blockAboveStops = true;
                 return true;
+            }
 
-            if (block.Empty) //new 6.3.2010
+            if (block.IsEmpty) //new 6.3.2010
                 return false;
 
             //check one block above only if it's a diagnoal or a low/high slope
@@ -469,7 +442,7 @@ namespace Hiale.GTA2NET.Logic
                 maxBlock = (int)currentValue;
         }
 
-        private static Polygon CreatePolygon(ref BlockInfo block, ref int x, ref int y)
+        private static Polygon CreateBlockPolygon(ref BlockInfo block, ref int x, ref int y)
         {
             Polygon polygon = new Polygon();
             SlopeType slope = block.SlopeType;

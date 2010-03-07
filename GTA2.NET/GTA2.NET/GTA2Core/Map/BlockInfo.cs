@@ -123,7 +123,7 @@ namespace Hiale.GTA2NET.Core.Map
             _SlopeType = (SlopeType)slopeType;
         }
 
-        public bool Empty
+        public bool IsEmpty
         {
             get
             {
@@ -133,13 +133,13 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
-        public bool LidOnly
+        public bool IsLidOnly
         {
             get
             {
-                if (Empty)
+                if (IsEmpty)
                     return false;
-                if (Lid != null && Lid.TileNumber > 0)
+                if (Lid != null && Lid.TileNumber > 0 && (Left == null || Left.TileNumber == 0) && (Right == null || Right.TileNumber == 0) && (Top == null || Top.TileNumber == 0) && (Bottom == null || Bottom.TileNumber == 0))
                     return true;
                 return false;
             }
@@ -198,7 +198,7 @@ namespace Hiale.GTA2NET.Core.Map
 
         public override string ToString()
         {
-            if (Empty)
+            if (IsEmpty)
                 return "[empty block]";
             else
             {

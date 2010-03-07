@@ -82,7 +82,7 @@ namespace Hiale.GTA2NET.Renderer
                 for (int y = 0; y < MainGame.Map.CityBlocks.GetLength(1); y++)
                 {
                     BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-                    if (!block.Empty && !SkipBlock(ref block))
+                    if (!block.IsEmpty && !SkipBlock(ref block))
                     {
                         //if (x == 71 && y == 198)
                         //    System.Diagnostics.Debug.WriteLine("OK");
@@ -852,9 +852,9 @@ namespace Hiale.GTA2NET.Renderer
             {
                 if (block.Position.Y >= 1 && block.Position.Y < MainGame.Map.CityBlocks.GetLength(1) - 2)
                 {
-                    if (faceID == 0 && !MainGame.Map.CityBlocks[x, y - 1, z].Empty)
+                    if (faceID == 0 && !MainGame.Map.CityBlocks[x, y - 1, z].IsEmpty)
                         return true;
-                    if (faceID == 1 && !MainGame.Map.CityBlocks[x, y + 1, z].Empty)
+                    if (faceID == 1 && !MainGame.Map.CityBlocks[x, y + 1, z].IsEmpty)
                         return true;
                 }
             }
@@ -862,9 +862,9 @@ namespace Hiale.GTA2NET.Renderer
             {
                 if (block.Position.X >= 1 && block.Position.X < MainGame.Map.CityBlocks.GetLength(0) - 2)
                 {
-                    if (faceID == 2 && !MainGame.Map.CityBlocks[x - 1, y, z].Empty)
+                    if (faceID == 2 && !MainGame.Map.CityBlocks[x - 1, y, z].IsEmpty)
                         return true;
-                    if (faceID == 3 && !MainGame.Map.CityBlocks[x + 1, y, z].Empty)
+                    if (faceID == 3 && !MainGame.Map.CityBlocks[x + 1, y, z].IsEmpty)
                         return true;
                 }
             }
