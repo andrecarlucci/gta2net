@@ -270,10 +270,15 @@ namespace Hiale.GTA2NET.Logic
 
         private void CheckCollision(ref Vector2 direction)
         {
-            Vector2 newTopLeft = TopLeft2 + direction;
-            Vector2 newTopRight = TopRight2 + direction;
-            Vector2 newBottomRight = BottomRight2 + direction;
-            Vector2 newBottomLeft = BottomLeft2 + direction;
+            Vector2 topLeft = TopLeft2; //Create these for cache
+            Vector2 topRight = TopRight2;
+            Vector2 bottomRight = BottomRight2;
+            Vector2 bottomLeft = BottomLeft2;
+
+            Vector2 newTopLeft = topLeft + direction;
+            Vector2 newTopRight = topRight + direction;
+            Vector2 newBottomRight = bottomRight + direction;
+            Vector2 newBottomLeft = bottomLeft + direction;
 
             int minBlockX = (int)newTopLeft.X;
             int maxBlockX = (int)newTopLeft.X;
@@ -290,10 +295,14 @@ namespace Hiale.GTA2NET.Logic
 
             int minBlockZ = (int) Position3.Z;
             int maxBlockZ = (int) Position3.Z;
-            SetMinMax(ref minBlockZ, ref maxBlockZ, _topLeftZ);
-            SetMinMax(ref minBlockZ, ref maxBlockZ, _topRightZ);
-            SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomRightZ);
-            SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomLeftZ);
+            //SetMinMax(ref minBlockZ, ref maxBlockZ, _topLeftZ);
+            //SetMinMax(ref minBlockZ, ref maxBlockZ, _topRightZ);
+            //SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomRightZ);
+            //SetMinMax(ref minBlockZ, ref maxBlockZ, _bottomLeftZ);
+            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newTopLeft.X, (int)newTopLeft.Y)); //Bug, if under bridge (SetCorrectHeight?)
+            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newTopRight.X, (int)newTopRight.Y));
+            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newBottomRight.X, (int)newBottomRight.Y));
+            SetMinMax(ref minBlockZ, ref maxBlockZ, MainGame.GetHighestPoint((int)newBottomLeft.X, (int)newBottomLeft.Y));
             minBlockZ = minBlockZ - 1;
             maxBlockZ = maxBlockZ + 1;
             if (minBlockZ < 0)
@@ -301,82 +310,88 @@ namespace Hiale.GTA2NET.Logic
             if (maxBlockZ > 7)
                 maxBlockZ = 7;
 
-            if (maxBlockX == 80)
-                System.Diagnostics.Debug.WriteLine("OK");
-
             for (int x = minBlockX; x < maxBlockX + 1; x++)
             {
                 for (int y = minBlockY; y < maxBlockY + 1; y++)
                 {
                     for (int z = minBlockZ; z < maxBlockZ + 1; z++)
                     {
-                        BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-                        //if (x == 79)
-                        //    System.Diagnostics.Debug.WriteLine("OK");
-                        bool movableSlope = false;
-                        if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope))
-                            continue;
-                        if (!block.LidOnly || movableSlope)
-                        {
-                            Polygon polygonObject = new Polygon();
-                            polygonObject.Points.Add(newTopLeft);
-                            polygonObject.Points.Add(newTopRight);
-                            polygonObject.Points.Add(newBottomRight);
-                            polygonObject.Points.Add(newBottomLeft);
-                            Polygon polygonBlock = CreatePolygon(ref block, ref x, ref y);
-                            PolygonCollisionResult resNew = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
-                            if (resNew.Intersect)
-                            {
-                                //if (Math.Abs(direction.X) > Math.Abs(direction.Y))
-                                //{
-                                //    if (direction.X > 0)
-                                //        System.Diagnostics.Debug.WriteLine("Collision left");
-                                //    else if (direction.X < 0)
-                                //        System.Diagnostics.Debug.WriteLine("Collision right");
-                                //}
-                                //else
-                                //{
-
-                                //    if (direction.Y > 0)
-                                //        System.Diagnostics.Debug.WriteLine("Collision top");
-                                //    else if (direction.Y < 0)
-                                //        System.Diagnostics.Debug.WriteLine("Collision bottom");
-                                //}
-                                if (block.IsLowSlope || block.IsHighSlope)
-                                {
-                                    _topLeftZ = MainGame.GetHighestPointF(newTopLeft.X, newTopLeft.Y);
-                                    _topRightZ = MainGame.GetHighestPointF(newTopRight.X, newTopRight.Y);
-                                    _bottomRightZ = MainGame.GetHighestPointF(newBottomRight.X, newBottomRight.Y);
-                                    _bottomLeftZ = MainGame.GetHighestPointF(newBottomLeft.X, newBottomLeft.Y);
-                                    return;
-                                    //continue;
-                                }
-
-                                //direction.X = 0;
-                                //direction.Y = 0;
-                                direction.X = resNew.MinimumTranslationVector.X;
-                                direction.Y = resNew.MinimumTranslationVector.Y;
-                                return;
-                            }
-                        }
-                        if (!block.IsDiagonalSlope) //maybe _Bug here //--> setzen wenn alle 4 Ecken auf geradem Boden sind
-                        {
-                            _topLeftZ = z;
-                            _topRightZ = z;
-                            _bottomRightZ = z;
-                            _bottomLeftZ = z;
-                        }
+                        CheckBlock(ref x, ref y, ref z, ref newTopLeft, ref newTopRight, ref newBottomRight, ref newBottomLeft, ref direction);
                     }
                 }
             }
+
+            SetCorrectHeight(ref _topLeftZ, topLeft + direction);
+            SetCorrectHeight(ref _topRightZ, topRight + direction);
+            SetCorrectHeight(ref _bottomRightZ, bottomRight + direction);
+            SetCorrectHeight(ref _bottomLeftZ, bottomLeft + direction);
         }
-        
-        private static void SetMinMax(ref int minBlock, ref int maxBlock, float currentValue)
+
+        private void CheckBlock(ref int x, ref int y, ref int z, ref Vector2 newTopLeft, ref Vector2 newTopRight, ref Vector2 newBottomRight, ref Vector2 newBottomLeft, ref Vector2 direction)
         {
-            if (currentValue < minBlock)
-                minBlock = (int)currentValue;
-            if (currentValue > maxBlock)
-                maxBlock = (int)currentValue;
+            BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
+            //if (x == 78)
+            //    System.Diagnostics.Debug.WriteLine("OK");
+
+            bool movableSlope = false; //a movable Slope is a block which actually intersecs with the object, but the object can move above it to change the height.
+            if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope))
+                return;
+            if (!block.LidOnly || movableSlope)
+            {
+                Polygon polygonObject = new Polygon();
+                polygonObject.Points.Add(newTopLeft);
+                polygonObject.Points.Add(newTopRight);
+                polygonObject.Points.Add(newBottomRight);
+                polygonObject.Points.Add(newBottomLeft);
+                Polygon polygonBlock = CreatePolygon(ref block, ref x, ref y);
+                PolygonCollisionResult resNew = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
+                if (resNew.Intersect)
+                {
+                    //if (Math.Abs(direction.X) > Math.Abs(direction.Y))
+                    //{
+                    //    if (direction.X > 0)
+                    //        System.Diagnostics.Debug.WriteLine("Collision left");
+                    //    else if (direction.X < 0)
+                    //        System.Diagnostics.Debug.WriteLine("Collision right");
+                    //}
+                    //else
+                    //{
+
+                    //    if (direction.Y > 0)
+                    //        System.Diagnostics.Debug.WriteLine("Collision top");
+                    //    else if (direction.Y < 0)
+                    //        System.Diagnostics.Debug.WriteLine("Collision bottom");
+                    //}
+                    if (block.IsLowSlope || block.IsHighSlope)
+                    {
+                        //_topLeftZ = MainGame.GetHighestPointF(newTopLeft.X, newTopLeft.Y);
+                        //_topRightZ = MainGame.GetHighestPointF(newTopRight.X, newTopRight.Y);
+                        //_bottomRightZ = MainGame.GetHighestPointF(newBottomRight.X, newBottomRight.Y);
+                        //_bottomLeftZ = MainGame.GetHighestPointF(newBottomLeft.X, newBottomLeft.Y);
+                        return;
+                        //continue;
+                    }
+
+                    //direction.X = 0;
+                    //direction.Y = 0;
+                    direction.X = resNew.MinimumTranslationVector.X;
+                    direction.Y = resNew.MinimumTranslationVector.Y;
+                    return;
+                }
+            }
+            //if (!block.IsDiagonalSlope) //maybe _Bug here //--> setzen wenn alle 4 Ecken auf geradem Boden sind
+            //{
+            //    //_topLeftZ = z;
+            //    //_topRightZ = z;
+            //    //_bottomRightZ = z;
+            //    //_bottomLeftZ = z;
+
+            //    _topLeftZ = MainGame.GetHighestPointF(TopLeft2.X, TopLeft2.Y);
+            //    _topRightZ = MainGame.GetHighestPointF(TopRight2.X, TopRight2.Y);
+            //    _bottomRightZ = MainGame.GetHighestPointF(BottomRight2.X, BottomRight2.Y);
+            //    _bottomLeftZ = MainGame.GetHighestPointF(newBottomLeft.X, BottomLeft2.Y);
+
+            //}
         }
 
         private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope)
@@ -392,7 +407,11 @@ namespace Hiale.GTA2NET.Logic
             //    //return false;
             //}
 
+            if (Position3.Z % 1 != 0) //07.03.2010, let's see if it works...
+                return false;
+
             movableSlope = false;
+
             int currentZ = (int) Position3.Z;
             
             //check the block above the current block. If this block is empty, process the current block.
@@ -416,6 +435,14 @@ namespace Hiale.GTA2NET.Logic
             }
 
             return false;
+        }
+
+        private static void SetMinMax(ref int minBlock, ref int maxBlock, float currentValue)
+        {
+            if (currentValue < minBlock)
+                minBlock = (int)currentValue;
+            if (currentValue > maxBlock)
+                maxBlock = (int)currentValue;
         }
 
         private static Polygon CreatePolygon(ref BlockInfo block, ref int x, ref int y)
@@ -459,6 +486,13 @@ namespace Hiale.GTA2NET.Logic
                     break;
             }
             return polygon;
+        }
+
+        private static void SetCorrectHeight(ref float value, Vector2 point)
+        {
+            float newValue = MainGame.GetHighestPointF(point.X, point.Y);
+            if (newValue != value && Math.Abs(newValue - value) < 1)
+                value = newValue;
         }
 
         /// <summary>
