@@ -235,56 +235,29 @@ namespace Hiale.GTA2NET.Logic
             Vector2 bottomLeft = BottomLeft2;
             CheckCollision(ref direction, ref topLeft, ref topRight, ref bottomRight, ref bottomLeft);
             
-            //Culculate height
+            //Culculate height, check all 4 points of the object and take the maximum value
+            float maxZ = float.MinValue;
             float currentHeight = Position3.Z;
-            float minBlockZ = float.MaxValue;
-            float maxBlockZ = float.MinValue;
-
             SetCorrectHeight(ref currentHeight, topLeft + direction);
-            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
-
+            SetMaxF(ref maxZ, currentHeight);
             currentHeight = Position3.Z;
             SetCorrectHeight(ref currentHeight, topRight + direction);
-            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
-
+            SetMaxF(ref maxZ, currentHeight);
             currentHeight = Position3.Z;
             SetCorrectHeight(ref currentHeight, bottomRight + direction);
-            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
-
+            SetMaxF(ref maxZ, currentHeight);
             currentHeight = Position3.Z;
             SetCorrectHeight(ref currentHeight, bottomLeft + direction);
-            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
-
-            if (maxBlockZ > 1)
-                System.Diagnostics.Debug.WriteLine("OK");
-
-            float weightedHeight = Position3.Z;
-            if (Position3.Z < maxBlockZ)
-                weightedHeight = maxBlockZ;
-            if (Position3.Z > maxBlockZ)
-                weightedHeight = maxBlockZ;
-
-            //_topLeftZUpdated = SetCorrectHeight(ref _topLeftZ, topLeft + direction);
-            //_topRightZUpdated = SetCorrectHeight(ref _topRightZ, topRight + direction);
-            //_bottomRightZUpdated = SetCorrectHeight(ref _bottomRightZ, bottomRight + direction);
-            //_bottomLeftZUpdated = SetCorrectHeight(ref _bottomLeftZ, bottomLeft + direction);
+            SetMaxF(ref maxZ, currentHeight);
 
             RotationAngle = rotationAngleNew;
-
-            //direction.X = (float) Math.Round(direction.X, 4);
-            //direction.Y = (float)Math.Round(direction.Y, 4);
-
-            //float axis1 = MathHelper.Lerp(_topLeftZ, _bottomRightZ, 0.5f);
-            //float axis2 = MathHelper.Lerp(_topRightZ, _bottomLeftZ, 0.5f);
-            //float weightedHeight = MathHelper.Lerp(axis1, axis2, 0.5f);
-            //float weightedHeight = 1;
 
             //check wether this height is on empty space
 
             float newPositionX = Position3.X + direction.X;
             float newPositionY = Position3.Y + direction.Y;
             //ApplyGravity(ref newPositionX, ref newPositionY, ref weightedHeight);
-            Position3 = new Vector3(newPositionX, newPositionY, weightedHeight);
+            Position3 = new Vector3(newPositionX, newPositionY, maxZ);
 
             if (PositionChanged != null)
                 PositionChanged(this, EventArgs.Empty);
@@ -312,31 +285,6 @@ namespace Hiale.GTA2NET.Logic
 
             int minBlockZ = (int)Position3.Z;
             int maxBlockZ = minBlockZ;
-            //float newZ;
-            //if (_topLeftZUpdated)
-            //{
-            //    newZ = _topLeftZ;
-            //    SetCorrectHeight(ref newZ, newTopLeft);
-            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            //}
-            //if (_topRightZUpdated)
-            //{
-            //    newZ = _topRightZ;
-            //    SetCorrectHeight(ref newZ, newTopRight);
-            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            //}
-            //if (_bottomRightZUpdated)
-            //{
-            //    newZ = _bottomRightZ;
-            //    SetCorrectHeight(ref newZ, newBottomRight);
-            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            //}
-            //if (_bottomLeftZUpdated)
-            //{
-            //    newZ = _bottomLeftZ;
-            //    SetCorrectHeight(ref newZ, newBottomLeft);
-            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            //}
             minBlockZ = minBlockZ - 1;
             maxBlockZ = maxBlockZ + 1;
             if (minBlockZ < 0)
@@ -438,10 +386,6 @@ namespace Hiale.GTA2NET.Logic
                 if (blockBelow.IsEmpty)
                 {
                     z -= 0.1f;
-                    //_topLeftZ = z;
-                    //_topRightZ = z;
-                    //_bottomRightZ = z;
-                    //_bottomLeftZ = z;
                 }
             }
         }
@@ -454,10 +398,8 @@ namespace Hiale.GTA2NET.Logic
                 maxBlock = (int)currentValue;
         }
 
-        private static void SetMinMaxF(ref float minBlock, ref float maxBlock, float currentValue)
+        private static void SetMaxF(ref float maxBlock, float currentValue)
         {
-            if (currentValue < minBlock)
-                minBlock = currentValue;
             if (currentValue > maxBlock)
                 maxBlock = currentValue;
         }
@@ -505,7 +447,7 @@ namespace Hiale.GTA2NET.Logic
             return polygon;
         }
 
-        private static bool SetCorrectHeight(ref float value, Vector2 point)
+        private static void SetCorrectHeight(ref float value, Vector2 point)
         {
             float x = point.X;
             float y = point.Y;
@@ -522,9 +464,7 @@ namespace Hiale.GTA2NET.Logic
             if (newValue != value && newValue > -1)
             {
                 value = newValue;
-                return true;
             }
-            return false;
         }
 
         /// <summary>
