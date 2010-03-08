@@ -238,7 +238,7 @@ namespace Hiale.GTA2NET
             }
 
             if (ForwardAmount != 0)
-                _chasingObject.Move(ForwardAmount, RotationAbount);
+                _chasingObject.Move(ref ForwardAmount, ref RotationAbount, ref _elapsedGameTime);
             
 
             if (Input.KeyboardF1JustPressed)
@@ -371,39 +371,47 @@ namespace Hiale.GTA2NET
             {
                 for (int z = Map.CityBlocks.GetLength(2) - 1; z >= 0; z--)
                 {
-                    BlockInfo block = Map.CityBlocks[(int)x, (int)y, z];
-                    if (!block.IsEmpty)
+                    float currentZ = GetHeightF(ref x, ref y, ref z);
+                    if (currentZ > -1)
+                        return currentZ;
+                }
+            }
+            return -1;
+        }
+
+        public static float GetHeightF(ref float x, ref float y, ref int z)
+        {
+            BlockInfo block = Map.CityBlocks[(int)x, (int)y, z];
+            if (!block.IsEmpty)
+            {
+                if (block.IsLowSlope || block.IsHighSlope)
+                {
+                    if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26Low)
                     {
-                        if (block.IsLowSlope || block.IsHighSlope)
-                        {
-                            if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26Low)
-                            {
-                                int roundedX = (int)x;
-                                float offset = x - roundedX;
-                                return (z - 1) + (offset / 2);
-                            }
-                            else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26High)
-                            {
-                                int roundedX = (int)x;
-                                float offset = x - roundedX;
-                                return (z - 0.5f) + (offset / 2);
-                            }
-                            else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26Low)
-                            {
-                                int roundedX = (int)x + 1;
-                                float offset = x - roundedX;
-                                return (z - 1) - (offset / 2);
-                            }
-                            else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26High)
-                            {
-                                int roundedX = (int)x + 1;
-                                float offset = roundedX - x;
-                                return (z - 0.5f) + (offset / 2);
-                            }
-                        }
-                        return z;
+                        int roundedX = (int)x;
+                        float offset = x - roundedX;
+                        return (z - 1) + (offset / 2);
+                    }
+                    else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26High)
+                    {
+                        int roundedX = (int)x;
+                        float offset = x - roundedX;
+                        return (z - 0.5f) + (offset / 2);
+                    }
+                    else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26Low)
+                    {
+                        int roundedX = (int)x + 1;
+                        float offset = x - roundedX;
+                        return (z - 1) - (offset / 2);
+                    }
+                    else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26High)
+                    {
+                        int roundedX = (int)x + 1;
+                        float offset = roundedX - x;
+                        return (z - 0.5f) + (offset / 2);
                     }
                 }
+                return z;
             }
             return -1;
         }
