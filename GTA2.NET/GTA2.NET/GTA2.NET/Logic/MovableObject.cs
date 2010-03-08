@@ -227,7 +227,6 @@ namespace Hiale.GTA2NET.Logic
 
             //Bugs:
             //Low/High Slops only allow from proper edge!
-            //Leaving a Low/High Slope, make the object disapear for some moments
 
             Vector2 topLeft = TopLeft2; //Create these for cache
             Vector2 topRight = TopRight2;
@@ -235,7 +234,7 @@ namespace Hiale.GTA2NET.Logic
             Vector2 bottomLeft = BottomLeft2;
             CheckCollision(ref direction, ref topLeft, ref topRight, ref bottomRight, ref bottomLeft);
             
-            //Culculate height, check all 4 points of the object and take the maximum value
+            //Culculate height, check all 4 points of the object and take the maximum value of those.
             float maxZ = float.MinValue;
             float currentHeight = Position3.Z;
             SetCorrectHeight(ref currentHeight, topLeft + direction);
@@ -455,12 +454,10 @@ namespace Hiale.GTA2NET.Logic
             BlockInfo blockAbove = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z + 1];
             if (blockAbove.IsLowSlope || blockAbove.IsHighSlope)
                 z++;
-            float newValue = MainGame.GetHeightF(ref x, ref y, ref z);
-            if (newValue == -1)
-            {
+            BlockInfo blockBelow = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z - 1];
+            if (blockBelow.IsLowSlope || blockBelow.IsHighSlope)
                 z--;
-                newValue = MainGame.GetHeightF(ref x, ref y, ref z);
-            }
+            float newValue = MainGame.GetHeightF(ref x, ref y, ref z);
             if (newValue != value && newValue > -1)
             {
                 value = newValue;
