@@ -274,7 +274,7 @@ namespace Hiale.GTA2NET
                 Vector3 lookAt = _chasingObject.Position3;
                 lookAt.Y *= -1;
                 cameraPos = lookAt;
-                cameraPos.Z += 5;
+                cameraPos.Z += 10 * GlobalScalar.Z;
                 BaseGame.ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
             }
 

@@ -17,20 +17,10 @@ namespace Hiale.GTA2NET.Logic
         public event EventHandler PositionChanged;
         public event EventHandler RotationChanged;
 
-        private Vector3 _position3;
         /// <summary>
         /// Current position of this object. It represents the centre of the object.
         /// </summary>
-        public Vector3 Position3
-        {
-            get { return _position3; }
-            set
-            {
-                _position3 = value;
-                //if (PositionChanged != null)
-                //    PositionChanged(this, EventArgs.Empty);
-            }
-        }
+        public Vector3 Position3 { get; set; }
 
         /// <summary>
         /// 2D position of the object.
@@ -90,10 +80,6 @@ namespace Hiale.GTA2NET.Logic
             }
         }
 
-        private float _topLeftZ;
-
-        private bool _topLeftZUpdated;
-
         /// <summary>
         /// 3D top left point of the object.
         /// </summary>
@@ -102,7 +88,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 topLeft = TopLeft2;
-                return new Vector3(topLeft.X, topLeft.Y, _topLeftZ);
+                return new Vector3(topLeft.X, topLeft.Y, Position3.Z);
             }
         }
         
@@ -119,10 +105,6 @@ namespace Hiale.GTA2NET.Logic
             }
         }
 
-        private float _topRightZ;
-
-        private bool _topRightZUpdated;
-
         /// <summary>
         /// 3D top right point of the object.
         /// </summary>
@@ -131,7 +113,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 topRight = TopRight2;
-                return new Vector3(topRight.X, topRight.Y, _topRightZ);
+                return new Vector3(topRight.X, topRight.Y, Position3.Z);
             }
         }
 
@@ -147,10 +129,6 @@ namespace Hiale.GTA2NET.Logic
             }
         }
 
-        private float _bottomRightZ;
-
-        private bool _bottomRightZUpdated;
-
         /// <summary>
         /// 3D bottom right point of the object.
         /// </summary>
@@ -159,7 +137,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 bottomRight = BottomRight2;
-                return new Vector3(bottomRight.X, bottomRight.Y, _bottomRightZ);
+                return new Vector3(bottomRight.X, bottomRight.Y, Position3.Z);
             }
         }
 
@@ -175,10 +153,6 @@ namespace Hiale.GTA2NET.Logic
             }
         }
 
-        private float _bottomLeftZ;
-
-        private bool _bottomLeftZUpdated;
-
         /// <summary>
         /// 3D bottom left point of the object.
         /// </summary>
@@ -187,27 +161,19 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 bottomLeft = BottomLeft2;
-                return new Vector3(bottomLeft.X, bottomLeft.Y, _bottomLeftZ);
+                return new Vector3(bottomLeft.X, bottomLeft.Y, Position3.Z);
             }
         }
 
-        private float _width;
         /// <summary>
         /// Width of the object.
         /// </summary>
-        public float Width
-        {
-            get { return _width; }
-        }
+        public float Width { get; private set; }
 
-        private float _height;
         /// <summary>
         /// Height of the object.
         /// </summary>
-        public float Height
-        {
-            get { return _height; }
-        }
+        public float Height { get; private set; }
 
         /// <summary>
         /// Helper variable to calculate the distance moved.
@@ -218,13 +184,13 @@ namespace Hiale.GTA2NET.Logic
 
         public MovableObject(Vector3 position) //ToDo: Add SpriteNumber(s), Width, Height, StartUpRotation
         {
-            _position3 = position;
+            Position3 = position;
 
-            //NEW 04.03.2010
-            _topLeftZ = position.Z;
-            _topRightZ = position.Z;
-            _bottomRightZ = position.Z;
-            _bottomLeftZ = position.Z;
+            ////NEW 04.03.2010
+            //_topLeftZ = position.Z;
+            //_topRightZ = position.Z;
+            //_bottomRightZ = position.Z;
+            //_bottomLeftZ = position.Z;
 
             if (ObjectCreated != null)
                 ObjectCreated(this, new GenericEventArgs<MovableObject>(this));
@@ -237,11 +203,9 @@ namespace Hiale.GTA2NET.Logic
         /// <param name="height"></param>
         public void SetDimension(float width, float height) //ToDo: move to constructor
         {
-            _width = width;
-            _height = height;
+            Width = width;
+            Height = height;
         }
-
-        private float _previousDelta;
 
         /// <summary>
         /// Moves the object forward or backwards and changes the rotation angle.
@@ -270,47 +234,50 @@ namespace Hiale.GTA2NET.Logic
             Vector2 bottomRight = BottomRight2;
             Vector2 bottomLeft = BottomLeft2;
             CheckCollision(ref direction, ref topLeft, ref topRight, ref bottomRight, ref bottomLeft);
-            _topLeftZUpdated = SetCorrectHeight(ref _topLeftZ, topLeft + direction);
-            _topRightZUpdated = SetCorrectHeight(ref _topRightZ, topRight + direction);
-            _bottomRightZUpdated = SetCorrectHeight(ref _bottomRightZ, bottomRight + direction);
-            _bottomLeftZUpdated = SetCorrectHeight(ref _bottomLeftZ, bottomLeft + direction);
+            
+            //Culculate height
+            float currentHeight = Position3.Z;
+            float minBlockZ = float.MaxValue;
+            float maxBlockZ = float.MinValue;
 
-            ////new -->
-            ////Sets all four points to the same height
-            ////float previousDelta = _topLeftZ + _topRightZ + _bottomRightZ + _bottomLeftZ;
-            //float minValue = float.MaxValue;
-            //float maxValue = 0;
-            //SetMinMaxF(ref minValue, ref maxValue, _topLeftZ);
-            //SetMinMaxF(ref minValue, ref maxValue, _topRightZ);
-            //SetMinMaxF(ref minValue, ref maxValue, _bottomRightZ);
-            //SetMinMaxF(ref minValue, ref maxValue, _bottomLeftZ);
-            ////float currentDelta = (_topLeftZ + _topRightZ + _bottomRightZ + _bottomLeftZ) / 4;
-            ////if (Position3.Z < currentDelta)
-            ////{
-            //    _topLeftZ = maxValue;
-            //    _topRightZ = maxValue;
-            //    _bottomRightZ = maxValue;
-            //    _bottomLeftZ = maxValue;
-            ////    System.Diagnostics.Debug.WriteLine("Max");
-            ////}
-            ////else if (Position3.Z > currentDelta)
-            ////{
-            ////    _topLeftZ = minValue;
-            ////    _topRightZ = minValue;
-            ////    _bottomRightZ = minValue;
-            ////    _bottomLeftZ = minValue;
-            ////    System.Diagnostics.Debug.WriteLine("Min");
-            ////}
-            //// <--
+            SetCorrectHeight(ref currentHeight, topLeft + direction);
+            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
+
+            currentHeight = Position3.Z;
+            SetCorrectHeight(ref currentHeight, topRight + direction);
+            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
+
+            currentHeight = Position3.Z;
+            SetCorrectHeight(ref currentHeight, bottomRight + direction);
+            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
+
+            currentHeight = Position3.Z;
+            SetCorrectHeight(ref currentHeight, bottomLeft + direction);
+            SetMinMaxF(ref minBlockZ, ref maxBlockZ, currentHeight);
+
+            if (maxBlockZ > 1)
+                System.Diagnostics.Debug.WriteLine("OK");
+
+            float weightedHeight = Position3.Z;
+            if (Position3.Z < maxBlockZ)
+                weightedHeight = maxBlockZ;
+            if (Position3.Z > maxBlockZ)
+                weightedHeight = maxBlockZ;
+
+            //_topLeftZUpdated = SetCorrectHeight(ref _topLeftZ, topLeft + direction);
+            //_topRightZUpdated = SetCorrectHeight(ref _topRightZ, topRight + direction);
+            //_bottomRightZUpdated = SetCorrectHeight(ref _bottomRightZ, bottomRight + direction);
+            //_bottomLeftZUpdated = SetCorrectHeight(ref _bottomLeftZ, bottomLeft + direction);
 
             RotationAngle = rotationAngleNew;
 
             //direction.X = (float) Math.Round(direction.X, 4);
             //direction.Y = (float)Math.Round(direction.Y, 4);
 
-            float axis1 = MathHelper.Lerp(_topLeftZ, _bottomRightZ, 0.5f);
-            float axis2 = MathHelper.Lerp(_topRightZ, _bottomLeftZ, 0.5f);
-            float weightedHeight = MathHelper.Lerp(axis1, axis2, 0.5f);
+            //float axis1 = MathHelper.Lerp(_topLeftZ, _bottomRightZ, 0.5f);
+            //float axis2 = MathHelper.Lerp(_topRightZ, _bottomLeftZ, 0.5f);
+            //float weightedHeight = MathHelper.Lerp(axis1, axis2, 0.5f);
+            //float weightedHeight = 1;
 
             //check wether this height is on empty space
 
@@ -321,27 +288,6 @@ namespace Hiale.GTA2NET.Logic
 
             if (PositionChanged != null)
                 PositionChanged(this, EventArgs.Empty);
-        }
-
-        private void ApplyGravity(ref float x, ref float y, ref float z)
-        {
-            if (z == 0)
-                return;
-            BlockInfo block = MainGame.Map.CityBlocks[(int)x, (int)y, (int)z];
-            if (block.Lid != null && block.Lid.TileNumber > 0)
-                return;
-            if (z % 1 == 0)
-            {
-                BlockInfo blockBelow = MainGame.Map.CityBlocks[(int)x, (int)y, (int)(z - 1)];
-                if (blockBelow.IsEmpty)
-                {
-                    z -= 0.1f;
-                    _topLeftZ = z;
-                    _topRightZ = z;
-                    _bottomRightZ = z;
-                    _bottomLeftZ = z;
-                }
-            }
         }
 
         private void CheckCollision(ref Vector2 direction, ref Vector2 topLeft, ref Vector2 topRight, ref Vector2 bottomRight, ref Vector2 bottomLeft)
@@ -366,31 +312,31 @@ namespace Hiale.GTA2NET.Logic
 
             int minBlockZ = (int)Position3.Z;
             int maxBlockZ = minBlockZ;
-            float newZ;
-            if (_topLeftZUpdated)
-            {
-                newZ = _topLeftZ;
-                SetCorrectHeight(ref newZ, newTopLeft);
-                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            }
-            if (_topRightZUpdated)
-            {
-                newZ = _topRightZ;
-                SetCorrectHeight(ref newZ, newTopRight);
-                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            }
-            if (_bottomRightZUpdated)
-            {
-                newZ = _bottomRightZ;
-                SetCorrectHeight(ref newZ, newBottomRight);
-                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            }
-            if (_bottomLeftZUpdated)
-            {
-                newZ = _bottomLeftZ;
-                SetCorrectHeight(ref newZ, newBottomLeft);
-                SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
-            }
+            //float newZ;
+            //if (_topLeftZUpdated)
+            //{
+            //    newZ = _topLeftZ;
+            //    SetCorrectHeight(ref newZ, newTopLeft);
+            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            //}
+            //if (_topRightZUpdated)
+            //{
+            //    newZ = _topRightZ;
+            //    SetCorrectHeight(ref newZ, newTopRight);
+            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            //}
+            //if (_bottomRightZUpdated)
+            //{
+            //    newZ = _bottomRightZ;
+            //    SetCorrectHeight(ref newZ, newBottomRight);
+            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            //}
+            //if (_bottomLeftZUpdated)
+            //{
+            //    newZ = _bottomLeftZ;
+            //    SetCorrectHeight(ref newZ, newBottomLeft);
+            //    SetMinMax(ref minBlockZ, ref maxBlockZ, newZ);
+            //}
             minBlockZ = minBlockZ - 1;
             maxBlockZ = maxBlockZ + 1;
             if (minBlockZ < 0)
@@ -479,6 +425,27 @@ namespace Hiale.GTA2NET.Logic
             return false;
         }
 
+        private void ApplyGravity(ref float x, ref float y, ref float z)
+        {
+            if (z == 0)
+                return;
+            BlockInfo block = MainGame.Map.CityBlocks[(int)x, (int)y, (int)z];
+            if (block.Lid != null && block.Lid.TileNumber > 0)
+                return;
+            if (z % 1 == 0)
+            {
+                BlockInfo blockBelow = MainGame.Map.CityBlocks[(int)x, (int)y, (int)(z - 1)];
+                if (blockBelow.IsEmpty)
+                {
+                    z -= 0.1f;
+                    //_topLeftZ = z;
+                    //_topRightZ = z;
+                    //_bottomRightZ = z;
+                    //_bottomLeftZ = z;
+                }
+            }
+        }
+
         private static void SetMinMax(ref int minBlock, ref int maxBlock, float currentValue)
         {
             if (currentValue < minBlock)
@@ -540,7 +507,6 @@ namespace Hiale.GTA2NET.Logic
 
         private static bool SetCorrectHeight(ref float value, Vector2 point)
         {
-            //float test1 = MainGame.GetHighestPointF(point.X, point.Y);
             float x = point.X;
             float y = point.Y;
             int z = (int)Math.Round(value, 0);
@@ -548,7 +514,12 @@ namespace Hiale.GTA2NET.Logic
             if (blockAbove.IsLowSlope || blockAbove.IsHighSlope)
                 z++;
             float newValue = MainGame.GetHeightF(ref x, ref y, ref z);
-            if (newValue != value && newValue > -1) //if we can fall the value is -1...
+            if (newValue == -1)
+            {
+                z--;
+                newValue = MainGame.GetHeightF(ref x, ref y, ref z);
+            }
+            if (newValue != value && newValue > -1)
             {
                 value = newValue;
                 return true;
