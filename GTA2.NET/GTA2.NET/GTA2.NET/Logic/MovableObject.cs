@@ -257,6 +257,7 @@ namespace Hiale.GTA2NET.Logic
             float newPositionY = Position3.Y + direction.Y;
             //ApplyGravity(ref newPositionX, ref newPositionY, ref weightedHeight);
             Position3 = new Vector3(newPositionX, newPositionY, maxZ);
+            MainGame.WindowTitle = maxZ.ToString();
 
             if (PositionChanged != null)
                 PositionChanged(this, EventArgs.Empty);
@@ -323,20 +324,73 @@ namespace Hiale.GTA2NET.Logic
                 if (blockAboveStops)
                     blockPolygon = blockAbove;
                 Polygon polygonBlock = CreateBlockPolygon(ref blockPolygon, ref x, ref y);
-                PolygonCollisionResult resNew = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
-                if (resNew.Intersect)
+                PolygonCollisionResult collisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
+                if (collisionResult.Intersect)
                 {
                     if (block.IsLowSlope || block.IsHighSlope)
                     {
-                        return;
+                        if (AllowSlopeBlock(ref x, ref y, ref z, ref block, ref polygonObject))
+                            return;
                     }
                     //direction.X = 0;
                     //direction.Y = 0;
-                    direction.X = resNew.MinimumTranslationVector.X;
-                    direction.Y = resNew.MinimumTranslationVector.Y;
+                    direction.X = collisionResult.MinimumTranslationVector.X;
+                    direction.Y = collisionResult.MinimumTranslationVector.Y;
                     return;
                 }
             }
+        }
+
+        private static bool AllowSlopeBlock(ref int x, ref int y, ref int z, ref BlockInfo block, ref Polygon polygonObject)
+        {
+            Vector2 dummy = Vector2.Zero;
+
+            //check the four edges of the block, these slops only some directions to come from...
+            Polygon polygonTop = new Polygon();
+            polygonTop.Points.Add(new Vector2(x, y));
+            polygonTop.Points.Add(new Vector2(x + 1, y));
+
+            Polygon polygonRight = new Polygon();
+            polygonRight.Points.Add(new Vector2(x + 1, y));
+            polygonRight.Points.Add(new Vector2(x + 1, y + 1));
+
+            Polygon polygonBottom = new Polygon();
+            polygonBottom.Points.Add(new Vector2(x + 1, y + 1));
+            polygonBottom.Points.Add(new Vector2(x, y + 1));
+
+            Polygon polygonLeft = new Polygon();
+            polygonLeft.Points.Add(new Vector2(x, y + 1));
+            polygonLeft.Points.Add(new Vector2(x, y));
+
+            PolygonCollisionResult edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonTop, ref dummy);
+            bool collisionTop = edgeCollisionResult.Intersect;
+            edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonRight, ref dummy);
+            bool collisionRight = edgeCollisionResult.Intersect;
+            edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBottom, ref dummy);
+            bool collisionBottom = edgeCollisionResult.Intersect;
+            edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonLeft, ref dummy);
+            bool collisionLeft = edgeCollisionResult.Intersect;
+
+            switch (block.SlopeType)
+            {
+                case SlopeType.Up26Low:
+                    if (collisionTop && !collisionRight && collisionBottom && !collisionLeft)
+                        return true;
+                    break;
+                case SlopeType.Right26Low:
+                    if (!collisionTop && !collisionRight && !collisionBottom && collisionLeft)
+                        return true;
+                    break;
+                case SlopeType.Down26Low:
+                    if (collisionTop && !collisionRight && !collisionBottom && !collisionLeft)
+                        return true;
+                    break;
+                case SlopeType.Left26Low:
+                    if (!collisionTop && collisionRight && !collisionBottom && !collisionLeft)
+                        return true;
+                    break;
+            }
+            return false;
         }
 
         private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope, ref bool blockAboveStops, ref BlockInfo blockAbove)

@@ -62,7 +62,6 @@ namespace Hiale.GTA2NET.Helper
                 // ===== 2. Now find if the polygons *will* intersect =====
 
                 // Project the velocity on the current axis
-                //float velocityProjection = axis.DotProduct(velocity); //Backup
                 float velocityProjection = Vector2.Dot(axis,velocity);
 
                 // Get the projection of polygon A during the movement
@@ -95,7 +94,6 @@ namespace Hiale.GTA2NET.Helper
                     Vector2 d = polygonA.Center - polygonB.Center;
                     if (Vector2.Dot(d, translationAxis) < 0)
                         translationAxis = -translationAxis;
-                    //if (d.DotProduct(translationAxis) < 0) translationAxis = -translationAxis; //Backup
                 }
             }
 
@@ -125,13 +123,11 @@ namespace Hiale.GTA2NET.Helper
         private static void ProjectPolygon(ref Vector2 axis, ref Polygon polygon, ref float min, ref float max)
         {
             // To project a point on an axis use the dot product
-            //float d = axis.DotProduct(polygon.Points[0]); //Backup
             float d = Vector2.Dot(axis, polygon.Points[0]);
             min = d;
             max = d;
             for (int i = 0; i < polygon.Points.Count; i++)
             {
-                //d = polygon.Points[i].DotProduct(axis); //Backup
                 d = Vector2.Dot(polygon.Points[i], (axis));
                 if (d < min)
                 {
