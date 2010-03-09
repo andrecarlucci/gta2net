@@ -181,11 +181,15 @@ namespace Hiale.GTA2NET.Core.Style
         {
             System.Diagnostics.Debug.WriteLine("Reading car infos...");
             int position = 0;
+            int offset = 0;
             while (position < chunkSize)
             {
                 CarInfo carInfo = new CarInfo();
                 carInfo.Model = reader.ReadByte();
-                carInfo.Sprite = reader.ReadByte();
+                byte sprite = reader.ReadByte();
+                if (sprite == 0)
+                    offset++;
+                carInfo.Sprite = carInfo.Model - (sprite + offset);
                 carInfo.Width = reader.ReadByte();
                 carInfo.Height = reader.ReadByte();
                 byte numRemaps = reader.ReadByte();
@@ -196,8 +200,15 @@ namespace Hiale.GTA2NET.Core.Style
                 carInfo.RearWheelOffset = reader.ReadByte();
                 carInfo.FrontWindowOffset = reader.ReadByte();
                 carInfo.RearWindowOffset = reader.ReadByte();
-                carInfo.InfoFlags = reader.ReadByte();
-                carInfo.InfoFlags2 = reader.ReadByte();
+                carInfo.InfoFlagsBase = reader.ReadByte();
+                carInfo.InfoFlags = (CarInfoFlags)carInfo.InfoFlagsBase;
+                carInfo.InfoFlags2Base = reader.ReadByte();
+                bool infoFlags2Value0 = Helper.CheckBit(carInfo.InfoFlags2Base, 0);
+                bool infoFlags2Value1 = Helper.CheckBit(carInfo.InfoFlags2Base, 1);
+                if (infoFlags2Value0)
+                    carInfo.InfoFlags += 0x100;
+                if (infoFlags2Value1)
+                    carInfo.InfoFlags += 0x200;
                 for (int i = 0; i < numRemaps; i++)
                 {
                     carInfo.RemapList.Add(reader.ReadByte());
@@ -213,6 +224,7 @@ namespace Hiale.GTA2NET.Core.Style
                 CarInfos.Add(carInfo.Model, carInfo);
                 position = position + 15 + numRemaps + numDoors * 2;
             }
+            System.Diagnostics.Debug.WriteLine("OK");
         }
 
         private void ReadMapObjects(BinaryReader reader, int chunkSize)
@@ -335,15 +347,15 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        private void SaveTile(string fileName, int ID)
+        private void SaveTile(string fileName, int id)
         {
-            UInt32 vpallete = PaletteIndexes[ID];
+            UInt32 vpallete = PaletteIndexes[id];
             Bitmap bmp = new Bitmap(64, 64); 
             for  (int y = 63; y >= 0; y--)
             {
                 for (int x = 0; x < 64; x++)
                 {
-                    UInt32 tileColor = tileData[(y+(ID / 4)*64)*256+(x+(ID % 4)*64)];
+                    UInt32 tileColor = tileData[(y+(id / 4)*64)*256+(x+(id % 4)*64)];
                     UInt32 palID = (vpallete/64)*256*64+(vpallete % 64) + tileColor * 64;
                     UInt32 baseColor = (PhysicalPalettes[palID]) & 0xFFFFFF;
                     Color rgbColor = Color.FromArgb((int)baseColor);

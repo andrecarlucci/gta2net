@@ -38,7 +38,7 @@ namespace Hiale.GTA2NET.Core
         public CarPhysics Physics { get; private set; }
 
         /// <summary>
-        /// Model is the car model number. Every distinct type of car has a unique model number.
+        /// Model is the car model number. Every type of car has a unique model number. It can be used as an ID.
         /// </summary>
         public int Model { get; set; }
 
@@ -46,14 +46,14 @@ namespace Hiale.GTA2NET.Core
         {
             get
             {
-                return Physics != null ? Physics.Name : "NoName";
+                return Physics != null ? Physics.Name : "Model: " + Model;
             }
         }
 
         /// <summary>
-        /// Sprite is the relative car sprite number. At least one sprite is stored for every car. The sprite number for each car is simply: car sprite number + car sprite base. In practice, the relative sprite number is actually filled in here by the game when the style is loaded. The style file only needs to store here the number of sprites used by the car ( 0 or 1 ). If a car has 0 sprites, it shares the graphic of the preceding one.
+        /// Sprite number.
         /// </summary>
-        public byte Sprite { get; set; }
+        public int Sprite { get; set; }
 
         /// <summary>
         /// Width of the car in pixels. This is required here because it may be different from the width of the car for collision purposes.
@@ -143,7 +143,7 @@ namespace Hiale.GTA2NET.Core
         /// -	no car cab be both cab and trailer
         /// -	a car with rear emerg lights must have emerg lights as well
         /// </summary>
-        public byte InfoFlags { get; set; } //ToDo: separate Flags
+        public byte InfoFlagsBase { get; set; }
 
         /// <summary>
         /// InfoFlags2 is a bitmap with the following fields:
@@ -151,7 +151,9 @@ namespace Hiale.GTA2NET.Core
         /// 0	0x01	collide_over	1 if this car can drive over other cars, else 0
         /// 1	0x02	popup	1 if this car has popup headlights, else 0
         /// </summary>
-        public byte InfoFlags2 { get; set; }
+        public byte InfoFlags2Base { get; set; }
+
+        public CarInfoFlags InfoFlags { get; set; }
 
         /// <summary>
         /// A list of doors is stored for each car.
