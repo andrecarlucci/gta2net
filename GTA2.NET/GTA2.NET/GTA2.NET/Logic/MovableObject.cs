@@ -249,6 +249,9 @@ namespace Hiale.GTA2NET.Logic
             SetCorrectHeight(ref currentHeight, bottomLeft + direction);
             SetMaxF(ref maxZ, currentHeight);
 
+            if (maxZ < 0)
+                maxZ = Position3.Z;
+
             RotationAngle = rotationAngleNew;
 
             //check wether this height is on empty space
@@ -374,7 +377,7 @@ namespace Hiale.GTA2NET.Logic
             switch (block.SlopeType)
             {
                 case SlopeType.Up26Low:
-                    if (collisionTop && !collisionRight && collisionBottom && !collisionLeft)
+                    if (!collisionTop && !collisionRight && collisionBottom && !collisionLeft)
                         return true;
                     break;
                 case SlopeType.Right26Low:
@@ -512,7 +515,7 @@ namespace Hiale.GTA2NET.Logic
             if (blockBelow.IsLowSlope || blockBelow.IsHighSlope)
                 z--;
             float newValue = MainGame.GetHeightF(ref x, ref y, ref z);
-            if (newValue != value && newValue > -1)
+            if (newValue != value)
             {
                 value = newValue;
             }

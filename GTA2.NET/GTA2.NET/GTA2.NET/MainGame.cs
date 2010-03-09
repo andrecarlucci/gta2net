@@ -386,29 +386,56 @@ namespace Hiale.GTA2NET
             {
                 if (block.IsLowSlope || block.IsHighSlope)
                 {
-                    if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26Low)
+                    switch (block.SlopeType)
                     {
-                        int roundedX = (int)x;
-                        float offset = x - roundedX;
-                        return (z - 1) + (offset / 2);
-                    }
-                    else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Right26High)
-                    {
-                        int roundedX = (int)x;
-                        float offset = x - roundedX;
-                        return (z - 0.5f) + (offset / 2);
-                    }
-                    else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26Low)
-                    {
-                        int roundedX = (int)x + 1;
-                        float offset = x - roundedX;
-                        return (z - 1) - (offset / 2);
-                    }
-                    else if (block.SlopeType == Hiale.GTA2.Core.Map.SlopeType.Left26High)
-                    {
-                        int roundedX = (int)x + 1;
-                        float offset = roundedX - x;
-                        return (z - 0.5f) + (offset / 2);
+                        case Hiale.GTA2.Core.Map.SlopeType.Up26Low:
+                            {
+                                int roundedY = (int)y + 1;
+                                float offset = y - roundedY;
+                                return (z - 1) - (offset / 2);
+                            }
+                        case Hiale.GTA2.Core.Map.SlopeType.Up26High:
+                            {
+                                int roundedY = (int)y + 1;
+                                float offset = roundedY - y;
+                                return (z - 0.5f) + (offset / 2);
+                            }
+                        case Hiale.GTA2.Core.Map.SlopeType.Right26Low:
+                            {
+                                int roundedX = (int)x;
+                                float offset = x - roundedX;
+                                return (z - 1) + (offset / 2);
+                            }
+                        case Hiale.GTA2.Core.Map.SlopeType.Right26High:
+                            {
+                                int roundedX = (int)x;
+                                float offset = x - roundedX;
+                                return (z - 0.5f) + (offset / 2);
+                            }
+                        case Hiale.GTA2.Core.Map.SlopeType.Down26Low:
+                            {
+                                int roundedY = (int)y;
+                                float offset = y - roundedY;
+                                return (z - 1) + (offset / 2);
+                            }
+                        case Hiale.GTA2.Core.Map.SlopeType.Down26High:
+                            {
+                                int roundedY = (int)y;
+                                float offset = y - roundedY;
+                                return (z - 0.5f) + (offset / 2);
+                            }
+                        case Hiale.GTA2.Core.Map.SlopeType.Left26Low:
+                            {
+                                int roundedX = (int)x + 1;
+                                float offset = x - roundedX;
+                                return (z - 1) - (offset / 2);
+                            }
+                        case Hiale.GTA2.Core.Map.SlopeType.Left26High:
+                            {
+                                int roundedX = (int)x + 1;
+                                float offset = roundedX - x;
+                                return (z - 0.5f) + (offset / 2);
+                            }
                     }
                 }
                 return z;
