@@ -48,8 +48,14 @@ namespace Hiale.GTA2NET.Renderer
         {
             if (!sprites.ContainsKey(e.Item))
             {
-                //sprites.Add(e.Item, new Sprite(e.Item.Position, 10, spriteTexture, spriteAtlas));
-                sprites.Add(e.Item, new Sprite(e.Item, e.Item.Position3, 10, spriteTexture, spriteAtlas));
+                MovableObject baseObject = e.Item;
+                int spriteIndex = 0;
+                if (baseObject is Car)
+                {
+                    spriteIndex = (baseObject as Car).CarInfo.Model;
+                }
+
+                sprites.Add(e.Item, new Sprite(baseObject, baseObject.Position3, spriteIndex, spriteTexture, spriteAtlas));
                 e.Item.PositionChanged += new EventHandler(MovableObject_PositionChanged);
                 e.Item.RotationChanged += new EventHandler(MovableObject_RotationChanged);
             }

@@ -43,15 +43,17 @@ namespace Hiale.GTA2NET
             set { MainGame._style = value; }
         }
 
-        private static Dictionary<int, CarPhysics> _carPhysics;
-        /// <summary>
-        /// A dictionary of all physics of all available car. Key is the model number.
-        /// </summary>
-        public static Dictionary<int, CarPhysics> CarPhysics
-        {
-            get { return MainGame._carPhysics; }
-            set { MainGame._carPhysics = value; }
-        }
+        //private static Dictionary<int, CarPhysics> _carPhysics;
+        ///// <summary>
+        ///// A dictionary of all physics of all available car. Key is the model number.
+        ///// </summary>
+        //public static Dictionary<int, CarPhysics> CarPhysics
+        //{
+        //    get { return MainGame._carPhysics; }
+        //    set { MainGame._carPhysics = value; }
+        //}
+
+        private static List<CarInfo> _carInfos;
 
         private static EventList<MovableObject> _cars;
         /// <summary>
@@ -180,7 +182,8 @@ namespace Hiale.GTA2NET
             MainGame._style = new Style();
             _style.ReadFromFile("data\\bil.sty");
 
-            _carPhysics = CarPhysicReader.ReadFromFile();
+            Dictionary<int, CarPhysics> carPhysics = CarPhysicReader.ReadFromFile();
+            _carInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
 
             BaseGame.ViewMatrix = Matrix.CreateLookAt(new Vector3(65, -181, 10), new Vector3(65, -181, 0), Vector3.Up);
             GameScreens.Push(new InGameScreen());
@@ -190,8 +193,7 @@ namespace Hiale.GTA2NET
             //
             //...
 
-            //_chasingObject = new Car(new Vector3(88.4f, 182.6f, GetHighestPoint(88, 182)));
-            _chasingObject = new Car(new Vector3(69, 186, GetHighestPoint(69, 186)));
+            _chasingObject = new Car(new Vector3(69, 186, GetHighestPoint(69, 186)), _carInfos[9]);
             Cars.Add(_chasingObject);
         }
 

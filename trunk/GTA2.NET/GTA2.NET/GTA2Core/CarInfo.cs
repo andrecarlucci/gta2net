@@ -1,25 +1,54 @@
-ï»¿//Created: 19.01.2010
+//Created: 19.01.2010
 
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Style;
 
-namespace Hiale.GTA2NET.Core.Style
+namespace Hiale.GTA2NET.Core
 {
     /// <summary>
     /// Various parameters are stored for each car. A car info structure is stored for each distinct type of car. 
     /// </summary>
-    public class CarStyle
+    public class CarInfo
     {
-
-        public CarStyle()
+        public CarInfo()
         {
             RemapList = new List<byte>();
             Doors = new List<DoorInfo>();
         }
 
+        public static List<CarInfo> CreateCarInfoCollection(Dictionary<int, CarInfo> carInfos, Dictionary<int, CarPhysics> carPhysics)
+        {
+            List<CarInfo> carInfoCollection = new List<CarInfo>();
+            foreach (KeyValuePair<int, CarInfo> carInfoItem in carInfos)
+            {
+                foreach (KeyValuePair<int, CarPhysics> carPhysicsItem in carPhysics)
+                {
+                    if (carInfoItem.Key != carPhysicsItem.Key) continue;
+                    carInfoItem.Value.Physics = carPhysicsItem.Value;
+                    carInfoCollection.Add(carInfoItem.Value);
+                }
+
+            }
+            return carInfoCollection;
+        }
+
+        /// <summary>
+        /// Physical behavior of the car.
+        /// </summary>
+        public CarPhysics Physics { get; private set; }
+
         /// <summary>
         /// Model is the car model number. Every distinct type of car has a unique model number.
         /// </summary>
         public int Model { get; set; }
+
+        public string Name
+        {
+            get
+            {
+                return Physics != null ? Physics.Name : "NoName";
+            }
+        }
 
         /// <summary>
         /// Sprite is the relative car sprite number. At least one sprite is stored for every car. The sprite number for each car is simply: car sprite number + car sprite base. In practice, the relative sprite number is actually filled in here by the game when the style is loaded. The style file only needs to store here the number of sprites used by the car ( 0 or 1 ). If a car has 0 sprites, it shares the graphic of the preceding one.
@@ -44,12 +73,12 @@ namespace Hiale.GTA2NET.Core.Style
         public byte Passengers { get; set; }
 
         /// <summary>
-        /// Wreck is the wreck graphic number to use when this car is wrecked (0-8, or 99 if canâ€™t wreck).
+        /// Wreck is the wreck graphic number to use when this car is wrecked (0-8, or 99 if can’t wreck).
         /// </summary>
         public byte Wreck { get; set; }
 
         /// <summary>
-        /// Rating is the quality rating for this car â€“ used to decide how often it is created in different areas of the city. Values are
+        /// Rating is the quality rating for this car – used to decide how often it is created in different areas of the city. Values are
         /// 1	bad
         /// 2	bad x 2
         /// 3	bad x 3
@@ -128,5 +157,10 @@ namespace Hiale.GTA2NET.Core.Style
         /// A list of doors is stored for each car.
         /// </summary>
         public List<DoorInfo> Doors { get; set; }
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }

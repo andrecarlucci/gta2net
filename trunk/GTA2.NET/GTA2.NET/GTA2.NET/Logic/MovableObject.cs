@@ -182,16 +182,13 @@ namespace Hiale.GTA2NET.Logic
 
         protected float Velocity;
 
-        public MovableObject(Vector3 position) //ToDo: Add SpriteNumber(s), Width, Height, StartUpRotation
+        public MovableObject(Vector3 startUpPosition)
         {
-            Position3 = position;
+            Position3 = startUpPosition;
+        }
 
-            ////NEW 04.03.2010
-            //_topLeftZ = position.Z;
-            //_topRightZ = position.Z;
-            //_bottomRightZ = position.Z;
-            //_bottomLeftZ = position.Z;
-
+        protected void CreateSprite()
+        {
             if (ObjectCreated != null)
                 ObjectCreated(this, new GenericEventArgs<MovableObject>(this));
         }
