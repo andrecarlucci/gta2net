@@ -43,21 +43,14 @@ namespace Hiale.GTA2NET
             set { MainGame._style = value; }
         }
 
-        //private static Dictionary<int, CarPhysics> _carPhysics;
-        ///// <summary>
-        ///// A dictionary of all physics of all available car. Key is the model number.
-        ///// </summary>
-        //public static Dictionary<int, CarPhysics> CarPhysics
-        //{
-        //    get { return MainGame._carPhysics; }
-        //    set { MainGame._carPhysics = value; }
-        //}
-
-        private static List<CarInfo> _carInfos;
+        /// <summary>
+        /// All available car data.
+        /// </summary>
+        public static List<CarInfo> CarInfos { get; private set; }
 
         private static EventList<MovableObject> _cars;
         /// <summary>
-        /// The _cars currently drive on the _map.
+        /// The cars currently drive on the map.
         /// </summary>
         public static EventList<MovableObject> Cars
         {
@@ -67,7 +60,7 @@ namespace Hiale.GTA2NET
 
         private static EventList<MovableObject> _pedestrians;
         /// <summary>
-        /// The pedestrian currently walks along the _map
+        /// The pedestrian currently walks along the map
         /// </summary>
         public static EventList<MovableObject> Pedestrians
         {
@@ -183,7 +176,7 @@ namespace Hiale.GTA2NET
             _style.ReadFromFile("data\\bil.sty");
 
             Dictionary<int, CarPhysics> carPhysics = CarPhysicReader.ReadFromFile();
-            _carInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
+            CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
 
             BaseGame.ViewMatrix = Matrix.CreateLookAt(new Vector3(65, -181, 10), new Vector3(65, -181, 0), Vector3.Up);
             GameScreens.Push(new InGameScreen());
@@ -193,7 +186,7 @@ namespace Hiale.GTA2NET
             //
             //...
 
-            _chasingObject = new Car(new Vector3(69, 186, GetHighestPoint(69, 186)), _carInfos[9]);
+            _chasingObject = new Car(new Vector3(69, 186, GetHighestPoint(69, 186)), CarInfos[9]);
             Cars.Add(_chasingObject);
         }
 
@@ -238,37 +231,9 @@ namespace Hiale.GTA2NET
                 RotationAbount = RotationScalar * _elapsedGameTime;
             }
 
-            if (ForwardAmount != 0)
-                _chasingObject.Move(ref ForwardAmount, ref RotationAbount, ref _elapsedGameTime);
+            //if (ForwardAmount != 0)
+            _chasingObject.Move(ref ForwardAmount, ref RotationAbount, ref _elapsedGameTime);
             
-
-            if (Input.KeyboardF1JustPressed)
-            {
-                if (Device.RenderState.CullMode == Microsoft.Xna.Framework.Graphics.CullMode.None)
-                {
-                    Device.RenderState.CullMode = Microsoft.Xna.Framework.Graphics.CullMode.CullCounterClockwiseFace;
-                    System.Diagnostics.Debug.WriteLine("Cullmode: CounterClockwise");
-                }
-                else
-                {
-                    Device.RenderState.CullMode = Microsoft.Xna.Framework.Graphics.CullMode.None;
-                    System.Diagnostics.Debug.WriteLine("WARNING! Cullmode: off");
-                }
-            }
-
-            //if (Input.MouseLeftButtonJustPressed && IsActive)
-            //{
-            //    _chasingObject = new Car(new Vector3(88.4f, 182.6f, GetHighestPoint(88, 182)));
-            //    //_chasingObject.Position = new Vector3(88.4f, 182.6f, GetHighestPoint(88, 182));
-            //    Cars.Add(_chasingObject);
-            //}
-
-            //if (Input.MouseRightButtonJustPressed && IsActive)
-            //{
-            //    Vector3 testVector = _chasingObject.Position;
-            //    testVector.X++;
-            //    _chasingObject.Position = testVector;
-            //}
 
             if (_chasingObject != null)
             {
@@ -281,18 +246,6 @@ namespace Hiale.GTA2NET
 
             ForwardAmount = 0;
             RotationAbount = 0;
-
-            //if (Input.GamePad.ThumbSticks.Left.X > 0)
-            //
-            //if (Input.KeyboardSpaceJustPressed)
-            //{
-            //    cameraPos.Z--;
-            //    //lookAt.Z++;
-            //    //lookAt.X++;
-            //    BaseGame.ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
-            //    //WorldMatrix = Matrix.CreateRotationZ(MathHelper.ToRadians(1));           
-            //}
-
         }
 
         //protected override void Draw(GameTime gameTime)

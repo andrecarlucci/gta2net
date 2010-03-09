@@ -182,7 +182,7 @@ namespace Hiale.GTA2NET.Logic
 
         protected float Velocity;
 
-        public MovableObject(Vector3 startUpPosition)
+        protected MovableObject(Vector3 startUpPosition)
         {
             Position3 = startUpPosition;
         }
