@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -351,18 +352,33 @@ namespace Hiale.GTA2NET.Core.Style
         {
             UInt32 vpallete = PaletteIndexes[id];
             Bitmap bmp = new Bitmap(64, 64); 
-            for  (int y = 63; y >= 0; y--)
+            BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            int stride = bmData.Stride;
+            System.IntPtr scan0 = bmData.Scan0;
+            unsafe
             {
-                for (int x = 0; x < 64; x++)
+                byte* p = (byte*)(void*)scan0;
+                int nOffset = stride - bmp.Width * 4;
+                for (int y = 0; y < bmp.Height; ++y)
                 {
-                    UInt32 tileColor = tileData[(y+(id / 4)*64)*256+(x+(id % 4)*64)];
-                    UInt32 palID = (vpallete/64)*256*64+(vpallete % 64) + tileColor * 64;
-                    UInt32 baseColor = (PhysicalPalettes[palID]) & 0xFFFFFF;
-                    Color rgbColor = Color.FromArgb((int)baseColor);
-                    UInt32 alphaColor = 0xFF - (tileColor > 0 ? (UInt32)0 : (UInt32)1) * 0xFF;
-                    bmp.SetPixel(x, y, System.Drawing.Color.FromArgb((int)alphaColor, rgbColor)); //ToDo: Optimize! http://www.bobpowell.net/lockingbits.htm
+                    for (int x = 0; x < bmp.Width; ++x)
+                    {
+                        UInt32 tileColor = tileData[(y + (id / 4) * 64) * 256 + (x + (id % 4) * 64)];
+                        UInt32 palID = (vpallete / 64) * 256 * 64 + (vpallete % 64) + tileColor * 64;
+                        UInt32 baseColor = (PhysicalPalettes[palID]) & 0xFFFFFF;
+                        byte[] color = BitConverter.GetBytes(baseColor);
+                        p[0] = color[0];
+                        p[1] = color[1];
+                        p[2] = color[2];
+                        UInt32 alphaColor = 0xFF - (tileColor > 0 ? (UInt32)0 : (UInt32)1) * 0xFF;
+                        color = BitConverter.GetBytes(alphaColor);
+                        p[3] = color[0];
+                        p += 4;
+                    }
+                    p += nOffset;
                 }
             }
+            bmp.UnlockBits(bmData);
             bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }
 
@@ -389,23 +405,35 @@ namespace Hiale.GTA2NET.Core.Style
             if (baseXXX != 0)
                 System.Diagnostics.Debug.WriteLine("Debug");
 
-            for (int y = height - 1; y >= 0; y--)
+            BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+            int stride = bmData.Stride;
+            System.IntPtr scan0 = bmData.Scan0;
+            unsafe
             {
-                for (int x = 0; x < width; x++)
+                byte* p = (byte*)(void*)scan0;
+                int nOffset = stride - bmp.Width * 4;
+                for (int y = 0; y < bmp.Height; ++y)
                 {
-                    UInt32 spriteColor = spriteData[baseXXX + ((baseX + x) + (baseY + y) * 256)];
-                    UInt32 palID = (vpallete / 64) * 256 * 64 + (vpallete % 64) + spriteColor * 64;
-                    UInt32 baseColor = (PhysicalPalettes[palID]) & 0xFFFFFF;
-                    Color rgbColor = Color.FromArgb((int)baseColor);
-
-                    UInt32 alphaColor = spriteData[spriteEntries[id].ptr + x + y * 256];
-                    UInt32 alphaColorFinal = 0xFF - (alphaColor > 0 ? (UInt32)0 : (UInt32)1) * 0xFF;
-                    //AlphaColorFinal = (AlphaColorFinal == 0 ? (UInt32)255 : 0);
-                    bmp.SetPixel(x, y, Color.FromArgb((int)alphaColorFinal, rgbColor));
+                    for (int x = 0; x < bmp.Width; ++x)
+                    {
+                        UInt32 spriteColor = spriteData[baseXXX + ((baseX + x) + (baseY + y) * 256)];
+                        UInt32 palID = (vpallete / 64) * 256 * 64 + (vpallete % 64) + spriteColor * 64;
+                        UInt32 baseColor = (PhysicalPalettes[palID]) & 0xFFFFFF;
+                        byte[] color = BitConverter.GetBytes(baseColor);
+                        p[0] = color[0];
+                        p[1] = color[1];
+                        p[2] = color[2];
+                        UInt32 alphaColor = spriteData[spriteEntries[id].ptr + x + y * 256];
+                        UInt32 alphaColorFinal = 0xFF - (alphaColor > 0 ? (UInt32)0 : (UInt32)1) * 0xFF;
+                        color = BitConverter.GetBytes(alphaColorFinal);
+                        p[3] = color[0];
+                        p += 4;
+                    }
+                    p += nOffset;
                 }
             }
-
-            //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
+            bmp.UnlockBits(bmData);
+            bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }
     }
 }
