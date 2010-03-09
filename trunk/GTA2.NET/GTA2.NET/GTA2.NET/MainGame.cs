@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using Hiale.GTA2NET.GameScreens;
 using Microsoft.Xna.Framework;
+using Hiale.GTA2NET.Core;
+using Hiale.GTA2NET.GameScreens;
 using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.Core.Style;
 using Hiale.GTA2NET.Helper;
-using Hiale.GTA2.Core;
 using Hiale.GTA2NET.Logic;
 
 namespace Hiale.GTA2NET
@@ -43,11 +43,11 @@ namespace Hiale.GTA2NET
             set { MainGame._style = value; }
         }
 
-        private static List<CarPhysics> _carPhysics;
+        private static Dictionary<int, CarPhysics> _carPhysics;
         /// <summary>
-        /// A list of all physics of each car.
+        /// A dictionary of all physics of all available car. Key is the model number.
         /// </summary>
-        public static List<CarPhysics> CarPhysics
+        public static Dictionary<int, CarPhysics> CarPhysics
         {
             get { return MainGame._carPhysics; }
             set { MainGame._carPhysics = value; }
@@ -180,8 +180,7 @@ namespace Hiale.GTA2NET
             MainGame._style = new Style();
             _style.ReadFromFile("data\\bil.sty");
 
-            CarPhysicReader carReader = new CarPhysicReader();
-            _carPhysics = carReader.ReadFromFile();
+            _carPhysics = CarPhysicReader.ReadFromFile();
 
             BaseGame.ViewMatrix = Matrix.CreateLookAt(new Vector3(65, -181, 10), new Vector3(65, -181, 0), Vector3.Up);
             GameScreens.Push(new InGameScreen());

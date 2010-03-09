@@ -23,14 +23,14 @@ namespace Hiale.GTA2NET.Core.Style
         private FontBase fontBase;
 
         private ObjectInfo[] objectInfos;
-        private List<CarInfo> carInfos;
+        private List<CarStyle> carInfos;
         private List<Delta> deltas;
         private List<Surface> Surfaces;
 
 
         public Style()
         {
-            carInfos = new List<CarInfo>();
+            carInfos = new List<CarStyle>();
             deltas = new List<Delta>();
             Surfaces = new List<Surface>();
             //PhysicalPalettes = new ushort[16384];
@@ -183,7 +183,7 @@ namespace Hiale.GTA2NET.Core.Style
             int position = 0;
             while (position < chunkSize)
             {
-                CarInfo carInfo = new CarInfo();
+                CarStyle carInfo = new CarStyle();
                 carInfo.Model = reader.ReadByte();
                 carInfo.Sprite = reader.ReadByte();
                 carInfo.Width = reader.ReadByte();
