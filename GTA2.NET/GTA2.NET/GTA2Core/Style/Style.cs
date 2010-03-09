@@ -23,14 +23,14 @@ namespace Hiale.GTA2NET.Core.Style
         private FontBase fontBase;
 
         private ObjectInfo[] objectInfos;
-        private List<CarStyle> carInfos;
         private List<Delta> deltas;
         private List<Surface> Surfaces;
 
+        public Dictionary<int, CarInfo> CarInfos { get; private set; }
 
         public Style()
         {
-            carInfos = new List<CarStyle>();
+            CarInfos = new Dictionary<int, CarInfo>();
             deltas = new List<Delta>();
             Surfaces = new List<Surface>();
             //PhysicalPalettes = new ushort[16384];
@@ -109,7 +109,7 @@ namespace Hiale.GTA2NET.Core.Style
             Array.Clear(tileData, 0, tileData.Length);
             Array.Clear(spriteData, 0, spriteData.Length);
             Array.Clear(objectInfos, 0, objectInfos.Length);
-            carInfos.Clear();
+            //CarStyleInfos.Clear();
             deltas.Clear();
             Surfaces.Clear();
             GC.Collect();
@@ -183,7 +183,7 @@ namespace Hiale.GTA2NET.Core.Style
             int position = 0;
             while (position < chunkSize)
             {
-                CarStyle carInfo = new CarStyle();
+                CarInfo carInfo = new CarInfo();
                 carInfo.Model = reader.ReadByte();
                 carInfo.Sprite = reader.ReadByte();
                 carInfo.Width = reader.ReadByte();
@@ -210,7 +210,7 @@ namespace Hiale.GTA2NET.Core.Style
                     door.Y = reader.ReadByte();
                     carInfo.Doors.Add(door);
                 }
-                carInfos.Add(carInfo);
+                CarInfos.Add(carInfo.Model, carInfo);
                 position = position + 15 + numRemaps + numDoors * 2;
             }
         }
