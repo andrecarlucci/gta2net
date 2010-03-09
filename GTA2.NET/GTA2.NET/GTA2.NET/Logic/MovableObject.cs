@@ -398,12 +398,9 @@ namespace Hiale.GTA2NET.Logic
 
         private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope, ref bool blockAboveStops, ref BlockInfo blockAbove)
         {
-            if (Position3.Z % 1 != 0) //07.03.2010, let's see if it works...
-                return false;
-
             movableSlope = false;
 
-            int currentZ = (int) Position3.Z;
+            int currentZ = (int)Math.Round(Position3.Z, 0);
             
             //check the block above the current block. If this block is empty, process the current block.
             blockAbove = MainGame.Map.CityBlocks[x, y, currentZ + 1];
@@ -413,6 +410,9 @@ namespace Hiale.GTA2NET.Logic
                     blockAboveStops = true;
                 return true;
             }
+
+            if (Position3.Z % 1 != 0) //07.03.2010, let's see if it works...
+                return false;
 
             if (block.IsEmpty) //new 6.3.2010
                 return false;
