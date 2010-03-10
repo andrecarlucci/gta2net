@@ -1,68 +1,23 @@
 ﻿//Created: 19.01.2010
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace Hiale.GTA2NET.Core.Style
 {
-    public class PaletteBase
+    public struct PaletteBase
     {
-        private ushort _Tile;
-        public ushort Tile
-        {
-            get { return _Tile; }
-            set { _Tile = value; }
-        }
+        public ushort Tile { get; set; }
 
-        private ushort _Sprite;
-        public ushort Sprite
-        {
-            get { return _Sprite; }
-            set { _Sprite = value; }
-        }
+        public ushort Sprite { get; set; }
 
-        private ushort _CarRemap;
-        public ushort CarRemap
-        {
-            get { return _CarRemap; }
-            set { _CarRemap = value; }
-        }
+        public ushort CarRemap { get; set; }
 
-        private ushort _PedRemap;
-        public ushort PedRemap
-        {
-            get { return _PedRemap; }
-            set { _PedRemap = value; }
-        }
+        public ushort PedRemap { get; set; }
 
-        private ushort _CodeObjRemap;
-        public ushort CodeObjRemap
-        {
-            get { return _CodeObjRemap; }
-            set { _CodeObjRemap = value; }
-        }
+        public ushort CodeObjRemap { get; set; }
 
-        private ushort _MapObjRemap;
-        public ushort MapObjRemap
-        {
-            get { return _MapObjRemap; }
-            set { _MapObjRemap = value; }
-        }
+        public ushort MapObjRemap { get; set; }
 
-        private ushort _UserRemap;
-        public ushort UserRemap
-        {
-            get { return _UserRemap; }
-            set { _UserRemap = value; }
-        }
+        public ushort UserRemap { get; set; }
 
-        private ushort _FontRemap;
-        public ushort FontRemap
-        {
-            get { return _FontRemap; }
-            set { _FontRemap = value; }
-        }
+        public ushort FontRemap { get; set; }
     }
 }
