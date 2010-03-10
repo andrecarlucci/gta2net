@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿//Created: 09.02.2010
 
-namespace Hiale.GTA2.Core.Map
+namespace Hiale.GTA2NET.Core.Map
 {
     public enum GroundType : byte
     {

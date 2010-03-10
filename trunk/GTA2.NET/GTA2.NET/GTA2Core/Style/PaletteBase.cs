@@ -4,20 +4,20 @@ namespace Hiale.GTA2NET.Core.Style
 {
     public struct PaletteBase
     {
-        public ushort Tile { get; set; }
+        public ushort Tile;
 
-        public ushort Sprite { get; set; }
+        public ushort Sprite;
 
-        public ushort CarRemap { get; set; }
+        public ushort CarRemap;
 
-        public ushort PedRemap { get; set; }
+        public ushort PedRemap;
 
-        public ushort CodeObjRemap { get; set; }
+        public ushort CodeObjRemap;
 
-        public ushort MapObjRemap { get; set; }
+        public ushort MapObjRemap;
 
-        public ushort UserRemap { get; set; }
+        public ushort UserRemap;
 
-        public ushort FontRemap { get; set; }
+        public ushort FontRemap;
     }
 }

@@ -1,77 +1,27 @@
 ﻿//Created 17.01.2010
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Map
 {
-    class Light
+    public struct Light
     {
-        private Color _Color;
-        public Color Color
-        {
-            get { return _Color; }
-            set { _Color = value; }
-        }
+        public Color Color;
 
-        private ushort _x;
-        public ushort X
-        {
-            get { return _x; }
-            set { _x = value; }
-        }
+        public ushort X;
 
-        private ushort _y;
-        public ushort Y
-        {
-            get { return _y; }
-            set { _y = value; }
-        }
+        public ushort Y;
 
-        private ushort _Z;
-        public ushort Z
-        {
-            get { return _Z; }
-            set { _Z = value; }
-        }
+        public ushort Z;
 
-        private ushort _Radius;
-        public ushort Radius
-        {
-            get { return _Radius; }
-            set { _Radius = value; }
-        }
+        public ushort Radius;
 
-        private byte _Intensity;
-        public byte Intensity
-        {
-            get { return _Intensity; }
-            set { _Intensity = value; }
-        }
+        public byte Intensity;
 
-        private byte _Shape;
-        public byte Shape
-        {
-            get { return _Shape; }
-            set { _Shape = value; }
-        }
+        public byte Shape;
 
-        private byte _OnTime;
-        public byte OnTime
-        {
-            get { return _OnTime; }
-            set { _OnTime = value; }
-        }
+        public byte OnTime;
 
-        private byte _OffTime;
-        public byte OffTime
-        {
-            get { return _OffTime; }
-            set { _OffTime = value; }
-        }
-
+        public byte OffTime;
     }
 }

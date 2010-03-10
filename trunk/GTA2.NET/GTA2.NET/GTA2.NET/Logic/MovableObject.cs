@@ -7,7 +7,6 @@ using System.Text;
 using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Helper;
-using Hiale.GTA2.Core.Map;
 
 namespace Hiale.GTA2NET.Logic
 {
@@ -182,9 +181,11 @@ namespace Hiale.GTA2NET.Logic
 
         protected float Velocity;
 
-        protected MovableObject(Vector3 startUpPosition)
+        protected MovableObject(Vector3 startUpPosition, float width , float height)
         {
             Position3 = startUpPosition;
+            Width = width / 64;
+            Height = height / 64;
         }
 
         protected void CreateSprite()

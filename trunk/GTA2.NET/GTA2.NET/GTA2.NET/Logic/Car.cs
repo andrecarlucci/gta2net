@@ -17,7 +17,7 @@ namespace Hiale.GTA2NET.Logic
 
         private CarWeapon _currentWeapon; //selected weapon
 
-        public Car(Vector3 startUpPosition, CarInfo carInfo) : base(startUpPosition)
+        public Car(Vector3 startUpPosition, CarInfo carInfo) : base(startUpPosition, carInfo.Width, carInfo.Height)
         {
             CarInfo = carInfo;
             CreateSprite();

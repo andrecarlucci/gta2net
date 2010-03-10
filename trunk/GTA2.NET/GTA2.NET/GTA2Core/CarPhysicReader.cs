@@ -2,8 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -16,14 +14,13 @@ namespace Hiale.GTA2NET.Core
         public static Dictionary<int,CarPhysics> ReadFromFile()
         {
             if (!File.Exists(FileName))
-                throw new Exception();
+                throw new FileNotFoundException("File not found!", FileName);
             StreamReader reader = new StreamReader(FileName);
             string text = reader.ReadToEnd();
             reader.Close();
             Dictionary<int, CarPhysics> cars = new Dictionary<int, CarPhysics>();
             try
             {
-                
                 Regex regEx = new Regex(@"f?(.*?)\ ?\{(.*)\}", RegexOptions.Multiline);
                 MatchCollection matches = regEx.Matches(text);
                 CarPhysics currentCar = null;

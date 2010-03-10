@@ -9,7 +9,6 @@ using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.Helper;
 using Microsoft.Xna.Framework;
 using System.IO;
-using Hiale.GTA2.Core.Map;
 
 namespace Hiale.GTA2NET.Renderer
 {
@@ -89,7 +88,7 @@ namespace Hiale.GTA2NET.Renderer
                         block.Position = new Vector3(x, y, z);
                         switch (block.SlopeType)
                         {
-                            case Hiale.GTA2.Core.Map.SlopeType.None:
+                            case SlopeType.None:
                                 SetUpCube(block, LidLayer);
                                 break;
                             case SlopeType.Up26Low:
