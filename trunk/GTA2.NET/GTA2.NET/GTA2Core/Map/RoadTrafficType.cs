@@ -1,15 +1,13 @@
 ﻿//Created: 26.01.2010
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Hiale.GTA2NET.Core.Map
 {
     /// <summary>
     /// Dummy cars use this to see where they are allowed to drive (i.e. which side of the road to drive on, where the corners & junctions are, etc.). The green arrows must be set up perfectly for the game to function.
     /// </summary>
+    [Flags]
     public enum RoadTrafficType : byte
     {
         GreenLeft = 1,
