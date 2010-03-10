@@ -77,7 +77,7 @@ namespace Hiale.GTA2NET.Core.Style
                         ReadDeltaIndex(reader, chunkSize);
                         break;
                     //case "DELS": //Delta Store
-                    //    ReadDeltaStore(reader, ChunkSize);
+                    //    ReadDeltaStore(reader, chunkSize);
                     //    break; 
                     case "CARI": //Car Info
                         ReadCars(reader, chunkSize);
@@ -102,7 +102,7 @@ namespace Hiale.GTA2NET.Core.Style
             }
             reader.Close();
             //SaveTiles();
-            //SaveSprites();
+            SaveSprites();
 
             //Clean-up
             Array.Clear(PaletteIndexes, 0, PaletteIndexes.Length);
@@ -182,15 +182,11 @@ namespace Hiale.GTA2NET.Core.Style
         {
             System.Diagnostics.Debug.WriteLine("Reading car infos...");
             int position = 0;
-            int offset = 0;
             while (position < chunkSize)
             {
                 CarInfo carInfo = new CarInfo();
                 carInfo.Model = reader.ReadByte();
-                byte sprite = reader.ReadByte();
-                if (sprite == 0)
-                    offset++;
-                carInfo.Sprite = carInfo.Model - (sprite + offset);
+                carInfo.Sprite = reader.ReadByte();
                 carInfo.Width = reader.ReadByte();
                 carInfo.Height = reader.ReadByte();
                 byte numRemaps = reader.ReadByte();
@@ -225,7 +221,6 @@ namespace Hiale.GTA2NET.Core.Style
                 CarInfos.Add(carInfo.Model, carInfo);
                 position = position + 15 + numRemaps + numDoors * 2;
             }
-            System.Diagnostics.Debug.WriteLine("OK");
         }
 
         private void ReadMapObjects(BinaryReader reader, int chunkSize)
@@ -384,16 +379,45 @@ namespace Hiale.GTA2NET.Core.Style
 
         private void SaveSprites()
         {
-            for (int i = 0; i < spriteEntries.Length; i++)
+            foreach (KeyValuePair<int, CarInfo> carInfoItem in CarInfos)
             {
-                SaveSprite("textures\\sprites\\" + i + ".png", i);
+                SaveSprite("textures\\sprites\\", carInfoItem.Key);
             }
+            //for (int i = 0; i < CarInfos.Count; i++)
+            //{
+            //    SaveSprite("textures\\sprites\\", i);
+            //}
         }
 
-        private void SaveSprite(string fileName, int id)
+        private void SaveSprite(string path, int id)
         {
-            UInt32 vpallete = PaletteIndexes[paletteBase.Tile + id];
+            if (id >= 11)
+                System.Diagnostics.Debug.WriteLine("OK");
+            UInt32 basePalette = PaletteIndexes[paletteBase.Tile + id];
+            SaveSpriteRemap(path + id + ".png", id, basePalette);
 
+            UInt32 remapPalette = PaletteIndexes[paletteBase.Sprite + paletteBase.Tile + id];
+            List<byte> remapList = null;
+            remapList = CarInfos[id].RemapList;
+            //foreach (KeyValuePair<int, CarInfo> carInfoItem in CarInfos)
+            //{
+            //    if (id == carInfoItem.Value.Sprite)
+            //    {
+            //        remapList = carInfoItem.Value.RemapList;
+            //    }
+            //}
+            if (remapList == null)
+                return;
+
+            for (int i = 0; i < remapList.Count; i++)
+            {
+                if (remapList[i] < 35) //There is a palette we skip here (according to http://en.wikigta.org/wiki/Code_lists_%28GTA2%29), but it kinda looks messed up!
+                    SaveSpriteRemap(path + id + "_" + remapList[i] + ".png", id, remapPalette + remapList[i]);
+                 }
+        }
+
+        private void SaveSpriteRemap(string fileName, int id, UInt32 palette)
+        {
             int width = spriteEntries[id].Width;
             int height = spriteEntries[id].Height;
 
@@ -401,9 +425,6 @@ namespace Hiale.GTA2NET.Core.Style
 
             int baseX = (int)(spriteEntries[id].ptr % 256);
             int baseY = (int)(spriteEntries[id].ptr / 256);
-            int baseXXX = (int)(spriteEntries[id].ptr - baseX - baseY * 256); //always 0
-            if (baseXXX != 0)
-                System.Diagnostics.Debug.WriteLine("Debug");
 
             BitmapData bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
             int stride = bmData.Stride;
@@ -416,8 +437,8 @@ namespace Hiale.GTA2NET.Core.Style
                 {
                     for (int x = 0; x < bmp.Width; ++x)
                     {
-                        UInt32 spriteColor = spriteData[baseXXX + ((baseX + x) + (baseY + y) * 256)];
-                        UInt32 palID = (vpallete / 64) * 256 * 64 + (vpallete % 64) + spriteColor * 64;
+                        UInt32 spriteColor = spriteData[(baseX + x) + (baseY + y) * 256];
+                        UInt32 palID = (palette / 64) * 256 * 64 + (palette % 64) + spriteColor * 64;
                         UInt32 baseColor = (PhysicalPalettes[palID]) & 0xFFFFFF;
                         byte[] color = BitConverter.GetBytes(baseColor);
                         p[0] = color[0];
