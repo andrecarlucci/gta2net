@@ -1,9 +1,6 @@
 ﻿//Created: 25.01.2010
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -17,27 +14,17 @@ namespace Hiale.GTA2NET.Core.Map
 
     public class BlockFace
     {
-        private ushort baseValue;
-
-        private bool _IsCeiling;
         /// <summary>
         /// IsCeiling indicates if this face is a ceiling (true) or left, right, top, bottom. Several properties cannot be used in either selection.
         /// </summary>
-        public bool IsCeiling
-        {
-            get { return _IsCeiling; }
-        }
+        public bool IsCeiling { get; private set; }
 
-        private int _TileNumber;
         /// <summary>
         /// Tile graphic number simply indicates which of the possible 1024 tile graphics to draw on this surface. It serves as an index into the tile information in the style file. A value of 0 means leave it blank. 992-1022 are reserved for internal use by the game engine. 1023 is used as a dummy tile number to mark 3-sided diagonal slopes.
         /// </summary>
-        public int TileNumber
-        {
-            get { return _TileNumber; }
-        }
+        public int TileNumber { get; private set; }
 
-        private bool _Wall;
+        private readonly bool _wall;
         /// <summary>
         /// Wall indicates whether or not a car, ped or object should collide with this tile.
         /// </summary>
@@ -47,11 +34,11 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 if (IsCeiling)
                     throw new NotSupportedException("A ceiling cannot have a Wall property! Use LightningLevel instead.");
-                return _Wall;
+                return _wall;
             }
         }
 
-        private bool _BulletWall;
+        private readonly bool _bulletWall;
         /// <summary>
         /// BulletWall indicates whether or not a bullet should collide with this tile.
         /// </summary>
@@ -61,11 +48,11 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 if (IsCeiling)
                     throw new NotSupportedException("A ceiling cannot have a ButtetWall property! Use LightningLevel instead.");
-                return _BulletWall;
+                return _bulletWall;
             }
         }
 
-        private byte _LightningLevel;
+        private readonly byte _lightningLevel;
         /// <summary>
         /// Lighting level marks which shading level to apply to a lid tile. 0 is normal brightness. 1-3 are increasing levels of darkness.
         /// </summary>
@@ -75,37 +62,25 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 if (!IsCeiling)
                     throw new NotSupportedException("A left, right, top & bottom face cannot have a LightningLevel property! Use Wall and BulletWall instead.");
-                return _LightningLevel;
+                return _lightningLevel;
             }      
         }
 
-        private bool _Flat;
         /// <summary>
         /// Flat indicates whether or not this tile should be treated as a flat. This means that it gets drawn transparently, and (except for a lid ) the tile opposite is used as the graphic for the reverse side.
         /// If both matching sides of a block (i.e. top and bottom or left and right) are flat, then both tiles are drawn at both positions.
         /// </summary>
-        public bool Flat
-        {
-            get { return _Flat; }
-        }
+        public bool Flat { get; private set; }
 
-        private bool _Flip;
         /// <summary>
         /// Flip indicates whether or not this tile is to be drawn flipped left to right.
         /// </summary>
-        public bool Flip
-        {
-            get { return _Flip; }
-        }
+        public bool Flip { get; private set; }
 
-        private RotationType _Rotation;
         /// <summary>
         /// Rotation describes a rotation to turn this tile by when drawing it
         /// </summary>
-        public RotationType Rotation
-        {
-            get { return _Rotation; }
-        }
+        public RotationType Rotation { get; private set; }
 
         /// <summary>
         /// Represents a face (left, right, top, bottom, lid) of a block.
@@ -114,8 +89,7 @@ namespace Hiale.GTA2NET.Core.Map
         /// <param name="ceiling">Whether this face is a ceiling face.</param>
         public BlockFace(ushort value, bool ceiling)
         {
-            baseValue = value;
-            _IsCeiling = ceiling;
+            IsCeiling = ceiling;
 
             if (value == 0)
                 return;
@@ -127,46 +101,46 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 tile = tile + (value & (int)Math.Pow(2, i));
             }
-            _TileNumber = tile;
+            TileNumber = tile;
 
             if (IsCeiling)
             {
-                _Wall = Helper.CheckBit(value, 10); //Bit 10
-                _BulletWall = Helper.CheckBit(value, 11); //Bit 11
+                _wall = Helper.CheckBit(value, 10); //Bit 10
+                _bulletWall = Helper.CheckBit(value, 11); //Bit 11
             }
             else
             {
                 bool bit10 = Helper.CheckBit(value, 10);
                 bool bit11 = Helper.CheckBit(value, 11);
                 if (!bit10 && !bit11)
-                    _LightningLevel = 0;
+                    _lightningLevel = 0;
                 if (bit10 && !bit11)
-                    _LightningLevel = 1;
+                    _lightningLevel = 1;
                 if (bit10 && bit11)
-                    _LightningLevel = 2;
+                    _lightningLevel = 2;
                 if (bit10 && bit11)
-                    _LightningLevel = 3;
+                    _lightningLevel = 3;
             }
 
-            _Flat = Helper.CheckBit(value, 12); //Bit 12
-            _Flip = Helper.CheckBit(value, 13); //Bit 13
+            Flat = Helper.CheckBit(value, 12); //Bit 12
+            Flip = Helper.CheckBit(value, 13); //Bit 13
 
             bool bit14 = Helper.CheckBit(value, 14);
             bool bit15 = Helper.CheckBit(value, 15);
             if (!bit14 && !bit15)
-                _Rotation = RotationType.RotateNone;
+                Rotation = RotationType.RotateNone;
             if (bit14 && !bit15)
-                _Rotation = RotationType.Rotate90;
+                Rotation = RotationType.Rotate90;
             if (!bit14 && bit15)
-                _Rotation = RotationType.Rotate180;
+                Rotation = RotationType.Rotate180;
             if (bit14 && bit15)
-                _Rotation = RotationType.Rotate270;
+                Rotation = RotationType.Rotate270;
         }
 
         public BlockFace(int tileNumber, RotationType rotation) //remove, just for debugging purpose
         {
-            _TileNumber = tileNumber;
-            _Rotation = rotation;
+            TileNumber = tileNumber;
+            Rotation = rotation;
         }
 
         public override string ToString()
@@ -191,7 +165,7 @@ namespace Hiale.GTA2NET.Core.Map
                 rotation += " flip)";
             else
                 rotation += ")";
-            return TileNumber.ToString() + rotation;
+            return TileNumber + rotation;
         }
 
 

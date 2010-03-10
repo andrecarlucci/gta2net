@@ -56,8 +56,8 @@ namespace Hiale.GTA2NET.Core.Map
             BinaryReader reader = new BinaryReader(stream);
             System.Text.Encoding encoder = System.Text.Encoding.ASCII;
             reader.ReadBytes(4); //GBMP
-            int Version = reader.ReadUInt16();
-            System.Diagnostics.Debug.WriteLine("Map version: " + Version);
+            int version = reader.ReadUInt16();
+            System.Diagnostics.Debug.WriteLine("Map version: " + version);
             while (stream.Position < stream.Length)
             {
                 string chunkType = encoder.GetString(reader.ReadBytes(4));
@@ -100,15 +100,15 @@ namespace Hiale.GTA2NET.Core.Map
                     baseOffsets[i,j] = reader.ReadUInt32();
                 }
             }
-            uint ColumnCount = reader.ReadUInt32();
-            uint[] Columns = new uint[ColumnCount];
-            for (int i = 0; i < ColumnCount; i++)
+            uint columnCount = reader.ReadUInt32();
+            uint[] columns = new uint[columnCount];
+            for (int i = 0; i < columnCount; i++)
             {
-                Columns[i] = reader.ReadUInt32();
+                columns[i] = reader.ReadUInt32();
             }
-            uint BlockCount = reader.ReadUInt32();
-            BlockInfo[] Blocks = new BlockInfo[BlockCount];
-            for (int i = 0; i < BlockCount; i++)
+            uint blockCount = reader.ReadUInt32();
+            BlockInfo[] blocks = new BlockInfo[blockCount];
+            for (int i = 0; i < blockCount; i++)
             {
                 BlockInfo blockInfo = new BlockInfo();
                 blockInfo.Left = new BlockFace(reader.ReadUInt16(), false);
@@ -119,51 +119,51 @@ namespace Hiale.GTA2NET.Core.Map
                 blockInfo.Arrows = (RoadTrafficType)reader.ReadByte(); //ToDo: Check, don't know if this works...
                 //blockInfo.SlopeType = reader.ReadByte();
                 blockInfo.ParseSlope(reader.ReadByte());
-                Blocks[i] = blockInfo;
+                blocks[i] = blockInfo;
             }
-            CreateUncompressedMap(baseOffsets, Columns, Blocks);
+            CreateUncompressedMap(baseOffsets, columns, blocks);
         }
 
-        private void ReadZones(BinaryReader reader, int ChunkSize, System.Text.Encoding encoder)
+        private void ReadZones(BinaryReader reader, int chunkSize, System.Text.Encoding encoder)
         {
-            int Position = 0;
-            while (Position < ChunkSize)
+            int position = 0;
+            while (position < chunkSize)
             {
                 Zone zone = new Zone();
                 zone.Type = (ZoneType)reader.ReadSByte();
                 zone.Rectangle = new Microsoft.Xna.Framework.Rectangle(reader.ReadSByte(), reader.ReadSByte(), reader.ReadSByte(), reader.ReadSByte());
-                int NameLength = reader.ReadSByte();
-                zone.Name = encoder.GetString(reader.ReadBytes(NameLength));
+                int nameLength = reader.ReadSByte();
+                zone.Name = encoder.GetString(reader.ReadBytes(nameLength));
                 Zones.Add(zone);
-                Position = Position + 6 + NameLength;
+                position = position + 6 + nameLength;
             }
         }
 
-        private void ReadAnimation(BinaryReader reader, int ChunkSize)
+        private void ReadAnimation(BinaryReader reader, int chunkSize)
         {
-            int Position = 0;
-            while (Position < ChunkSize)
+            int position = 0;
+            while (position < chunkSize)
             {
                 TileAnimation anim = new TileAnimation();
                 anim.BaseTile = reader.ReadUInt16();
                 anim.FrameRate = reader.ReadByte();
                 anim.Repeat = reader.ReadByte();
-                byte AnimLength = reader.ReadByte();
+                byte animLength = reader.ReadByte();
                 reader.ReadByte(); //Unused
-                for (byte i = 0; i < AnimLength; i++)
+                for (byte i = 0; i < animLength; i++)
                 {
                     anim.Tiles.Add(reader.ReadUInt16());
                 }
                 Animations.Add(anim);
-                Position = Position + 6 + AnimLength * 2;
+                position = position + 6 + animLength * 2;
             }
         }
 
-        private void ReadObjects(BinaryReader reader, int ChunkSize)
+        private void ReadObjects(BinaryReader reader, int chunkSize)
         {
             System.Diagnostics.Debug.WriteLine("Map objects not implemented yet!");
-            int Position = 0;
-            while (Position < ChunkSize)
+            int position = 0;
+            while (position < chunkSize)
             {
                 //ToDo
                 reader.ReadUInt16(); //x
@@ -174,10 +174,10 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
-        private void ReadLights(BinaryReader reader, int ChunkSize)
+        private void ReadLights(BinaryReader reader, int chunkSize)
         {
-            int Position = 0;
-            while (Position < ChunkSize)
+            int position = 0;
+            while (position < chunkSize)
             {
                 Light light = new Light();
                 byte[] color = reader.ReadBytes(4);
@@ -191,24 +191,24 @@ namespace Hiale.GTA2NET.Core.Map
                 light.OnTime = reader.ReadByte();
                 light.OffTime = reader.ReadByte();
                 Lights.Add(light);
-                Position = Position + 16;
+                position = position + 16;
             }            
         }
 
-        private void CreateUncompressedMap(uint[,] baseOffsets, uint[] Columns, BlockInfo[] Blocks)
+        private void CreateUncompressedMap(uint[,] baseOffsets, uint[] columns, BlockInfo[] blocks)
         {
             for (int i = 0; i < 256; i++)
             {
                 for (int j = 0; j < 256; j++)
                 {
-                    uint ColumnIndex = baseOffsets[j,i];
-                    uint Height = Columns[ColumnIndex] & 0xFF;
-                    uint Offset = (Columns[ColumnIndex] & 0xFF00) >> 8;
-                    for (int bk = 0; bk < Height; bk++)
+                    uint columnIndex = baseOffsets[j,i];
+                    uint height = columns[columnIndex] & 0xFF;
+                    uint offset = (columns[columnIndex] & 0xFF00) >> 8;
+                    for (int k = 0; k < height; k++)
                     {
-                        if (bk >= Offset)
+                        if (k >= offset)
                         {
-                            cityBlocks[i, j, bk] = Blocks[Columns[ColumnIndex + bk - Offset + 1]];
+                            cityBlocks[i, j, k] = blocks[columns[columnIndex + k - offset + 1]];
                         }
                     }
                 }

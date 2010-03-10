@@ -1,126 +1,64 @@
 ﻿//Created: 17.01.2010
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Hiale.GTA2.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map
 {
     public class BlockInfo
     {
-        private Vector3 position;
         /// <summary>
         /// Position of this block in a map.
         /// </summary>
-        public Vector3 Position
-        {
-            get { return position; }
-            set { position = value; }
-        }
+        public Vector3 Position { get; set; }
 
+        public BlockFace Left { get; set; }
 
-        private BlockFace _Left;
-        public BlockFace Left
-        {
-            get { return _Left; }
-            set { _Left = value; }
-        }
+        public BlockFace Right { get; set; }
 
-        private BlockFace _Right;
-        public BlockFace Right
-        {
-            get { return _Right; }
-            set { _Right = value; }
-        }
+        public BlockFace Top { get; set; }
 
-        private BlockFace _Top;
-        public BlockFace Top
-        {
-            get { return _Top; }
-            set { _Top = value; }
-        }
+        public BlockFace Bottom { get; set; }
 
-        private BlockFace _Bottom;
-        public BlockFace Bottom
-        {
-            get { return _Bottom; }
-            set { _Bottom = value; }
-        }
+        public BlockFace Lid { get; set; }
 
-        private BlockFace _Lid;
-        public BlockFace Lid
-        {
-            get { return _Lid; }
-            set { _Lid = value; }
-        }
-
-        private RoadTrafficType _Arrows;
         /// <summary>
         /// ToDo
         /// </summary>
-        public RoadTrafficType Arrows
-        {
-            get { return _Arrows; }
-            set { _Arrows = value; }
-        }
+        public RoadTrafficType Arrows { get; set; }
 
-        //private byte _Arrows;
-        ///// <summary>
-        ///// ToDo - enum
-        ///// </summary>
-        //public byte Arrows
-        //{
-        //    get { return _Arrows; }
-        //    set { _Arrows = value; }
-        //}
-        
 
-        private byte _BaseSlopeType;
         /// <summary>
         /// ToDo - enum
         /// </summary>
-        public byte BaseSlopeType
-        {
-            get { return _BaseSlopeType; }
-        }
+        public byte BaseSlopeType { get; private set; }
 
-        private GroundType _GroundType;
-        public GroundType GroundType
-        {
-            get { return _GroundType; }
-        }
+        public GroundType GroundType { get; private set; }
 
-        private SlopeType _SlopeType;
-        public SlopeType SlopeType
-        {
-            get { return _SlopeType; }
-        }
+        public SlopeType SlopeType { get; private set; }
 
-        public void ParseSlope(byte SlopeType)
+        public void ParseSlope(byte type)
         {
-            _BaseSlopeType = SlopeType;
+            BaseSlopeType = type;
 
-            if (SlopeType == 0)
+            if (type == 0)
                 return;
 
             int groundType = 0;
-            groundType += (SlopeType & 1);
-            groundType += (SlopeType & 2);
-            _GroundType = (GroundType)groundType;
+            groundType += (type & 1);
+            groundType += (type & 2);
+            GroundType = (GroundType)groundType;
 
-            if (SlopeType < 4)
+            if (type < 4)
                 return;
 
             int slopeType = 0;
             for (int i = 2; i < 8; i++)
             {
-                if (Helper.CheckBit(SlopeType, i))
+                if (Helper.CheckBit(type, i))
                     slopeType += (int)Math.Pow(2, i - 2);
             }
-            _SlopeType = (SlopeType)slopeType;
+            SlopeType = (SlopeType)slopeType;
         }
 
         public bool IsEmpty
@@ -190,11 +128,6 @@ namespace Hiale.GTA2NET.Core.Map
         //{
         //    return ((SlopeType & 1) == 1) && ((SlopeType & 2) == 2); //Bit 0 and Bit 1 are both 1
         //}
-
-        public BlockInfo()
-        {
-
-        }
 
         public override string ToString()
         {

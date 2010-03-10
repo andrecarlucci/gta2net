@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿//Created: 09.03.2010
+
+using System;
 
 namespace Hiale.GTA2NET.Core.Style
 {

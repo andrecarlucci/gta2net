@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Hiale.GTA2.Core.Style
+namespace Hiale.GTA2NET.Core.Style
 {
     public class Delta
     {

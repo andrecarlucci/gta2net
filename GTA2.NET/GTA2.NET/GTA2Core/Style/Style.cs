@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Drawing;
-using Hiale.GTA2.Core.Style;
 
 namespace Hiale.GTA2NET.Core.Style
 {
@@ -210,11 +209,11 @@ namespace Hiale.GTA2NET.Core.Style
                 carInfo.RearWheelOffset = reader.ReadByte();
                 carInfo.FrontWindowOffset = reader.ReadByte();
                 carInfo.RearWindowOffset = reader.ReadByte();
-                carInfo.InfoFlagsBase = reader.ReadByte();
-                carInfo.InfoFlags = (CarInfoFlags)carInfo.InfoFlagsBase;
-                carInfo.InfoFlags2Base = reader.ReadByte();
-                bool infoFlags2Value0 = Helper.CheckBit(carInfo.InfoFlags2Base, 0);
-                bool infoFlags2Value1 = Helper.CheckBit(carInfo.InfoFlags2Base, 1);
+                byte infoFlag = reader.ReadByte();
+                carInfo.InfoFlags = (CarInfoFlags)infoFlag;
+                byte infoFlag2 = reader.ReadByte();
+                bool infoFlags2Value0 = Helper.CheckBit(infoFlag2, 0);
+                bool infoFlags2Value1 = Helper.CheckBit(infoFlag2, 1);
                 if (infoFlags2Value0)
                     carInfo.InfoFlags += 0x100;
                 if (infoFlags2Value1)
@@ -235,7 +234,6 @@ namespace Hiale.GTA2NET.Core.Style
                     CarInfos.Add(carInfo.Model, carInfo);
                 position = position + 15 + numRemaps + numDoors * 2;
             }
-            System.Diagnostics.Debug.WriteLine("OK");
         }
 
         private void ReadMapObjects(BinaryReader reader, int chunkSize)

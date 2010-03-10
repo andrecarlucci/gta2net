@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Hiale.GTA2.Core.Style
+namespace Hiale.GTA2NET.Core.Style
 {
     public enum SurfaceType : byte
     {
@@ -14,21 +14,11 @@ namespace Hiale.GTA2.Core.Style
 
     public class Surface
     {
-        private SurfaceType type;
-        public SurfaceType Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
+        public SurfaceType Type { get; set; }
 
-        private List<int> tiles;
-        public List<int> Tiles
-        {
-            get { return tiles; }
-            set { tiles = value; }
-        }
+        public List<int> Tiles { get; set; }
 
-        public Surface(SurfaceType Type)
+        public Surface(SurfaceType type)
         {
             Tiles = new List<int>();
         }

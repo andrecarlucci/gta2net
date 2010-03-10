@@ -91,7 +91,6 @@
     <Compile Include="Map\BlockFace.cs" />
     <Compile Include="Map\BlockInfo.cs" />
     <Compile Include="Map\RoadTrafficType.cs" />
-    <Compile Include="Map\JunctionList.cs" />
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Map\MapObject.cs" />
@@ -104,13 +103,11 @@
     <Compile Include="Style\DoorInfo.cs" />
     <Compile Include="Style\FontBase.cs" />
     <Compile Include="Style\ObjectInfo.cs" />
-    <Compile Include="Style\Palette.cs" />
     <Compile Include="Style\PaletteBase.cs" />
     <Compile Include="Style\SpriteBase.cs" />
     <Compile Include="Style\SpriteEntry.cs" />
     <Compile Include="Style\Style.cs" />
     <Compile Include="Style\Surface.cs" />
-    <Compile Include="WorldObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <NestedContentProject Include="Content\Content.contentproj">

@@ -8,7 +8,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Helper;
 using System.IO;
-using Hiale.GTA2.Core;
 using Hiale.GTA2NET.Logic;
 
 namespace Hiale.GTA2NET.Renderer

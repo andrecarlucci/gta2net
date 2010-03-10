@@ -1,9 +1,5 @@
 ﻿//Created 17.01.2010
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map
@@ -80,26 +76,11 @@ namespace Hiale.GTA2NET.Core.Map
     /// </summary>
     public class Zone
     {
-        ZoneType _Type;
-        public ZoneType Type
-        {
-            get { return _Type; }
-            set { _Type = value; }
-        }
+        public ZoneType Type { get; set; }
 
-        Rectangle _Rectangle;
-        public Rectangle Rectangle
-        {
-            get { return _Rectangle; }
-            set { _Rectangle = value; }
-        }
+        public Rectangle Rectangle { get; set; }
 
-        string _Name;
-        public string Name
-        {
-            get { return _Name; }
-            set { _Name = value; }
-        }
+        public string Name { get; set; }
 
         public override string ToString()
         {
