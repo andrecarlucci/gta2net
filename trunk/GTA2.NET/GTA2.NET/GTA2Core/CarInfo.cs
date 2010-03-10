@@ -90,7 +90,7 @@ namespace Hiale.GTA2NET.Core
         /// 23	good x 3
         /// 99	not recycled
         /// </summary>
-        public byte Rating { get; set; }
+        public byte Rating { get; set; } //ToDo enum
 
         /// <summary>
         /// FrontWheelOffset is the distances in pixels from the centre of the car to the front axle.
@@ -123,35 +123,35 @@ namespace Hiale.GTA2NET.Core
         //}
 
         /// <summary>
-        /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this car. Note that these palette numbers are relative to the start of the car remap palette area.
+        /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this car.
         /// </summary>
         public List<byte> RemapList { get; set; }
 
-        /// <summary>
-        /// InfoFlags is a bitmap with the following fields:
-        /// bit	value	name	meaning
-        /// 0	0x01	ped_jump	1 if this car is too high for a ped to jump,  else 0
-        /// 1	0x02	emerg_lights	1 if this car has emergency lights (e.g. police car), else 0
-        /// 2	0x04	roof_lights	1 if this car has roof lights (come on with headlights), else 0
-        /// 3	0x08	cab	1 if this car can be used as an artic cab, else 0
-        /// 4	0x10	trailer	1 if this car can be used as an artic trailer, else 0
-        /// 5	0x20	forhire_lights	1 if this car has forhire lights (e.g. taxi) else 0
-        /// 6	0x40	roof_decal	1 if this car has a roof decal (e.g. TV van) else 0
-        /// 7	0x80	rear_emerg_lights	1 if this car has rear emergency lights ( else 0 )
-        /// NOTE:
-        /// -	no car can have more than one out of emerg_lights, roof_lights, forhire_lights & roof decal.
-        /// -	no car cab be both cab and trailer
-        /// -	a car with rear emerg lights must have emerg lights as well
-        /// </summary>
-        public byte InfoFlagsBase { get; set; }
+        ///// <summary>
+        ///// InfoFlags is a bitmap with the following fields:
+        ///// bit	value	name	meaning
+        ///// 0	0x01	ped_jump	1 if this car is too high for a ped to jump,  else 0
+        ///// 1	0x02	emerg_lights	1 if this car has emergency lights (e.g. police car), else 0
+        ///// 2	0x04	roof_lights	1 if this car has roof lights (come on with headlights), else 0
+        ///// 3	0x08	cab	1 if this car can be used as an artic cab, else 0
+        ///// 4	0x10	trailer	1 if this car can be used as an artic trailer, else 0
+        ///// 5	0x20	forhire_lights	1 if this car has forhire lights (e.g. taxi) else 0
+        ///// 6	0x40	roof_decal	1 if this car has a roof decal (e.g. TV van) else 0
+        ///// 7	0x80	rear_emerg_lights	1 if this car has rear emergency lights ( else 0 )
+        ///// NOTE:
+        ///// -	no car can have more than one out of emerg_lights, roof_lights, forhire_lights & roof decal.
+        ///// -	no car cab be both cab and trailer
+        ///// -	a car with rear emerg lights must have emerg lights as well
+        ///// </summary>
+        //public byte InfoFlagsBase { get; set; }
 
-        /// <summary>
-        /// InfoFlags2 is a bitmap with the following fields:
-        /// bit	value	name	meaning
-        /// 0	0x01	collide_over	1 if this car can drive over other cars, else 0
-        /// 1	0x02	popup	1 if this car has popup headlights, else 0
-        /// </summary>
-        public byte InfoFlags2Base { get; set; }
+        ///// <summary>
+        ///// InfoFlags2 is a bitmap with the following fields:
+        ///// bit	value	name	meaning
+        ///// 0	0x01	collide_over	1 if this car can drive over other cars, else 0
+        ///// 1	0x02	popup	1 if this car has popup headlights, else 0
+        ///// </summary>
+        //public byte InfoFlags2Base { get; set; }
 
         public CarInfoFlags InfoFlags { get; set; }
 

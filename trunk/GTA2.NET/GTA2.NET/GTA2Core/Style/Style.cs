@@ -104,7 +104,7 @@ namespace Hiale.GTA2NET.Core.Style
             }
             reader.Close();
             //SaveTiles();
-            SaveSprites();
+            //SaveSprites();
 
             //Clean-up
             Array.Clear(PaletteIndexes, 0, PaletteIndexes.Length);
@@ -393,52 +393,85 @@ namespace Hiale.GTA2NET.Core.Style
 
         private void SaveSprites()
         {
-            //foreach (KeyValuePair<int, CarInfo> carInfoItem in CarInfos)
-            //{
-            //    SaveSprite("textures\\sprites\\", carInfoItem.Key);
-            //}
-            //for (int i = 0; i < CarInfos.Count; i++)
-            //{
-            //    if (CarInfos[i].Sprite > 0)
-            //        SaveSprite("textures\\sprites\\", i);
-            //}
-
+            //cars
             foreach (KeyValuePair<int, List<int>> carSpriteItem in _carSprites)
             {
-                SaveSprite("textures\\sprites\\", carSpriteItem.Key, carSpriteItem.Value);
+                SaveCarSprite("textures\\sprites\\cars\\", carSpriteItem.Key, carSpriteItem.Value);
             }
-            System.Diagnostics.Debug.WriteLine("OK");
+            
+            //Peds
+            /*             
+            Remaps
+            0 	Cop
+            1 	Green SWAT cop
+            2 	Red SWAT cop
+            3 	Yellow SWAT cop
+            4 	Soldier
+            5 	Redneck #1
+            6 	Redneck #2
+            7 	SRS Scientist
+            8 	Zaibatsu member
+            9 	Hare Krishna member
+            10 	Russian
+            11 	Loonie
+            12 	Elvis
+            13 	Yakuza
+            14 	Fire fighter
+            15 	Car jacker
+            16 	Medic
+            17 	Pickpocket
+            18 	Blue pedestrian
+            19 	Light blue pedestrian
+            20 	Red pedestrian
+            21 	Pedestrian
+            22 	Prisoner
+            23 	Poisened pedestrian
+            24 	Poisened pedestrian
+            25 	Claude Speed (default playerped)
+            26 	Naked pedestrian
+            27  t/m 52 	Other normal pedestrians 
+            */
+            const string path = "textures\\sprites\\peds\\";
+            UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + paletteBase.CarRemap];
+            //int remapPaletteEnd = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + paletteBase.CarRemap + paletteBase.PedRemap];
+            //int remapCount = remapPaletteEnd - remapPalette;
+            for (int i = spriteBase.Ped; i < spriteBase.CodeObj; i++)
+            {
+                UInt32 basePalette = PaletteIndexes[paletteBase.Tile + i];
+                SaveSpriteRemap(path + "\\" + i + "_-1.png", i, (basePalette));
+                for (int j = 0; j < 53; j++)
+                {
+                    Directory.CreateDirectory(path + j);
+                    SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
+                }
+            }
+            System.Diagnostics.Debug.WriteLine("Done!");
         }
 
-        private void SaveSprite(string path, int spriteID, IList<int> modelList)
+        private void SavePedSprite(string path, int spriteID)
         {
-            //if (spriteID != 11)
-            //    return;
+
+        }
+
+        private void SaveCarSprite(string path, int spriteID, IList<int> modelList)
+        {
             UInt32 basePalette = PaletteIndexes[paletteBase.Tile + spriteID];
-            UInt32 remapPalette = PaletteIndexes[paletteBase.Sprite + paletteBase.Tile];
-            //UInt32 remapPalette = PaletteIndexes[paletteBase.Sprite + paletteBase.Tile + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
+            UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite];
+            //UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
             for (int i = 0; i < modelList.Count; i++)
             {
-                SaveSpriteRemap(path + spriteID + ".png", spriteID, basePalette);
+                //SaveSpriteRemap(path + spriteID + ".png", spriteID, basePalette); //this way, models which use a shared sprite, only get's saved once. (spriteID.png)
+                SaveSpriteRemap(path + spriteID + "_" + modelList[i] + "_-1.png", spriteID, basePalette); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
                 List<byte> remapList = CarInfos[modelList[i]].RemapList;
                 for (int j = 0; j < remapList.Count; j++)
                 {
                     byte remapID = remapList[j];
-                    if (remapID >= 35) //hack
-                        remapID--;
-                    SaveSpriteRemap(path + spriteID + "_" + modelList[i] + "_" + remapID + ".png", spriteID, remapPalette + remapID);
+                    byte remapIDhack = remapID;
+                    if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
+                        remapIDhack--;
+                    SaveSpriteRemap(path + spriteID + "_" + modelList[i] + "_" + remapID + ".png", spriteID, remapPalette + remapIDhack);
                 }
             }
-
-
-            //UInt32 remapPalette = PaletteIndexes[paletteBase.Sprite + paletteBase.Tile + spriteID];
-
-
-            //for (int i = 0; i < carInfo.RemapList.Count; i++)
-            //{
-            //    if (carInfo.RemapList[i] < 35) //There is a palette we skip here (according to http://en.wikigta.org/wiki/Code_lists_%28GTA2%29), but it kinda looks messed up!
-            //        SaveSpriteRemap(path + id + "_" + carInfo.RemapList[i] + ".png", id, remapPalette + carInfo.RemapList[i]);
-            //}
         }
 
         private void SaveSpriteRemap(string fileName, int id, UInt32 palette)
