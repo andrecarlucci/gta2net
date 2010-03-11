@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿//Created: 11.02.2010
+
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Helper
@@ -15,10 +13,10 @@ namespace Hiale.GTA2NET.Helper
 
         public FaceCoordinates(ref Vector3 topLeft, ref Vector3 topRight, ref Vector3 bottomRight, ref Vector3 bottomLeft)
         {
-            this.TopLeft = topLeft;
-            this.TopRight = topRight;
-            this.BottomRight = bottomRight;
-            this.BottomLeft = bottomLeft;
+            TopLeft = topLeft;
+            TopRight = topRight;
+            BottomRight = bottomRight;
+            BottomLeft = bottomLeft;
         }
     }
 }

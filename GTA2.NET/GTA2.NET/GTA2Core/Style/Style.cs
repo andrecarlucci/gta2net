@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Linq;
-using System.Text;
 using System.IO;
 using System.Drawing;
 
@@ -396,7 +395,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 SaveCarSprite("textures\\sprites\\cars\\", carSpriteItem.Key, carSpriteItem.Value);
             }
-            
+            return;
             //Peds
             /*             
             Remaps
@@ -446,11 +445,6 @@ namespace Hiale.GTA2NET.Core.Style
             System.Diagnostics.Debug.WriteLine("Done!");
         }
 
-        private void SavePedSprite(string path, int spriteID)
-        {
-
-        }
-
         private void SaveCarSprite(string path, int spriteID, IList<int> modelList)
         {
             UInt32 basePalette = PaletteIndexes[paletteBase.Tile + spriteID];
@@ -458,8 +452,8 @@ namespace Hiale.GTA2NET.Core.Style
             //UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
             for (int i = 0; i < modelList.Count; i++)
             {
-                //SaveSpriteRemap(path + spriteID + ".png", spriteID, basePalette); //this way, models which use a shared sprite, only get's saved once. (spriteID.png)
-                SaveSpriteRemap(path + spriteID + "_" + modelList[i] + "_-1.png", spriteID, basePalette); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
+                SaveSpriteRemap(path + spriteID + ".png", spriteID, basePalette); //this way, models which use a shared sprite, only get's saved once. (spriteID.png)
+                //SaveSpriteRemap(path + spriteID + "_" + modelList[i] + "_-1.png", spriteID, basePalette); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
                 List<byte> remapList = CarInfos[modelList[i]].RemapList;
                 for (int j = 0; j < remapList.Count; j++)
                 {
