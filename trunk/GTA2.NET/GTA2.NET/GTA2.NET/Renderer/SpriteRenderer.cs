@@ -20,7 +20,7 @@ namespace Hiale.GTA2NET.Renderer
         Texture2D spriteTexture;
         //List<Sprite> sprites;
         Dictionary<MovableObject, Sprite> sprites;
-        Dictionary<int, Rectangle> spriteAtlas;
+        Dictionary<SpriteItem, Rectangle> spriteAtlas;
         
 
         //Triangle stuff, use DynamicVertexBuffer?
@@ -131,7 +131,7 @@ namespace Hiale.GTA2NET.Renderer
         private void LoadTexture()
         {
             string spriteDictPath = "textures\\sprites.xml";
-            TextureAtlas dict;
+            TextureAtlasSprites dict;
             if (!File.Exists(spriteDictPath))
             {
                 string[] spriteFiles = Directory.GetFiles("textures\\sprites");
@@ -147,7 +147,7 @@ namespace Hiale.GTA2NET.Renderer
             }
             else
             {
-                dict = TextureAtlas.Deserialize(spriteDictPath);
+                dict = (TextureAtlasSprites)TextureAtlas.Deserialize(spriteDictPath, typeof(TextureAtlasSprites));
                 spriteAtlas = dict.Dictionary;
                 spriteTexture = Texture2D.FromFile(BaseGame.Device, dict.ImagePath);
             }            
@@ -193,9 +193,9 @@ namespace Hiale.GTA2NET.Renderer
                 //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Linear;
                 //effect.GraphicsDevice.SamplerStates[0].MaxAnisotropy = 16;
 
-                effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Point;
-                effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
-                effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
+                //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Point;
+                //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
+                //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
 
                 //effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, verticesCollection.Count, 0, indexBufferCollection.Count / 3);
                 effect.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, indices, 0, indices.Length / 3);

@@ -893,14 +893,14 @@ namespace Hiale.GTA2NET.Renderer
         private void LoadTexture()
         {
             const string tilesDictPath = "textures\\tiles.xml";
-            TextureAtlas dict;
+            TextureAtlasTiles dict;
             if (!File.Exists(tilesDictPath))
             {
                 //City-tiles: Maybe could be optimized :P
                 string[] tileFiles = System.IO.Directory.GetFiles("textures\\tiles");
                 dict = ImageHelper.CreateImageDictionary(tileFiles, 64, 64);
                 dict.Serialize(tilesDictPath);
-                tileAtlas = dict.Dictionary;
+                //tileAtlas = dict.Dictionary;
                 MemoryStream stream = new MemoryStream();
                 dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
                 stream.Position = 0;
@@ -910,7 +910,7 @@ namespace Hiale.GTA2NET.Renderer
             }
             else
             {
-                dict = TextureAtlas.Deserialize(tilesDictPath);
+                dict = (TextureAtlasTiles)TextureAtlas.Deserialize(tilesDictPath, typeof(TextureAtlasTiles));
                 tileAtlas = dict.Dictionary;
                 cityTexture = Texture2D.FromFile(BaseGame.Device, dict.ImagePath);
             }

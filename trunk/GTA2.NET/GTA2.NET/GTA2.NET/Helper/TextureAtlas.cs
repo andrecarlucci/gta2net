@@ -1,10 +1,10 @@
 ﻿//Created: 28.01.2010
 
-using Microsoft.Xna.Framework;
-using System.Collections.Generic;
 using System;
+using System.Drawing;
 using System.Xml.Serialization;
 using System.IO;
+using Rectangle=Microsoft.Xna.Framework.Rectangle;
 
 
 namespace Hiale.GTA2NET.Helper
@@ -13,55 +13,44 @@ namespace Hiale.GTA2NET.Helper
     /// Holds information where certail tiles are put on the image.
     /// </summary>
     [Serializable()]
-    public struct TextureAtlas : IDisposable
+    public class TextureAtlas : IDisposable
     {
-        private System.Drawing.Image image;
         /// <summary>
         /// Image with all the tiles on it.
         /// </summary>
-        [XmlIgnore()]
-        public System.Drawing.Image Image
-        {
-            get { return image; }
-        }
+        [XmlIgnore]
+        public Image Image { get; private set; }
 
-        private string imagePath;
         /// <summary>
         /// Path to image file, used by serialization
         /// </summary>
-        public string ImagePath
+        public string ImagePath { get; set; }
+
+        //public SerializableDictionary<SpriteItem, Rectangle> Dictionary { get; set; }
+
+        public TextureAtlas(Image image, string imagePath)
         {
-            get { return imagePath; }
-            set { imagePath = value; }
+            Image = image;
+            ImagePath = imagePath;
         }
 
-        private SerializableDictionary<int, Rectangle> dictionary;
-
-        public SerializableDictionary<int, Rectangle> Dictionary
+        protected TextureAtlas()
         {
-            get { return dictionary; }
-            set { dictionary = value; }
-        }
-
-        public TextureAtlas(System.Drawing.Image Image, string ImagePath, SerializableDictionary<int, Rectangle> Dictionary)
-        {
-            image = Image;
-            imagePath = ImagePath;
-            dictionary = Dictionary;
+            //needed by xml serializer
         }
 
         public void Serialize(string path)
         {
             TextWriter textWriter = new StreamWriter(path);
-            System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(this.GetType());
+            XmlSerializer serializer = new XmlSerializer(GetType());
             serializer.Serialize(textWriter, this);
             textWriter.Close();
         }
 
-        public static TextureAtlas Deserialize(string path)
+        public static TextureAtlas Deserialize(string path, Type type)
         {
             TextReader textReader = new StreamReader(path);
-            XmlSerializer deserializer = new XmlSerializer(typeof(TextureAtlas));            
+            XmlSerializer deserializer = new XmlSerializer(type);
             TextureAtlas atlas = (TextureAtlas)deserializer.Deserialize(textReader);
             textReader.Close();
             return atlas;
@@ -70,10 +59,41 @@ namespace Hiale.GTA2NET.Helper
         /// <summary>
         /// Disposes the image when not needed anymore.
         /// </summary>
-        public void  Dispose()
+        public void Dispose()
         {
-            ((System.Drawing.Bitmap)Image).Dispose();
+            Image.Dispose();
         }
 
-}
+    }
+
+    public class TextureAtlasTiles : TextureAtlas
+    {
+        public SerializableDictionary<int, Rectangle> Dictionary { get; set; }
+
+        public TextureAtlasTiles(Image image, string imagePath, SerializableDictionary<int, Rectangle> dictionary) : base(image, imagePath)
+        {
+            Dictionary = dictionary;
+        }
+
+        private TextureAtlasTiles()
+        {
+            //needed by xml serializer
+        }
+    }
+
+    public class TextureAtlasSprites : TextureAtlas
+    {
+        public SerializableDictionary<SpriteItem, Rectangle> Dictionary { get; set; }
+
+        public TextureAtlasSprites(Image image, string imagePath, SerializableDictionary<SpriteItem, Rectangle> dictionary) : base(image, imagePath)
+        {
+            Dictionary = dictionary;
+        }
+
+        private TextureAtlasSprites()
+        {
+            //needed by xml serializer
+        }
+
+    }
 }

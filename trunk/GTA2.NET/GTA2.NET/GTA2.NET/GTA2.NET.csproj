@@ -91,6 +91,7 @@
     <Compile Include="Helper\Polygon.cs" />
     <Compile Include="Helper\SeparatingAxisTheorem.cs" />
     <Compile Include="Helper\SerializableDictionary.cs" />
+    <Compile Include="Helper\SpriteItem.cs" />
     <Compile Include="Logic\Car.cs" />
     <Compile Include="Logic\CarWeapon.cs" />
     <Compile Include="Logic\MovableObject.cs" />
