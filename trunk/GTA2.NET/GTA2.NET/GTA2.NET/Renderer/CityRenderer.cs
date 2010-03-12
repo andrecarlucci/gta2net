@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework.Graphics;
 using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.Helper;
@@ -20,7 +21,6 @@ namespace Hiale.GTA2NET.Renderer
         Texture2D cityTexture;
         Dictionary<int, Rectangle> tileAtlas;
         Vector2[] texturePosition;
-        Vector2 tiles;
 
         //Triangle stuff
         VertexBuffer vertexBuffer;
@@ -31,8 +31,6 @@ namespace Hiale.GTA2NET.Renderer
 
         //Options
         private const float UnitSize = 1f;
-        //private Vector3 globalScalar = Vector3.One;
-        bool EnableSkipFace = false;
 
         public CityRenderer()
         {
@@ -59,7 +57,6 @@ namespace Hiale.GTA2NET.Renderer
             //MainGame.Map.ReadFromFile("data\\bil.gmp");
             MainGame.Map.ReadFromFile("data\\MP1-comp.gmp");
             //MainGame.Map.ReadFromFile("data\\MP1-comp1.gmp");
-            
         }
 
         private void SetUpCity()
@@ -74,7 +71,7 @@ namespace Hiale.GTA2NET.Renderer
         }
 
 
-        private void SetUpLayer(ref int z, bool LidLayer)
+        private void SetUpLayer(ref int z, bool lidLayer)
         {
             for (int x = 0; x < MainGame.Map.CityBlocks.GetLength(0); x++)
             {
@@ -89,7 +86,7 @@ namespace Hiale.GTA2NET.Renderer
                         switch (block.SlopeType)
                         {
                             case SlopeType.None:
-                                SetUpCube(block, LidLayer);
+                                SetUpCube(block, lidLayer);
                                 break;
                             case SlopeType.Up26Low:
                                 SetUpSlope_26Low(block, 1);
@@ -128,7 +125,7 @@ namespace Hiale.GTA2NET.Renderer
                                 SetUpSlope_Diagonal(block, 3);
                                 break;
                             default:
-                                SetUpCube(block, LidLayer);
+                                SetUpCube(block, lidLayer);
                                 break;
                         }
                     }
@@ -601,7 +598,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Top.TileNumber > 0 && !SkipFace(block, 0))
+            if (block.Top.TileNumber > 0)
             {
                 Vector2[] TexPos = GetTexturePositions(tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, TexPos[0]));
@@ -621,7 +618,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Bottom.TileNumber > 0 && !SkipFace(block, 1))
+            if (block.Bottom.TileNumber > 0)
             {
                 Vector2[] TexPos = GetTexturePositions(tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, TexPos[2]));
@@ -646,7 +643,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace leftFace, byte rotation)
         {
-            if (leftFace.TileNumber > 0 && !SkipFace(block, 2))
+            if (leftFace.TileNumber > 0)
             {
                 FaceCoordinates newFront = new FaceCoordinates();
                 FaceCoordinates newBack = new FaceCoordinates();
@@ -684,7 +681,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace rightFace, byte rotation)
         {
-            if (rightFace.TileNumber > 0 && !SkipFace(block, 3))
+            if (rightFace.TileNumber > 0)
             {
                 FaceCoordinates newFront = new FaceCoordinates();
                 FaceCoordinates newBack = new FaceCoordinates();
@@ -747,39 +744,13 @@ namespace Hiale.GTA2NET.Renderer
 
         private Vector2[] GetTexturePositions(Rectangle sourceRectangle, RotationType rotation, bool flip)
         {
-            float tileSizeX = 1.0f / 32;
-            float tileSizeY = 1.0f / 31;
-            
-            int tileColumn = sourceRectangle.X / 64;
-            int tileRow = sourceRectangle.Y / 64;
+            double pixelPerWidth = 1f/cityTexture.Width;
+            double pixelPerHeight = 1f/cityTexture.Height;
 
-            //Then you can determine your UV's for each corner based on which row and column the image you want is located in.  So say you wanted the image that's in the second row from the top, and third column from the left:
-
-            //int tileRow = 1;  // First row is 0
-            //int tileColumn = 2;
-
-            Vector2 texTopLeft = new Vector2(tileColumn * tileSizeX, tileRow * tileSizeY);
-            Vector2 texTopRight = new Vector2((tileColumn + 1) * tileSizeX, tileRow * tileSizeY);
-            Vector2 texBottomLeft = new Vector2(tileColumn * tileSizeX, (tileRow + 1) * tileSizeY);
-            Vector2 texBottomRight = new Vector2((tileColumn + 1) * tileSizeX, (tileRow + 1) * tileSizeY);
-
-
-            double pixelPerWidth = 1/tiles.X;
-            double pixelPerHeight = 1/tiles.Y;
-
-            //if (sourceRectangle.X == 1984)
-            //    System.Diagnostics.Debug.WriteLine("OK");
-
-            //Vector2 texTopLeft = new Vector2((float)(sourceRectangle.X * pixelPerWidth), (float)(sourceRectangle.Y * pixelPerHeight));
-            //Vector2 texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)(sourceRectangle.Y * pixelPerHeight));
-            //Vector2 texBottomRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
-            //Vector2 texBottomLeft = new Vector2((float)(sourceRectangle.X * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
-            //Vector2 tempVecor = new Vector2(sourceRectangle.X, sourceRectangle.Y);
-
-            //Vector2 texTopLeft = tempVecor / tiles;
-            //Vector2 texTopRight = (tempVecor + new Vector2(64 - 1, 0)) / tiles; //Vectors here could be static, but it only works with 64px tiles here... maybe dynamical tiles will appear somewhen...
-            //Vector2 texBottomRight = (tempVecor + new Vector2(64 - 1, 64 - 1)) / tiles;
-            //Vector2 texBottomLeft = (tempVecor + new Vector2(0, 64 - 1)) / tiles;
+            Vector2 texTopLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
+            Vector2 texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
+            Vector2 texBottomRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
+            Vector2 texBottomLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
             
             if (flip)
             {
@@ -837,39 +808,6 @@ namespace Hiale.GTA2NET.Renderer
             return center;
         }
 
-        private bool SkipFace(BlockInfo block, byte faceID) //faceID: 0=Top, 1=Bottom, 2=Left, 3=Right
-        {
-            if (!EnableSkipFace)
-                return false;
-            int x, y, z;
-            x = (int)block.Position.X;
-            y = (int)block.Position.Y;
-            z = (int)block.Position.Z;
-            //if (x == 71 && y == 168)
-            //    System.Diagnostics.Debug.WriteLine("OK");
-            if (faceID == 0 || faceID == 1)
-            {
-                if (block.Position.Y >= 1 && block.Position.Y < MainGame.Map.CityBlocks.GetLength(1) - 2)
-                {
-                    if (faceID == 0 && !MainGame.Map.CityBlocks[x, y - 1, z].IsEmpty)
-                        return true;
-                    if (faceID == 1 && !MainGame.Map.CityBlocks[x, y + 1, z].IsEmpty)
-                        return true;
-                }
-            }
-            if (faceID == 2 || faceID == 3)
-            {
-                if (block.Position.X >= 1 && block.Position.X < MainGame.Map.CityBlocks.GetLength(0) - 2)
-                {
-                    if (faceID == 2 && !MainGame.Map.CityBlocks[x - 1, y, z].IsEmpty)
-                        return true;
-                    if (faceID == 3 && !MainGame.Map.CityBlocks[x + 1, y, z].IsEmpty)
-                        return true;
-                }
-            }
-            return false;
-        }
-
         private void SetUpEffect()
         {
             effect.Texture = cityTexture;
@@ -896,11 +834,11 @@ namespace Hiale.GTA2NET.Renderer
             TextureAtlasTiles dict;
             if (!File.Exists(tilesDictPath))
             {
-                //City-tiles: Maybe could be optimized :P
-                string[] tileFiles = System.IO.Directory.GetFiles("textures\\tiles");
-                dict = ImageHelper.CreateImageDictionary(tileFiles, 64, 64);
+                ZipStorer zip = ZipStorer.Open("bil.zip", FileAccess.Read);
+                dict = new TextureAtlasTiles( "textures\\tiles.png", zip);
+                dict.BuildTextureAtlas();
                 dict.Serialize(tilesDictPath);
-                //tileAtlas = dict.Dictionary;
+                tileAtlas = dict.TilesDictionary;
                 MemoryStream stream = new MemoryStream();
                 dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
                 stream.Position = 0;
@@ -911,11 +849,9 @@ namespace Hiale.GTA2NET.Renderer
             else
             {
                 dict = (TextureAtlasTiles)TextureAtlas.Deserialize(tilesDictPath, typeof(TextureAtlasTiles));
-                tileAtlas = dict.Dictionary;
+                tileAtlas = dict.TilesDictionary;
                 cityTexture = Texture2D.FromFile(BaseGame.Device, dict.ImagePath);
             }
-            tiles = new Vector2(cityTexture.Width, cityTexture.Height);
-
         }
 
         public void DrawCity()
@@ -952,9 +888,9 @@ namespace Hiale.GTA2NET.Renderer
                 //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Linear;
                 //effect.GraphicsDevice.SamplerStates[0].MaxAnisotropy = 16;
 
-                effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Point;
-                effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
-                effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
+                //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Point;
+                //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
+                //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
 
                 effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, cityVerticesCollection.Count, 0, indexBufferCollection.Count / 3);
                 pass.End();

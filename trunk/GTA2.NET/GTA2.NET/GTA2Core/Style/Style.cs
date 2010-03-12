@@ -6,11 +6,16 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.IO;
 using System.Drawing;
+using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Style
 {
     public class Style
     {
+        public const string Png = ".png";
+        public const string TilesZipDir = "Tiles/";
+        public const string SpritesZipDir = "Sprites/";
+
         private ushort[] PaletteIndexes;
         private uint[] PhysicalPalettes;
         private PaletteBase paletteBase;
@@ -25,7 +30,10 @@ namespace Hiale.GTA2NET.Core.Style
         private List<Delta> deltas;
         private List<Surface> Surfaces;
 
+        public string StylePath { get; private set; }
+
         public Dictionary<int, CarInfo> CarInfos { get; private set; }
+
         private Dictionary<int, List<int>> _carSprites; //Helper variable to see which sprites are used by more than one model.
 
         public Style()
@@ -34,87 +42,140 @@ namespace Hiale.GTA2NET.Core.Style
             deltas = new List<Delta>();
             Surfaces = new List<Surface>();
             _carSprites = new Dictionary<int, List<int>>();
-            //PhysicalPalettes = new ushort[16384];
-            //Palettes = new uint[64 * 64 * 256];
-            //Read("data\\bil.sty");
         }
 
         public void ReadFromFile(string styleFile)
         {
-            System.Diagnostics.Debug.WriteLine("Reading style file " + styleFile);
-            FileStream stream = new FileStream(styleFile, FileMode.Open);
-            BinaryReader reader = new BinaryReader(stream);
-            System.Text.Encoding encoder = System.Text.Encoding.ASCII;
-            reader.ReadBytes(4); //GBMP
-            int version = reader.ReadUInt16();
-            System.Diagnostics.Debug.WriteLine("Style version: " + version);
-            while (stream.Position < stream.Length)
+            ReadFromFile(styleFile, false);
+        }
+
+        public void ReadFromFile(string stylePath, bool extractGraphics)
+        {
+            //extractGraphics = true;
+            BinaryReader reader = null;
+            try
             {
-                string chunkType = encoder.GetString(reader.ReadBytes(4));
-                int chunkSize = (int)reader.ReadUInt32();
-                System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " + chunkSize.ToString() + ".");
-                switch (chunkType)
+                if (!File.Exists(stylePath))
+                    throw new FileNotFoundException("Style File not found!", stylePath);
+                StylePath = stylePath;
+                System.Diagnostics.Debug.WriteLine("Reading style file " + stylePath);
+                FileStream stream = new FileStream(stylePath, FileMode.Open);
+                reader = new BinaryReader(stream);
+                System.Text.Encoding encoder = System.Text.Encoding.ASCII;
+                reader.ReadBytes(4); //GBMP
+                int version = reader.ReadUInt16();
+                System.Diagnostics.Debug.WriteLine("Style version: " + version);
+                while (stream.Position < stream.Length)
                 {
-                    case "TILE": //Tiles
-                        ReadTiles(reader, chunkSize);
-                        break;
-                    case "PPAL": //Physical Palette
-                        ReadPhysicalPalette(reader, chunkSize);
-                        break;
-                    case "SPRB": //Sprite Bases
-                        ReadSpriteBases(reader);
-                        break;
-                    case "PALX": //Palette Index
-                        ReadPaletteIndexes(reader, chunkSize);
-                        break;
-                    case "OBJI": //Map Objects
-                        ReadMapObjects(reader, chunkSize);
-                        break;
-                    case "FONB": //Font Base
-                        ReadFonts(reader);
-                        break;
-                    case "DELX": //Delta Index
-                        ReadDeltaIndex(reader, chunkSize);
-                        break;
-                    //case "DELS": //Delta Store
-                    //    ReadDeltaStore(reader, chunkSize);
-                    //    break; 
-                    case "CARI": //Car Info
-                        ReadCars(reader, chunkSize);
-                        break;
-                    case "SPRG": //Sprite Graphics
-                        ReadSpritesGraphics(reader, chunkSize);
-                        break;
-                    case "SPRX": //Sprite Index
-                        ReadSpriteIndex(reader, chunkSize);
-                        break;
-                    case "PALB": //Palette Base
-                        ReadPaletteBase(reader);
-                        break;
-                    case "SPEC": //Undocumented
-                        ReadSurfaces(reader, chunkSize);
-                        break;
-                    default:
-                        System.Diagnostics.Debug.WriteLine("Skipping chunk...");
-                        reader.ReadBytes(chunkSize);
-                        break;
+                    string chunkType = encoder.GetString(reader.ReadBytes(4));
+                    int chunkSize = (int)reader.ReadUInt32();
+                    System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " + chunkSize.ToString() + ".");
+                    switch (chunkType)
+                    {
+                        case "TILE": //Tiles
+                            if (extractGraphics)
+                                ReadTiles(reader, chunkSize);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "PPAL": //Physical Palette
+                            if (extractGraphics)
+                                ReadPhysicalPalette(reader, chunkSize);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "SPRB": //Sprite Bases
+                            if (extractGraphics)
+                                ReadSpriteBases(reader);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "PALX": //Palette Index
+                            if (extractGraphics)
+                                ReadPaletteIndexes(reader, chunkSize);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "OBJI": //Map Objects
+                            ReadMapObjects(reader, chunkSize);
+                            break;
+                        case "FONB": //Font Base
+                            if (extractGraphics)
+                                ReadFonts(reader);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "DELX": //Delta Index
+                            if (extractGraphics)
+                                ReadDeltaIndex(reader, chunkSize);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        //case "DELS": //Delta Store
+                        //    ReadDeltaStore(reader, chunkSize);
+                        //    break; 
+                        case "CARI": //Car Info
+                            ReadCars(reader, chunkSize);
+                            break;
+                        case "SPRG": //Sprite Graphics
+                            if (extractGraphics)
+                                ReadSpritesGraphics(reader, chunkSize);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "SPRX": //Sprite Index
+                            if (extractGraphics)
+                                ReadSpriteIndex(reader, chunkSize);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "PALB": //Palette Base
+                            if (extractGraphics)
+                                ReadPaletteBase(reader);
+                            else
+                                reader.ReadBytes(chunkSize);
+                            break;
+                        case "SPEC": //Undocumented
+                            ReadSurfaces(reader, chunkSize);
+                            break;
+                        default:
+                            System.Diagnostics.Debug.WriteLine("Skipping chunk...");
+                            reader.ReadBytes(chunkSize);
+                            break;
+                    }
                 }
             }
-            reader.Close();
-            //SaveTiles();
-            //SaveSprites();
+            catch (Exception e)
+            {
 
-            //Clean-up
-            Array.Clear(PaletteIndexes, 0, PaletteIndexes.Length);
-            Array.Clear(PhysicalPalettes, 0, PhysicalPalettes.Length);
-            Array.Clear(tileData, 0, tileData.Length);
-            Array.Clear(spriteData, 0, spriteData.Length);
-            Array.Clear(objectInfos, 0, objectInfos.Length);
-            //CarStyleInfos.Clear();
-            _carSprites.Clear();
-            deltas.Clear();
-            Surfaces.Clear();
-            GC.Collect();
+            }
+            finally
+            {
+                if (reader != null) reader.Close();
+            }
+            if (extractGraphics)
+            {
+                string styleFile = Path.GetFileNameWithoutExtension(StylePath);
+                //MemoryStream memoryStream = new MemoryStream();
+                //ZipStorer zip = ZipStorer.Create(memoryStream, string.Empty);
+                ZipStorer zip = ZipStorer.Create(styleFile + ".zip", string.Empty);
+                SaveTiles(zip);
+                SaveSprites(zip);
+                zip.Close();
+
+
+                //Clean-up
+                Array.Clear(PaletteIndexes, 0, PaletteIndexes.Length);
+                Array.Clear(PhysicalPalettes, 0, PhysicalPalettes.Length);
+                Array.Clear(tileData, 0, tileData.Length);
+                Array.Clear(spriteData, 0, spriteData.Length);
+                Array.Clear(objectInfos, 0, objectInfos.Length);
+                //CarStyleInfos.Clear();
+                _carSprites.Clear();
+                deltas.Clear();
+                Surfaces.Clear();
+                GC.Collect();
+            }
         }
 
         private void ReadTiles(BinaryReader reader, int chunkSize)
@@ -211,8 +272,8 @@ namespace Hiale.GTA2NET.Core.Style
                 byte infoFlag = reader.ReadByte();
                 carInfo.InfoFlags = (CarInfoFlags)infoFlag;
                 byte infoFlag2 = reader.ReadByte();
-                bool infoFlags2Value0 = Helper.CheckBit(infoFlag2, 0);
-                bool infoFlags2Value1 = Helper.CheckBit(infoFlag2, 1);
+                bool infoFlags2Value0 = BitHelper.CheckBit(infoFlag2, 0);
+                bool infoFlags2Value1 = BitHelper.CheckBit(infoFlag2, 1);
                 if (infoFlags2Value0)
                     carInfo.InfoFlags += 0x100;
                 if (infoFlags2Value1)
@@ -346,16 +407,17 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        private void SaveTiles()
+        private void SaveTiles(ZipStorer zip)
         {
             int tilesCount = tileData.Length / (64 * 64);
             for (int i = 0; i < tilesCount; i++)
             {
-                SaveTile("textures\\tiles\\" + i + ".png", i);
+                //SaveTile("textures\\tiles\\" + i + ".png", i);
+                SaveTile(zip, ref i);
             }
         }
 
-        private void SaveTile(string fileName, int id)
+        private void SaveTile(ZipStorer zip, ref int id)
         {
             UInt32 vpallete = PaletteIndexes[id];
             Bitmap bmp = new Bitmap(64, 64); 
@@ -385,15 +447,21 @@ namespace Hiale.GTA2NET.Core.Style
                 }
             }
             bmp.UnlockBits(bmData);
-            bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
+            MemoryStream memoryStream = new MemoryStream();
+            bmp.Save(memoryStream, ImageFormat.Png);
+            memoryStream.Position = 0;
+            zip.AddStream(ZipStorer.Compression.Deflate, TilesZipDir + id + Png, memoryStream, DateTime.Now, string.Empty);
+            memoryStream.Close();
+            //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }
 
-        private void SaveSprites()
+        private void SaveSprites(ZipStorer zip)
         {
             //cars
             foreach (KeyValuePair<int, List<int>> carSpriteItem in _carSprites)
             {
-                SaveCarSprite("textures\\sprites\\cars\\", carSpriteItem.Key, carSpriteItem.Value);
+                //SaveCarSprite("textures\\sprites\\cars\\", carSpriteItem.Key, carSpriteItem.Value);
+                SaveCarSprite(zip, carSpriteItem.Key, carSpriteItem.Value);
             }
             return;
             //Peds
@@ -435,25 +503,26 @@ namespace Hiale.GTA2NET.Core.Style
             for (int i = spriteBase.Ped; i < spriteBase.CodeObj; i++)
             {
                 UInt32 basePalette = PaletteIndexes[paletteBase.Tile + i];
-                SaveSpriteRemap(path + "\\" + i + "_-1.png", i, (basePalette));
+                //SaveSpriteRemap(path + "\\" + i + "_-1.png", i, (basePalette));
                 for (int j = 0; j < 53; j++)
                 {
                     Directory.CreateDirectory(path + j);
-                    SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
+                    //SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
                 }
             }
             System.Diagnostics.Debug.WriteLine("Done!");
         }
 
-        private void SaveCarSprite(string path, int spriteID, IList<int> modelList)
+        //private void SaveCarSprite(string path, int spriteID, IList<int> modelList)
+        private void SaveCarSprite(ZipStorer zip, int spriteID, IList<int> modelList)
         {
             UInt32 basePalette = PaletteIndexes[paletteBase.Tile + spriteID];
             UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite];
             //UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
             for (int i = 0; i < modelList.Count; i++)
             {
-                SaveSpriteRemap(path + spriteID + ".png", spriteID, basePalette); //this way, models which use a shared sprite, only get's saved once. (spriteID.png)
-                //SaveSpriteRemap(path + spriteID + "_" + modelList[i] + "_-1.png", spriteID, basePalette); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
+                //SaveSpriteRemap(zip, + spriteID, spriteID, basePalette); //this way, models which use a shared sprite, only get's saved once. (spriteID.png)
+                SaveSpriteRemap(zip, + spriteID + "_" + modelList[i] + "_-1", ref spriteID, basePalette); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
                 List<byte> remapList = CarInfos[modelList[i]].RemapList;
                 for (int j = 0; j < remapList.Count; j++)
                 {
@@ -461,12 +530,13 @@ namespace Hiale.GTA2NET.Core.Style
                     byte remapIDhack = remapID;
                     if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
                         remapIDhack--;
-                    SaveSpriteRemap(path + spriteID + "_" + modelList[i] + "_" + remapID + ".png", spriteID, remapPalette + remapIDhack);
+                    SaveSpriteRemap(zip, + spriteID + "_" + modelList[i] + "_" + remapID, ref spriteID, remapPalette + remapIDhack);
                 }
             }
         }
 
-        private void SaveSpriteRemap(string fileName, int id, UInt32 palette)
+        //private void SaveSpriteRemap(string fileName, int id, UInt32 palette)
+        private void SaveSpriteRemap(ZipStorer zip, string fileName, ref int id, UInt32 palette)
         {
             int width = spriteEntries[id].Width;
             int height = spriteEntries[id].Height;
@@ -502,7 +572,12 @@ namespace Hiale.GTA2NET.Core.Style
                 }
             }
             bmp.UnlockBits(bmData);
-            bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
+            MemoryStream memoryStream = new MemoryStream();
+            bmp.Save(memoryStream, ImageFormat.Png);
+            memoryStream.Position = 0;
+            zip.AddStream(ZipStorer.Compression.Deflate, SpritesZipDir + fileName + Png, memoryStream, DateTime.Now, string.Empty);
+            memoryStream.Close();
+            //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }
     }
 }

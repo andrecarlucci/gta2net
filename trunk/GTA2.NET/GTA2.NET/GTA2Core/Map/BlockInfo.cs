@@ -1,6 +1,7 @@
 ﻿//Created: 17.01.2010
 
 using System;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map
@@ -55,7 +56,7 @@ namespace Hiale.GTA2NET.Core.Map
             int slopeType = 0;
             for (int i = 2; i < 8; i++)
             {
-                if (Helper.CheckBit(type, i))
+                if (BitHelper.CheckBit(type, i))
                     slopeType += (int)Math.Pow(2, i - 2);
             }
             SlopeType = (SlopeType)slopeType;

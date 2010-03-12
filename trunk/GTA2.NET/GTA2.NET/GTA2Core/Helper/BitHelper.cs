@@ -1,8 +1,10 @@
-﻿using System;
+﻿//Created: 29.01.2010
 
-namespace Hiale.GTA2NET.Core
+using System;
+
+namespace Hiale.GTA2NET.Core.Helper
 {
-    public static class Helper
+    public static class BitHelper
     {
         public static bool CheckBit(int value, int bitOffset)
         {

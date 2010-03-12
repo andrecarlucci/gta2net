@@ -11,8 +11,7 @@ namespace Hiale.GTA2NET.Helper
     {
         public int Sprite;
 
-        //[XmlElement(IsNullable = false)]
-        public int? Model;
+        public int Model;
 
         public int Remap;
 
