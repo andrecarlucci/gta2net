@@ -1,6 +1,7 @@
 ﻿//Created: 25.01.2010
 
 using System;
+using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -105,13 +106,13 @@ namespace Hiale.GTA2NET.Core.Map
 
             if (IsCeiling)
             {
-                _wall = Helper.CheckBit(value, 10); //Bit 10
-                _bulletWall = Helper.CheckBit(value, 11); //Bit 11
+                _wall = BitHelper.CheckBit(value, 10); //Bit 10
+                _bulletWall = BitHelper.CheckBit(value, 11); //Bit 11
             }
             else
             {
-                bool bit10 = Helper.CheckBit(value, 10);
-                bool bit11 = Helper.CheckBit(value, 11);
+                bool bit10 = BitHelper.CheckBit(value, 10);
+                bool bit11 = BitHelper.CheckBit(value, 11);
                 if (!bit10 && !bit11)
                     _lightningLevel = 0;
                 if (bit10 && !bit11)
@@ -122,11 +123,11 @@ namespace Hiale.GTA2NET.Core.Map
                     _lightningLevel = 3;
             }
 
-            Flat = Helper.CheckBit(value, 12); //Bit 12
-            Flip = Helper.CheckBit(value, 13); //Bit 13
+            Flat = BitHelper.CheckBit(value, 12); //Bit 12
+            Flip = BitHelper.CheckBit(value, 13); //Bit 13
 
-            bool bit14 = Helper.CheckBit(value, 14);
-            bool bit15 = Helper.CheckBit(value, 15);
+            bool bit14 = BitHelper.CheckBit(value, 14);
+            bool bit15 = BitHelper.CheckBit(value, 15);
             if (!bit14 && !bit15)
                 Rotation = RotationType.RotateNone;
             if (bit14 && !bit15)

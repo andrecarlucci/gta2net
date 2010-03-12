@@ -87,7 +87,8 @@
     <Compile Include="CarPhysics.cs" />
     <Compile Include="CarPhysicReader.cs" />
     <Compile Include="CarInfo.cs" />
-    <Compile Include="Helper.cs" />
+    <Compile Include="Helper\BitHelper.cs" />
+    <Compile Include="Helper\ZipStorer.cs" />
     <Compile Include="Map\BlockFace.cs" />
     <Compile Include="Map\BlockInfo.cs" />
     <Compile Include="Map\RoadTrafficType.cs" />

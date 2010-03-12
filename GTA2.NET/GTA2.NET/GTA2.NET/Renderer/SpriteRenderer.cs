@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Helper;
@@ -134,10 +135,12 @@ namespace Hiale.GTA2NET.Renderer
             TextureAtlasSprites dict;
             if (!File.Exists(spriteDictPath))
             {
-                string[] spriteFiles = Directory.GetFiles("textures\\sprites");
-                dict = ImageHelper.CreateImageDictionary(spriteFiles);
+                //string[] spriteFiles = Directory.GetFiles("textures\\sprites");
+                ZipStorer zip = ZipStorer.Open("bil.zip", FileAccess.Read);
+                dict = new TextureAtlasSprites("textures\\sprites.png", zip);
+                dict.BuildTextureAtlas();
                 dict.Serialize(spriteDictPath);
-                spriteAtlas = dict.Dictionary;
+                spriteAtlas = dict.SpriteDictionary;
                 MemoryStream stream = new MemoryStream();
                 dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
                 stream.Position = 0;
@@ -148,7 +151,7 @@ namespace Hiale.GTA2NET.Renderer
             else
             {
                 dict = (TextureAtlasSprites)TextureAtlas.Deserialize(spriteDictPath, typeof(TextureAtlasSprites));
-                spriteAtlas = dict.Dictionary;
+                spriteAtlas = dict.SpriteDictionary;
                 spriteTexture = Texture2D.FromFile(BaseGame.Device, dict.ImagePath);
             }            
         }
