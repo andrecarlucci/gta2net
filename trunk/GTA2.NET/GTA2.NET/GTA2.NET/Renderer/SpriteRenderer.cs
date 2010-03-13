@@ -131,13 +131,13 @@ namespace Hiale.GTA2NET.Renderer
 
         private void LoadTexture()
         {
-            string spriteDictPath = "textures\\sprites.xml";
+            string spriteDictPath = "Textures\\sprites.xml";
             TextureAtlasSprites dict;
             if (!File.Exists(spriteDictPath))
             {
                 //string[] spriteFiles = Directory.GetFiles("textures\\sprites");
-                ZipStorer zip = ZipStorer.Open("bil.zip", FileAccess.Read);
-                dict = new TextureAtlasSprites("textures\\sprites.png", zip);
+                ZipStorer zip = ZipStorer.Open("Textures\\bil.zip", FileAccess.Read);
+                dict = new TextureAtlasSprites("Textures\\sprites.png", zip);
                 dict.BuildTextureAtlas();
                 dict.Serialize(spriteDictPath);
                 spriteAtlas = dict.SpriteDictionary;

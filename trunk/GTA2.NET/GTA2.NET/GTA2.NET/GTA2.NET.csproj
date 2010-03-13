@@ -101,7 +101,6 @@
     <Compile Include="Renderer\CityRenderer.cs" />
     <Compile Include="GameScreens\IGameScreen.cs" />
     <Compile Include="GameScreens\InGameScreen.cs" />
-    <Compile Include="Helper\ImageHelper.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="MainGame.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

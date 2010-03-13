@@ -158,7 +158,7 @@ namespace Hiale.GTA2NET.Core.Style
                 string styleFile = Path.GetFileNameWithoutExtension(StylePath);
                 //MemoryStream memoryStream = new MemoryStream();
                 //ZipStorer zip = ZipStorer.Create(memoryStream, string.Empty);
-                ZipStorer zip = ZipStorer.Create(styleFile + ".zip", string.Empty);
+                ZipStorer zip = ZipStorer.Create("Textures\\" + styleFile + ".zip", string.Empty);
                 SaveTiles(zip);
                 SaveSprites(zip);
                 zip.Close();

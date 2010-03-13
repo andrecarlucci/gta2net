@@ -288,6 +288,9 @@ namespace Hiale.GTA2NET.Core.Helper
                     break;
 
                 ushort method = BitConverter.ToUInt16(CentralDirImage, pointer + 10);
+                //Hiale
+                uint crc32 = BitConverter.ToUInt32(CentralDirImage, pointer + 16);
+                //Hiale end
                 uint comprSize = BitConverter.ToUInt32(CentralDirImage, pointer + 20);
                 uint fileSize = BitConverter.ToUInt32(CentralDirImage, pointer + 24);
                 ushort filenameSize = BitConverter.ToUInt16(CentralDirImage, pointer + 28);
@@ -304,6 +307,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 zfe.CompressedSize = comprSize;
                 zfe.HeaderOffset = headerOffset;
                 zfe.HeaderSize = headerSize;
+                zfe.Crc32 = crc32;
                 //zfe.ModifyTime = ;  // Date format can vary
                 if (commentSize > 0)
                     zfe.Comment = FilenameEncoder.GetString(CentralDirImage, pointer + 46 + filenameSize + extraSize, commentSize);
