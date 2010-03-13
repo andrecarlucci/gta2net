@@ -320,7 +320,7 @@ namespace Hiale.GTA2NET
             return -1;
         }
 
-        public static float GetHighestPointF(float x, float y)
+        public static float GetHighestPointF(float x, float y) //not used at the moment
         {
             if (x >= 0 && x < Map.CityBlocks.GetLength(0) && y >= 0 && y < Map.CityBlocks.GetLength(1))
             {
@@ -338,65 +338,70 @@ namespace Hiale.GTA2NET
         {
             BlockInfo block = Map.CityBlocks[(int)x, (int)y, z];
             if (!block.IsEmpty)
-            {
-                if (block.IsMovableSlope)
-                {
-                    switch (block.SlopeType)
-                    {
-                        case SlopeType.Up26Low:
-                            {
-                                int roundedY = (int)y + 1;
-                                float offset = y - roundedY;
-                                return (z - 1) - (offset / 2);
-                            }
-                        case SlopeType.Up26High:
-                            {
-                                int roundedY = (int)y + 1;
-                                float offset = roundedY - y;
-                                return (z - 0.5f) + (offset / 2);
-                            }
-                        case SlopeType.Right26Low:
-                            {
-                                int roundedX = (int)x;
-                                float offset = x - roundedX;
-                                return (z - 1) + (offset / 2);
-                            }
-                        case SlopeType.Right26High:
-                            {
-                                int roundedX = (int)x;
-                                float offset = x - roundedX;
-                                return (z - 0.5f) + (offset / 2);
-                            }
-                        case SlopeType.Down26Low:
-                            {
-                                int roundedY = (int)y;
-                                float offset = y - roundedY;
-                                return (z - 1) + (offset / 2);
-                            }
-                        case SlopeType.Down26High:
-                            {
-                                int roundedY = (int)y;
-                                float offset = y - roundedY;
-                                return (z - 0.5f) + (offset / 2);
-                            }
-                        case SlopeType.Left26Low:
-                            {
-                                int roundedX = (int)x + 1;
-                                float offset = x - roundedX;
-                                return (z - 1) - (offset / 2);
-                            }
-                        case SlopeType.Left26High:
-                            {
-                                int roundedX = (int)x + 1;
-                                float offset = roundedX - x;
-                                return (z - 0.5f) + (offset / 2);
-                            }
-                            //ToDo: add more slopes!
-                    }
-                }
-                return z;
-            }
+                return block.IsMovableSlope ? GetSlopeHeight(ref block, ref x, ref y, ref z) : z;
             return -1;
+        }
+
+        private static float GetSlopeHeight(ref BlockInfo block, ref float x, ref float y, ref int z)
+        {
+            float xy;
+            int rounded;
+            float offset;
+            float stepPerUnit = 1f;
+            switch (block.SlopeDirection)
+            {
+                case SlopeDirection.Up:
+                    xy = y;
+                    rounded = (int) (xy + 1);
+                    break;
+                case SlopeDirection.Down:
+                    xy = y;
+                    rounded = (int) xy;
+                    break;
+                case SlopeDirection.Left:
+                    xy = x;
+                    rounded = (int) (xy + 1);
+                    break;
+                case SlopeDirection.Right:
+                    xy = x;
+                    rounded = (int) xy;
+                    break;
+                default:
+                    return -1; //Shound not happen!
+            }
+            offset = xy - rounded;
+            offset = Math.Abs(offset);
+            byte slopeSubType = block.SlopeSubTyp;
+            switch (slopeSubType)
+            {
+                case 26:
+                    stepPerUnit = 2;
+                    break;
+                case 7:
+                    stepPerUnit = 8;
+                    break;
+            }
+            switch (block.SlopeType)
+            {
+                case SlopeType.Up26Low:
+                    return (z - 1) + (offset / stepPerUnit);
+                case SlopeType.Up26High:
+                    return (z - 0.5f) + (offset / stepPerUnit);
+                case SlopeType.Down26Low:
+                    return (z - 1) + (offset / stepPerUnit);
+                case SlopeType.Down26High:
+                    return (z - 0.5f) + (offset / stepPerUnit);
+                case SlopeType.Left26Low:
+                    return (z - 1) + (offset / stepPerUnit);
+                case SlopeType.Left26High:
+                    return (z - 0.5f) + (offset / stepPerUnit);
+                case SlopeType.Right26Low:
+                    return (z - 1) + (offset / stepPerUnit);
+                case SlopeType.Right26High:
+                    return (z - 0.5f) + (offset / stepPerUnit);
+                //ToDo: add more slopes!
+            }
+            return z;
         }
 
         /// <summary>

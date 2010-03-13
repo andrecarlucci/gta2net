@@ -7,6 +7,11 @@ namespace Hiale.GTA2NET.Core.Map
         Air = 0, Road = 1, Pavement = 2, Field = 3
     }
 
+    public enum SlopeDirection : byte
+    {
+        None = 0, Up = 1, Down = 2, Left = 3, Right = 4
+    }
+
     public enum SlopeType : byte
     {
         //ToDo: add more
