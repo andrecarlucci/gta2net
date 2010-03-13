@@ -19,7 +19,7 @@ namespace Hiale.GTA2NET.Logic
         /// <summary>
         /// Current position of this object. It represents the centre of the object.
         /// </summary>
-        public Vector3 Position3 { get; set; }
+        public Vector3 Position3 { get; protected set; }
 
         /// <summary>
         /// 2D position of the object.
@@ -42,7 +42,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 if (_origin == Vector2.Zero)
-                    _origin = new Vector2(Width / 2, Height / 2);
+                    _origin = new Vector2(WidthHalf, HeightHalf);
                 return _origin;
             }
             //set { _origin = value; }
@@ -57,7 +57,7 @@ namespace Hiale.GTA2NET.Logic
         public float RotationAngle
         {
             get { return _rotationAngle; }
-            set
+            protected set
             {
                 if (value < -Circumference)
                     value += Circumference;
@@ -74,7 +74,7 @@ namespace Hiale.GTA2NET.Logic
         {
             get
             {
-                Vector2 topLeft = new Vector2(Position3.X - (Width / 2), Position3.Y - (Height / 2));
+                Vector2 topLeft = new Vector2(Position3.X - WidthHalf, Position3.Y - HeightHalf);
                 return MainGame.RotatePoint(topLeft, Position2, RotationAngle);
             }
         }
@@ -99,7 +99,7 @@ namespace Hiale.GTA2NET.Logic
         {
             get
             {
-                Vector2 topRight = new Vector2(Position3.X + (Width / 2), Position3.Y - (Height / 2));
+                Vector2 topRight = new Vector2(Position3.X + WidthHalf, Position3.Y - HeightHalf);
                 return MainGame.RotatePoint(topRight, Position2, RotationAngle);
             }
         }
@@ -123,7 +123,7 @@ namespace Hiale.GTA2NET.Logic
         {
             get
             {
-                Vector2 bottomRight = new Vector2(Position3.X + (Width / 2), Position3.Y + (Height / 2));
+                Vector2 bottomRight = new Vector2(Position3.X + WidthHalf, Position3.Y + HeightHalf);
                 return MainGame.RotatePoint(bottomRight, Position2, RotationAngle);
             }
         }
@@ -147,7 +147,7 @@ namespace Hiale.GTA2NET.Logic
         {
             get
             {
-                Vector2 bottomLeft = new Vector2(Position3.X - (Width / 2), Position3.Y + (Height / 2));
+                Vector2 bottomLeft = new Vector2(Position3.X - WidthHalf, Position3.Y + HeightHalf);
                 return MainGame.RotatePoint(bottomLeft, Position2, RotationAngle);
             }
         }
@@ -167,17 +167,21 @@ namespace Hiale.GTA2NET.Logic
         /// <summary>
         /// Width of the object. Used by collision detection.
         /// </summary>
-        public float Width { get; private set; }
+        public float Width { get; protected set; }
+
+        protected float WidthHalf;
 
         /// <summary>
         /// Height of the object. Used by collision detection.
         /// </summary>
-        public float Height { get; private set; }
+        public float Height { get; protected set; }
+
+        protected float HeightHalf;
 
         /// <summary>
         /// Helper variable to calculate the distance moved.
         /// </summary>
-        private static readonly Vector2 OriginZero = Vector2.Zero;
+        protected static readonly Vector2 OriginZero = Vector2.Zero;
 
         protected float Velocity;
 
@@ -185,7 +189,9 @@ namespace Hiale.GTA2NET.Logic
         {
             Position3 = startUpPosition;
             Width = width / 64;
+            WidthHalf = Width / 2;
             Height = height / 64;
+            HeightHalf = Height / 2;
         }
 
         protected void CreateSprite()
@@ -197,20 +203,20 @@ namespace Hiale.GTA2NET.Logic
         /// <summary>
         /// Moves the object forward or backwards and changes the rotation angle.
         /// </summary>
-        /// <param name="forwardChange">Positive values mean 'go forward', negative 'go backward'</param>
-        /// <param name="rotationChange">ToDo</param>
+        /// <param name="forwardDelta">Positive values mean 'go forward', negative 'go backward'</param>
+        /// <param name="rotationDelta">ToDo</param>
         /// <param name="elapsedGameTime">The amount of elapsedGameTime since the last update</param>
-        public void Move(ref float forwardChange, ref float rotationChange, ref float elapsedGameTime)
+        public void Move(ref float forwardDelta, ref float rotationDelta, ref float elapsedGameTime)
         {
-            if (forwardChange < 0) //Backwards
-                rotationChange *= -1;
+            if (forwardDelta < 0) //Backwards
+                rotationDelta *= -1;
 
-            if (forwardChange == 0)
+            if (forwardDelta == 0)
                 return;
 
             float rotationAngleNew = RotationAngle;
-            rotationAngleNew += MathHelper.ToRadians(rotationChange);
-            Vector2 direction = MainGame.RotatePoint(new Vector2(0, forwardChange), OriginZero, rotationAngleNew);
+            rotationAngleNew += MathHelper.ToRadians(rotationDelta);
+            Vector2 direction = MainGame.RotatePoint(new Vector2(0, forwardDelta), OriginZero, rotationAngleNew);
 
             //Bugs:
             //Low/High Slops only allow from proper edge!
@@ -364,19 +370,23 @@ namespace Hiale.GTA2NET.Logic
             switch (block.SlopeType)
             {
                 case SlopeType.Up26Low:
+                case SlopeType.Up7Low:
                     if (!collisionTop && !collisionRight && collisionBottom && !collisionLeft)
                         return true;
                     break;
-                case SlopeType.Right26Low:
-                    if (!collisionTop && !collisionRight && !collisionBottom && collisionLeft)
-                        return true;
-                    break;
                 case SlopeType.Down26Low:
+                case SlopeType.Down7Low:
                     if (collisionTop && !collisionRight && !collisionBottom && !collisionLeft)
                         return true;
                     break;
                 case SlopeType.Left26Low:
+                case SlopeType.Left7Low:
                     if (!collisionTop && collisionRight && !collisionBottom && !collisionLeft)
+                        return true;
+                    break;
+                case SlopeType.Right26Low:
+                case SlopeType.Right7Low:
+                    if (!collisionTop && !collisionRight && !collisionBottom && collisionLeft)
                         return true;
                     break;
             }

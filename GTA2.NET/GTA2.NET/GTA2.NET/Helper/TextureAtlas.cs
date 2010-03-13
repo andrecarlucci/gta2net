@@ -16,7 +16,7 @@ namespace Hiale.GTA2NET.Helper
     /// <summary>
     /// Holds information where certail tiles or sprites are put on the image.
     /// </summary>
-    [Serializable()]
+    [Serializable]
     public class TextureAtlas : IDisposable
     {
         public class ImageEntry
@@ -48,7 +48,7 @@ namespace Hiale.GTA2NET.Helper
         }
 
         /// <summary>
-        /// Image with all the tiles on it.
+        /// Image with all the tiles or sprites on it.
         /// </summary>
         [XmlIgnore]
         public Image Image { get; protected set; }
@@ -90,7 +90,6 @@ namespace Hiale.GTA2NET.Helper
                 if (!ZipEntries[i].FilenameInZip.StartsWith(ImageDirName))
                     continue;
                 Bitmap source = GetBitmapFromZip(ZipStore, ZipEntries[i]);
-
                 ImageEntry entry = new ImageEntry();
                 if (!CrcDictionary.ContainsKey(ZipEntries[i].Crc32))
                     CrcDictionary.Add(ZipEntries[i].Crc32, i);
@@ -302,18 +301,14 @@ namespace Hiale.GTA2NET.Helper
             int outputHeight = 0;
             FindFreeSpace(entries, ref outputWidth, ref outputHeight);
             CreateOutputBitmap(outputWidth, outputHeight);
-            SerializableDictionary<int, Rectangle> dictTiles = new SerializableDictionary<int, Rectangle>();
+            TileDictionary = new SerializableDictionary<int, Rectangle>();
             for (int i = 0; i < entries.Count; i++)
             {
-                Rectangle rect;
-                if (entries[i].SameSpriteIndex == 0)
-                    rect = PaintAndGetRectangle(entries[i]);
-                else
-                    rect = dictTiles[entries[i].SameSpriteIndex];
+                Rectangle rect = entries[i].SameSpriteIndex == 0 ? PaintAndGetRectangle(entries[i]) : TileDictionary[entries[i].SameSpriteIndex];
                 try
                 {
                     int index = int.Parse(entries[i].FileName);
-                    dictTiles.Add(index, rect);
+                    TileDictionary.Add(index, rect);
                 }
                 catch (Exception)
                 {
@@ -321,7 +316,6 @@ namespace Hiale.GTA2NET.Helper
                 }
             }
             Image.Save(ImagePath, ImageFormat.Png);
-            TileDictionary = dictTiles;
         }
     }
 
@@ -329,7 +323,7 @@ namespace Hiale.GTA2NET.Helper
     {
         public SerializableDictionary<SpriteItem, Rectangle> SpriteDictionary { get; set; }
 
-        private Dictionary<int, SpriteItem> DuplicateDictionary; //Helper list to find duplicate images.
+        private readonly Dictionary<int, SpriteItem> _duplicateDictionary; //Helper list to find duplicate images.
 
         private TextureAtlasSprites()
         {
@@ -339,7 +333,7 @@ namespace Hiale.GTA2NET.Helper
         public TextureAtlasSprites(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
         {
             ImageDirName = Style.SpritesZipDir;
-            DuplicateDictionary = new Dictionary<int, SpriteItem>();
+            _duplicateDictionary = new Dictionary<int, SpriteItem>();
         }
 
         public override void BuildTextureAtlas()
@@ -347,8 +341,7 @@ namespace Hiale.GTA2NET.Helper
             List<ImageEntry> entries = CreateImageEntries();
 
             // Sort so the largest sprites get arranged first.
-            ImageEntryComparer comparer = new ImageEntryComparer();
-            comparer.CompareSize = true;
+            ImageEntryComparer comparer = new ImageEntryComparer {CompareSize = true};
             entries.Sort(comparer);
 
             int outputWidth = 0;
@@ -360,14 +353,10 @@ namespace Hiale.GTA2NET.Helper
             entries.Sort(comparer);
 
             CreateOutputBitmap(outputWidth, outputHeight);
-            SerializableDictionary<SpriteItem, Rectangle> dictSprites = new SerializableDictionary<SpriteItem, Rectangle>();
+            SpriteDictionary = new SerializableDictionary<SpriteItem, Rectangle>();
             for (int i = 0; i < entries.Count; i++)
             {
-                Rectangle rect;
-                if (entries[i].SameSpriteIndex == 0)
-                    rect = PaintAndGetRectangle(entries[i]);
-                else
-                    rect = dictSprites[DuplicateDictionary[entries[i].SameSpriteIndex]];
+                Rectangle rect = entries[i].SameSpriteIndex == 0 ? PaintAndGetRectangle(entries[i]) : SpriteDictionary[_duplicateDictionary[entries[i].SameSpriteIndex]];
                 string fileName = entries[i].FileName;
                 SpriteItem item;
                 try
@@ -378,32 +367,24 @@ namespace Hiale.GTA2NET.Helper
                 {
                     continue;
                 }
-                DuplicateDictionary.Add(entries[i].Index, item);
-                dictSprites.Add(item, rect);
+                _duplicateDictionary.Add(entries[i].Index, item);
+                SpriteDictionary.Add(item, rect);
             }
             Image.Save(ImagePath, ImageFormat.Png);
-            SpriteDictionary = dictSprites;
         }
 
         private static SpriteItem ParseFileName(string fileName)
         {
-            try
+            SpriteItem item = new SpriteItem();
+            string[] parts = fileName.Split('_');
+            item.Sprite = int.Parse(parts[0]);
+            item.Remap = -1;
+            if (parts.Length == 3)
             {
-                SpriteItem item = new SpriteItem();
-                string[] parts = fileName.Split('_');
-                item.Sprite = int.Parse(parts[0]);
-                item.Remap = -1;
-                if (parts.Length == 3)
-                {
-                    item.Model = int.Parse(parts[1]);
-                    item.Remap = int.Parse(parts[2]);
-                }
-                return item;
+                item.Model = int.Parse(parts[1]);
+                item.Remap = int.Parse(parts[2]);
             }
-            catch (Exception e)
-            {
-                throw e;
-            }
+            return item;
         }
     }
 }

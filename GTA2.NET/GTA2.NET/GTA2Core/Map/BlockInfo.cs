@@ -11,7 +11,7 @@ namespace Hiale.GTA2NET.Core.Map
         /// <summary>
         /// Position of this block in a map.
         /// </summary>
-        public Vector3 Position { get; set; }
+        public Vector3 Position { get; set; } //remove?
 
         public BlockFace Left { get; set; }
 
@@ -114,6 +114,80 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 byte slope = (byte)SlopeType;
                 return slope != 0 && slope < 41;
+            }
+        }
+
+        public SlopeDirection SlopeDirection
+        {
+            get
+            {
+                switch (SlopeType)
+                {
+                    case SlopeType.Up26Low:
+                    case SlopeType.Up26High:
+                    case SlopeType.Up7Low:
+                    case SlopeType.Up7High0:
+                    case SlopeType.Up7High1:
+                    case SlopeType.Up7High2:
+                    case SlopeType.Up7High3:
+                    case SlopeType.Up7High4:
+                    case SlopeType.Up7High5:
+                    case SlopeType.Up7High6:
+                    case SlopeType.Up45:
+                        return SlopeDirection.Up;
+                    case SlopeType.Down26Low:
+                    case SlopeType.Down26High:
+                    case SlopeType.Down7Low:
+                    case SlopeType.Down7High0:
+                    case SlopeType.Down7High1:
+                    case SlopeType.Down7High2:
+                    case SlopeType.Down7High3:
+                    case SlopeType.Down7High4:
+                    case SlopeType.Down7High5:
+                    case SlopeType.Down7High6:
+                    case SlopeType.Down45:
+                        return SlopeDirection.Down;
+                    case SlopeType.Left26Low:
+                    case SlopeType.Left26High:
+                    case SlopeType.Left7Low:
+                    case SlopeType.Left7High0:
+                    case SlopeType.Left7High1:
+                    case SlopeType.Left7High2:
+                    case SlopeType.Left7High3:
+                    case SlopeType.Left7High4:
+                    case SlopeType.Left7High5:
+                    case SlopeType.Left7High6:
+                    case SlopeType.Left45:
+                        return SlopeDirection.Left;
+                    case SlopeType.Right26Low:
+                    case SlopeType.Right26High:
+                    case SlopeType.Right7Low:
+                    case SlopeType.Right7High0:
+                    case SlopeType.Right7High1:
+                    case SlopeType.Right7High2:
+                    case SlopeType.Right7High3:
+                    case SlopeType.Right7High4:
+                    case SlopeType.Right7High5:
+                    case SlopeType.Right7High6:
+                    case SlopeType.Right45:
+                        return SlopeDirection.Right;
+                }
+                return SlopeDirection.None;
+            }
+        }
+
+        public byte SlopeSubTyp
+        {
+            get
+            {
+                byte slope = (byte)SlopeType;
+                if (slope > 0 && slope < 9)
+                    return 26;
+                if (slope > 8 && slope < 41)
+                    return 7;
+                if (slope > 40 && slope < 45)
+                    return 45;
+                return 0;
             }
         }
 
