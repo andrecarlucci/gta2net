@@ -75,7 +75,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 topLeft = new Vector2(Position3.X - (Width / 2), Position3.Y - (Height / 2));
-                return RotatePoint(topLeft, Position2, RotationAngle);
+                return MainGame.RotatePoint(topLeft, Position2, RotationAngle);
             }
         }
 
@@ -100,7 +100,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 topRight = new Vector2(Position3.X + (Width / 2), Position3.Y - (Height / 2));
-                return RotatePoint(topRight, Position2, RotationAngle);
+                return MainGame.RotatePoint(topRight, Position2, RotationAngle);
             }
         }
 
@@ -124,7 +124,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 bottomRight = new Vector2(Position3.X + (Width / 2), Position3.Y + (Height / 2));
-                return RotatePoint(bottomRight, Position2, RotationAngle);
+                return MainGame.RotatePoint(bottomRight, Position2, RotationAngle);
             }
         }
 
@@ -148,7 +148,7 @@ namespace Hiale.GTA2NET.Logic
             get
             {
                 Vector2 bottomLeft = new Vector2(Position3.X - (Width / 2), Position3.Y + (Height / 2));
-                return RotatePoint(bottomLeft, Position2, RotationAngle);
+                return MainGame.RotatePoint(bottomLeft, Position2, RotationAngle);
             }
         }
 
@@ -165,12 +165,12 @@ namespace Hiale.GTA2NET.Logic
         }
 
         /// <summary>
-        /// Width of the object.
+        /// Width of the object. Used by collision detection.
         /// </summary>
         public float Width { get; private set; }
 
         /// <summary>
-        /// Height of the object.
+        /// Height of the object. Used by collision detection.
         /// </summary>
         public float Height { get; private set; }
 
@@ -195,17 +195,6 @@ namespace Hiale.GTA2NET.Logic
         }
 
         /// <summary>
-        /// Temporary helper method to set the width and height. Will be moved to the constructor in the future.
-        /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        public void SetDimension(float width, float height) //ToDo: move to constructor
-        {
-            Width = width;
-            Height = height;
-        }
-
-        /// <summary>
         /// Moves the object forward or backwards and changes the rotation angle.
         /// </summary>
         /// <param name="forwardChange">Positive values mean 'go forward', negative 'go backward'</param>
@@ -221,7 +210,7 @@ namespace Hiale.GTA2NET.Logic
 
             float rotationAngleNew = RotationAngle;
             rotationAngleNew += MathHelper.ToRadians(rotationChange);
-            Vector2 direction = RotatePoint(new Vector2(0, forwardChange), OriginZero, rotationAngleNew);
+            Vector2 direction = MainGame.RotatePoint(new Vector2(0, forwardChange), OriginZero, rotationAngleNew);
 
             //Bugs:
             //Low/High Slops only allow from proper edge!
@@ -517,24 +506,6 @@ namespace Hiale.GTA2NET.Logic
             {
                 value = newValue;
             }
-        }
-
-        /// <summary>
-        /// Rotate a point from a given location and adjust using the Origin we
-        /// are rotating around
-        /// </summary>
-        /// <param name="point">The point to rotate.</param>
-        /// <param name="origin">Used origin for the rotation.</param>
-        /// <param name="rotation">Angle in radians.</param>
-        /// <returns></returns>
-        public Vector2 RotatePoint(Vector2 point, Vector2 origin, float rotation)
-        {
-            Vector2 aTranslatedPoint = new Vector2();
-            aTranslatedPoint.X = (float)(origin.X + (point.X - origin.X) * Math.Cos(rotation)
-                - (point.Y - origin.Y) * Math.Sin(rotation));
-            aTranslatedPoint.Y = (float)(origin.Y + (point.Y - origin.Y) * Math.Cos(rotation)
-                + (point.X - origin.X) * Math.Sin(rotation));
-            return aTranslatedPoint;
         }
     }
 }

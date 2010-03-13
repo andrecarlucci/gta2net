@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.GameScreens;
@@ -186,7 +187,7 @@ namespace Hiale.GTA2NET
             //
             //...
 
-            _chasingObject = new Car(new Vector3(69, 186, GetHighestPoint(69, 186)), CarInfos[9]);
+            _chasingObject = new Car(new Vector3(69, 186, GetHighestPoint(69, 186)), CarInfos[10]);
             Cars.Add(_chasingObject);
         }
 
@@ -398,27 +399,42 @@ namespace Hiale.GTA2NET
             return -1;
         }
 
-        //public static void RotateSprite(ref Hiale.GTA2NET.Helper.FaceCoordinates coordinates, ref float rotation)
-        //{
-        //    Vector2 center = new Vector2((coordinates.BottomRight.X - coordinates.TopLeft.X) / 2 + coordinates.TopLeft.X, (coordinates.BottomLeft.Y - coordinates.TopRight.Y) / 2 + coordinates.TopRight.Y);
-        //    RotateSprite(ref coordinates, ref rotation, ref center);
-        //}
+        /// <summary>
+        /// Rotate a point from a given location and adjust using the Origin we
+        /// are rotating around
+        /// </summary>
+        /// <param name="point">The point to rotate.</param>
+        /// <param name="origin">Used origin for the rotation.</param>
+        /// <param name="rotation">Angle in radians.</param>
+        /// <returns></returns>
+        public static Vector2 RotatePoint(Vector2 point, Vector2 origin, float rotation)
+        {
+            float outX = 0;
+            float outY = 0;
+            RotatePointInternal(point.X, point.Y, origin.X, origin.Y, rotation, ref outX, ref outY);
+            return new Vector2(outX, outY);
+        }
 
-        //public static void RotateSprite(ref Hiale.GTA2NET.Helper.FaceCoordinates coordinates, ref float rotation, ref Vector2 origin)
-        //{
-        //    float radiants = MathHelper.ToRadians(rotation);
-        //    coordinates.TopLeft = RotatePoint(coordinates.TopLeft, ref radiants, ref origin);
-        //    coordinates.TopRight = RotatePoint(coordinates.TopRight, ref radiants, ref origin);
-        //    coordinates.BottomRight = RotatePoint(coordinates.BottomRight, ref radiants, ref origin);
-        //    coordinates.BottomLeft = RotatePoint(coordinates.BottomLeft, ref radiants, ref origin);
-        //}
+        /// <summary>
+        /// Rotate a point from a given location and adjust using the Origin we
+        /// are rotating around
+        /// </summary>
+        /// <param name="point">The point to rotate.</param>
+        /// <param name="origin">Used origin for the rotation.</param>
+        /// <param name="rotation">Angle in radians.</param>
+        /// <returns></returns>
+        public static Vector3 RotatePoint3(Vector3 point, Vector3 origin, float rotation)
+        {
+            float outX = 0;
+            float outY = 0;
+            RotatePointInternal(point.X, point.Y, origin.X, origin.Y, rotation, ref outX, ref outY);
+            return new Vector3(outX, outY, point.Z);
+        }
 
-        ////Idea: Create a lookat table for speed!
-        //private static Vector3 RotatePoint(Vector3 point, ref float radians, ref Vector2 origin)
-        //{
-        //    return new Vector3(origin.X + ((float)Math.Cos(radians) * (point.X - origin.X) - (float)Math.Sin(radians) * (point.Y - origin.Y)), origin.Y + ((float)Math.Sin(radians) * (point.X - origin.X) + (float)Math.Cos(radians) * (point.Y - origin.Y)), point.Z);
-        //}
-
-
+        private static void RotatePointInternal(float inX, float inY, float originX, float originY, float rotation, ref float outX, ref float outY)
+        {
+            outX = (float)(originX + (inX - originX) * Math.Cos(rotation) - (inY - originY) * Math.Sin(rotation));
+            outY = (float)(originY + (inY - originY) * Math.Cos(rotation) + (inX - originX) * Math.Sin(rotation));
+        }
     }
 }
