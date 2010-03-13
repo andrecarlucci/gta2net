@@ -328,7 +328,7 @@ namespace Hiale.GTA2NET.Logic
                 PolygonCollisionResult collisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
                 if (collisionResult.Intersect)
                 {
-                    if (block.IsLowSlope || block.IsHighSlope)
+                    if (block.IsMovableSlope)
                     {
                         if (AllowSlopeBlock(ref x, ref y, ref z, ref block, ref polygonObject))
                             return;
@@ -402,7 +402,7 @@ namespace Hiale.GTA2NET.Logic
             
             //check the block above the current block. If this block is empty, process the current block.
             blockAbove = MainGame.Map.CityBlocks[x, y, currentZ + 1];
-            if (z == currentZ && !blockAbove.IsLowSlope && !blockAbove.IsHighSlope)
+            if (z == currentZ && !blockAbove.IsMovableSlope)
             {
                 if (!blockAbove.IsEmpty)
                     blockAboveStops = true;
@@ -418,7 +418,7 @@ namespace Hiale.GTA2NET.Logic
             //check one block above only if it's a low/high slope
             if (z == currentZ + 1)
             {
-                if (block.IsLowSlope || block.IsHighSlope)
+                if (block.IsMovableSlope)
                 {
                     movableSlope = true;
                     return true;
@@ -507,10 +507,10 @@ namespace Hiale.GTA2NET.Logic
             float y = point.Y;
             int z = (int)Math.Round(value, 0);
             BlockInfo blockAbove = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z + 1];
-            if (blockAbove.IsLowSlope || blockAbove.IsHighSlope)
+            if (blockAbove.IsMovableSlope)
                 z++;
             BlockInfo blockBelow = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z - 1];
-            if (blockBelow.IsLowSlope || blockBelow.IsHighSlope)
+            if (blockBelow.IsMovableSlope)
                 z--;
             float newValue = MainGame.GetHeightF(ref x, ref y, ref z);
             if (newValue != value)

@@ -338,7 +338,7 @@ namespace Hiale.GTA2NET
             BlockInfo block = Map.CityBlocks[(int)x, (int)y, z];
             if (!block.IsEmpty)
             {
-                if (block.IsLowSlope || block.IsHighSlope)
+                if (block.IsMovableSlope)
                 {
                     switch (block.SlopeType)
                     {
@@ -390,6 +390,7 @@ namespace Hiale.GTA2NET
                                 float offset = roundedX - x;
                                 return (z - 0.5f) + (offset / 2);
                             }
+                            //ToDo: add more slopes!
                     }
                 }
                 return z;

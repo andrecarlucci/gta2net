@@ -84,27 +84,36 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
-        public bool IsDiagonalSlope
-        {
-            get
-            {
-                return SlopeType == SlopeType.DiagonalFacingDownLeft || SlopeType == SlopeType.DiagonalFacingDownRight || SlopeType == SlopeType.DiagonalFacingUpLeft || SlopeType == SlopeType.DiagonalFacingUpRight;
-            }
-        }
+        //public bool IsDiagonalSlope
+        //{
+        //    get
+        //    {
+        //        return SlopeType == SlopeType.DiagonalFacingDownLeft || SlopeType == SlopeType.DiagonalFacingDownRight || SlopeType == SlopeType.DiagonalFacingUpLeft || SlopeType == SlopeType.DiagonalFacingUpRight;
+        //    }
+        //}
 
-        public bool IsLowSlope
-        {
-            get
-            {
-                return SlopeType == SlopeType.Up26Low || SlopeType == SlopeType.Down26Low || SlopeType == SlopeType.Left26Low || SlopeType == SlopeType.Right26Low;
-            }
-        }
+        //public bool IsLowSlope
+        //{
+        //    get
+        //    {
+        //        return SlopeType == SlopeType.Up26Low || SlopeType == SlopeType.Down26Low || SlopeType == SlopeType.Left26Low || SlopeType == SlopeType.Right26Low;
+        //    }
+        //}
 
-        public bool IsHighSlope
+        //public bool IsHighSlope
+        //{
+        //    get
+        //    {
+        //        return SlopeType == SlopeType.Up26High || SlopeType == SlopeType.Down26High || SlopeType == SlopeType.Left26High || SlopeType == SlopeType.Right26High;
+        //    }
+        //}
+
+        public bool IsMovableSlope
         {
             get
             {
-                return SlopeType == SlopeType.Up26High || SlopeType == SlopeType.Down26High || SlopeType == SlopeType.Left26High || SlopeType == SlopeType.Right26High;
+                byte slope = (byte)SlopeType;
+                return slope != 0 && slope < 41;
             }
         }
 
