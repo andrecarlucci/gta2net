@@ -176,6 +176,15 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
+        public bool IsDiagonalSlope
+        {
+            get
+            {
+                byte slope = (byte)SlopeType;
+                return slope >= 45 && slope <= 48;
+            }
+        }
+
         public byte SlopeSubTyp
         {
             get

@@ -90,7 +90,7 @@ namespace Hiale.GTA2NET.Logic
                 return new Vector3(topLeft.X, topLeft.Y, Position3.Z);
             }
         }
-        
+
 
         /// <summary>
         /// 2D top right point of the object.
@@ -185,7 +185,7 @@ namespace Hiale.GTA2NET.Logic
 
         protected float Velocity;
 
-        protected MovableObject(Vector3 startUpPosition, float width , float height)
+        protected MovableObject(Vector3 startUpPosition, float width, float height)
         {
             Position3 = startUpPosition;
             Width = width / 64;
@@ -204,7 +204,7 @@ namespace Hiale.GTA2NET.Logic
         /// Moves the object forward or backwards and changes the rotation angle.
         /// </summary>
         /// <param name="forwardDelta">Positive values mean 'go forward', negative 'go backward'</param>
-        /// <param name="rotationDelta">ToDo</param>
+        /// <param name="rotationDelta">Change of the rotation angle</param>
         /// <param name="elapsedGameTime">The amount of elapsedGameTime since the last update</param>
         public void Move(ref float forwardDelta, ref float rotationDelta, ref float elapsedGameTime)
         {
@@ -225,8 +225,10 @@ namespace Hiale.GTA2NET.Logic
             Vector2 topRight = TopRight2;
             Vector2 bottomRight = BottomRight2;
             Vector2 bottomLeft = BottomLeft2;
-            CheckCollision(ref direction, ref topLeft, ref topRight, ref bottomRight, ref bottomLeft);
-            
+            Vector2 before = direction;
+            if (Collide(ref direction, ref topLeft, ref topRight, ref bottomRight, ref bottomLeft))
+                return;
+
             //Culculate height, check all 4 points of the object and take the maximum value of those.
             float maxZ = float.MinValue;
             float currentHeight = Position3.Z;
@@ -243,29 +245,29 @@ namespace Hiale.GTA2NET.Logic
             SetMaxF(ref maxZ, currentHeight);
 
             if (maxZ < 0)
-                maxZ = Position3.Z;
+                maxZ = Position3.Z; //still bug here...
 
             RotationAngle = rotationAngleNew;
-
-            //check wether this height is on empty space
 
             float newPositionX = Position3.X + direction.X;
             float newPositionY = Position3.Y + direction.Y;
             //ApplyGravity(ref newPositionX, ref newPositionY, ref weightedHeight);
             Position3 = new Vector3(newPositionX, newPositionY, maxZ);
-            MainGame.WindowTitle = maxZ.ToString();
+            //MainGame.WindowTitle = maxZ.ToString();
 
             if (PositionChanged != null)
                 PositionChanged(this, EventArgs.Empty);
         }
 
-        private void CheckCollision(ref Vector2 direction, ref Vector2 topLeft, ref Vector2 topRight, ref Vector2 bottomRight, ref Vector2 bottomLeft)
+        private bool Collide(ref Vector2 direction, ref Vector2 topLeft, ref Vector2 topRight, ref Vector2 bottomRight, ref Vector2 bottomLeft)
         {
+            //calculate the tentative new position of each point
             Vector2 newTopLeft = topLeft + direction;
             Vector2 newTopRight = topRight + direction;
             Vector2 newBottomRight = bottomRight + direction;
             Vector2 newBottomLeft = bottomLeft + direction;
 
+            //find all correspondig block coordinates (x & y) which the object is laying on.
             int minBlockX = (int)newTopLeft.X;
             int maxBlockX = minBlockX;
             int minBlockY = (int)newTopLeft.Y;
@@ -279,168 +281,177 @@ namespace Hiale.GTA2NET.Logic
             SetMinMax(ref minBlockX, ref maxBlockX, newBottomLeft.X);
             SetMinMax(ref minBlockY, ref maxBlockY, newBottomLeft.Y);
 
-            int minBlockZ = (int)Position3.Z;
-            int maxBlockZ = minBlockZ;
-            minBlockZ = minBlockZ - 1;
-            maxBlockZ = maxBlockZ + 1;
-            if (minBlockZ < 0)
-                minBlockZ = 0;
-            if (maxBlockZ > 7)
-                maxBlockZ = 7;
+            //check z + 1 blocks because they might block us
+            int z = (int)Position3.Z + 1;
+
+            //if we go through a narrow passage, it can happen that the object collides on both sides and implact them mutual
+            //for the moment we immediately stop the object then
+            bool topCollision = false;
+            bool bottomCollision = false;
+            bool leftCollision = false;
+            bool rightCollision = false;
 
             for (int x = minBlockX; x < maxBlockX + 1; x++)
             {
                 for (int y = minBlockY; y < maxBlockY + 1; y++)
                 {
-                    for (int z = minBlockZ; z < maxBlockZ + 1; z++)
-                    {
-                        CheckBlock(ref x, ref y, ref z, ref newTopLeft, ref newTopRight, ref newBottomRight, ref newBottomLeft, ref direction);
-                    }
+                    BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
+                    if (block.IsEmpty)
+                        continue;
+                    Polygon polygonObject = new Polygon();
+                    polygonObject.Points.Add(newTopLeft);
+                    polygonObject.Points.Add(newTopRight);
+                    polygonObject.Points.Add(newBottomRight);
+                    polygonObject.Points.Add(newBottomLeft);
+                    CheckBlock(ref x, ref y, ref block, ref polygonObject, ref direction, ref topCollision, ref bottomCollision, ref leftCollision, ref rightCollision);
                 }
             }
-        }
 
-        private void CheckBlock(ref int x, ref int y, ref int z, ref Vector2 newTopLeft, ref Vector2 newTopRight, ref Vector2 newBottomRight, ref Vector2 newBottomLeft, ref Vector2 direction)
-        {
-            BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-            bool movableSlope = false; //a movable Slope is a block which actually intersecs with the object, but the object can move above it to change the height.
-            bool blockAboveStops = false;
-            BlockInfo blockAbove = null;
-            if (!ProcessBlock(ref block, ref x, ref y, ref z, ref movableSlope, ref blockAboveStops, ref blockAbove))
-                return;
-            if (movableSlope || blockAboveStops)
-            {
-                Polygon polygonObject = new Polygon();
-                polygonObject.Points.Add(newTopLeft);
-                polygonObject.Points.Add(newTopRight);
-                polygonObject.Points.Add(newBottomRight);
-                polygonObject.Points.Add(newBottomLeft);
-
-                BlockInfo blockPolygon = block;
-                if (blockAboveStops)
-                    blockPolygon = blockAbove;
-                Polygon polygonBlock = CreateBlockPolygon(ref blockPolygon, ref x, ref y);
-                PolygonCollisionResult collisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBlock, ref direction);
-                if (collisionResult.Intersect)
-                {
-                    if (block.IsMovableSlope)
-                    {
-                        if (AllowSlopeBlock(ref x, ref y, ref z, ref block, ref polygonObject))
-                            return;
-                    }
-                    //direction.X = 0;
-                    //direction.Y = 0;
-                    direction.X = collisionResult.MinimumTranslationVector.X;
-                    direction.Y = collisionResult.MinimumTranslationVector.Y;
-                    return;
-                }
-            }
-        }
-
-        private static bool AllowSlopeBlock(ref int x, ref int y, ref int z, ref BlockInfo block, ref Polygon polygonObject)
-        {
-            Vector2 dummy = Vector2.Zero;
-
-            //check the four edges of the block, these slops only some directions to come from...
-            Polygon polygonTop = new Polygon();
-            polygonTop.Points.Add(new Vector2(x, y));
-            polygonTop.Points.Add(new Vector2(x + 1, y));
-
-            Polygon polygonRight = new Polygon();
-            polygonRight.Points.Add(new Vector2(x + 1, y));
-            polygonRight.Points.Add(new Vector2(x + 1, y + 1));
-
-            Polygon polygonBottom = new Polygon();
-            polygonBottom.Points.Add(new Vector2(x + 1, y + 1));
-            polygonBottom.Points.Add(new Vector2(x, y + 1));
-
-            Polygon polygonLeft = new Polygon();
-            polygonLeft.Points.Add(new Vector2(x, y + 1));
-            polygonLeft.Points.Add(new Vector2(x, y));
-
-            PolygonCollisionResult edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonTop, ref dummy);
-            bool collisionTop = edgeCollisionResult.Intersect;
-            edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonRight, ref dummy);
-            bool collisionRight = edgeCollisionResult.Intersect;
-            edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBottom, ref dummy);
-            bool collisionBottom = edgeCollisionResult.Intersect;
-            edgeCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonLeft, ref dummy);
-            bool collisionLeft = edgeCollisionResult.Intersect;
-
-            switch (block.SlopeType)
-            {
-                case SlopeType.Up26Low:
-                case SlopeType.Up7Low:
-                    if (!collisionTop && !collisionRight && collisionBottom && !collisionLeft)
-                        return true;
-                    break;
-                case SlopeType.Down26Low:
-                case SlopeType.Down7Low:
-                    if (collisionTop && !collisionRight && !collisionBottom && !collisionLeft)
-                        return true;
-                    break;
-                case SlopeType.Left26Low:
-                case SlopeType.Left7Low:
-                    if (!collisionTop && collisionRight && !collisionBottom && !collisionLeft)
-                        return true;
-                    break;
-                case SlopeType.Right26Low:
-                case SlopeType.Right7Low:
-                    if (!collisionTop && !collisionRight && !collisionBottom && collisionLeft)
-                        return true;
-                    break;
-            }
-            return false;
-        }
-
-        private bool ProcessBlock(ref BlockInfo block, ref int x, ref int y, ref int z, ref bool movableSlope, ref bool blockAboveStops, ref BlockInfo blockAbove)
-        {
-            movableSlope = false;
-
-            int currentZ = (int)Math.Round(Position3.Z, 0);
-            
-            //check the block above the current block. If this block is empty, process the current block.
-            blockAbove = MainGame.Map.CityBlocks[x, y, currentZ + 1];
-            if (z == currentZ && !blockAbove.IsMovableSlope)
-            {
-                if (!blockAbove.IsEmpty)
-                    blockAboveStops = true;
+            if ((topCollision && bottomCollision) || (leftCollision && rightCollision))
                 return true;
-            }
 
-            if (Position3.Z % 1 != 0) //07.03.2010, let's see if it works...
-                return false;
+            return false;
+        }
 
-            if (block.IsEmpty) //new 6.3.2010
-                return false;
+        private void CheckBlock(ref int x, ref int y, ref BlockInfo block, ref Polygon polygonObject, ref Vector2 direction, ref bool topCollision, ref bool bottomCollision, ref bool leftCollision, ref bool rightCollision)
+        {
+            PolygonCollisionResult topCollisionResult;
+            PolygonCollisionResult bottomCollisionResult;
+            PolygonCollisionResult leftCollisionResult;
+            PolygonCollisionResult rightCollisionResult;
 
-            //check one block above only if it's a low/high slope
-            if (z == currentZ + 1)
+            Vector2 directionCopy = direction;
+
+            if (block.Top.TileNumber > 0)
             {
-                if (block.IsMovableSlope)
+                Polygon polygonTop = CreatePolygon(ref x, ref y, ref block, SlopeDirection.Up);
+                if (polygonTop.Points.Count > 0)
                 {
-                    movableSlope = true;
-                    return true;
+                    topCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonTop, ref directionCopy);
+                    if (topCollisionResult.Intersect)
+                    {
+                        direction += topCollisionResult.MinimumTranslationVector;
+                        topCollision = true;
+                    }
                 }
             }
-            return false;
+
+            if (block.Bottom.TileNumber > 0)
+            {
+                Polygon polygonBottom = CreatePolygon(ref x, ref y, ref block, SlopeDirection.Down);
+                if (polygonBottom.Points.Count > 0)
+                {
+                    bottomCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonBottom, ref directionCopy);
+                    if (bottomCollisionResult.Intersect)
+                    {
+                        direction += bottomCollisionResult.MinimumTranslationVector;
+                        bottomCollision = true;
+                    }
+                }
+            }
+
+            if (block.Left.TileNumber > 0)
+            {
+                Polygon polygonLeft = CreatePolygon(ref x, ref y, ref block, SlopeDirection.Left);
+                if (polygonLeft.Points.Count > 0)
+                {
+                    leftCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonLeft, ref directionCopy);
+                    if (leftCollisionResult.Intersect)
+                    {
+                        direction += leftCollisionResult.MinimumTranslationVector;
+                        leftCollision = true;
+                    }
+                }
+            }
+
+            if (block.Right.TileNumber > 0)
+            {
+                Polygon polygonRight = CreatePolygon(ref x, ref y, ref block, SlopeDirection.Right);
+                if (polygonRight.Points.Count > 0)
+                {
+                    rightCollisionResult = SeparatingAxisTheorem.PolygonCollision(ref polygonObject, ref polygonRight, ref directionCopy);
+                    if (rightCollisionResult.Intersect)
+                    {
+                        direction += rightCollisionResult.MinimumTranslationVector;
+                        rightCollision = true;
+                    }
+                }
+            }
+        }
+
+        private Polygon CreatePolygon(ref int x, ref int y, ref BlockInfo block, SlopeDirection direction)
+        {
+            Polygon polygon = new Polygon();
+            switch (direction)
+            {
+                case SlopeDirection.Up:
+                    if (!block.IsDiagonalSlope)
+                    {
+                        polygon.Points.Add(new Vector2(x, y));
+                        polygon.Points.Add(new Vector2(x + 1, y));
+                    }
+                    break;
+                case SlopeDirection.Down:
+                    if (!block.IsDiagonalSlope)
+                    {
+                        polygon.Points.Add(new Vector2(x + 1, y + 1));
+                        polygon.Points.Add(new Vector2(x, y + 1));
+                    }
+                    break;
+                case SlopeDirection.Left:
+                    if (!block.IsDiagonalSlope)
+                    {
+                        polygon.Points.Add(new Vector2(x, y + 1));
+                        polygon.Points.Add(new Vector2(x, y));
+                    }
+                    else if (block.SlopeType == SlopeType.DiagonalFacingUpLeft)
+                    {
+                        polygon.Points.Add(new Vector2(x, y + 1));
+                        polygon.Points.Add(new Vector2(x + 1, y));
+                    }
+                    else if (block.SlopeType == SlopeType.DiagonalFacingDownLeft)
+                    {
+                        polygon.Points.Add(new Vector2(x + 1, y + 1));
+                        polygon.Points.Add(new Vector2(x, y));
+                    }
+                    break;
+                case SlopeDirection.Right:
+                    if (!block.IsDiagonalSlope)
+                    {
+                        polygon.Points.Add(new Vector2(x + 1, y));
+                        polygon.Points.Add(new Vector2(x + 1, y + 1));
+                    }
+                    else if (block.SlopeType == SlopeType.DiagonalFacingUpRight)
+                    {
+                        polygon.Points.Add(new Vector2(x + 1, y + 1));
+                        polygon.Points.Add(new Vector2(x, y));
+                    }
+                    else if (block.SlopeType == SlopeType.DiagonalFacingDownRight)
+                    {
+                        polygon.Points.Add(new Vector2(x + 1, y));
+                        polygon.Points.Add(new Vector2(x, y + 1));
+                    }
+                    break;
+            }
+
+            return polygon;
         }
 
         private void ApplyGravity(ref float x, ref float y, ref float z)
         {
-            if (z == 0)
-                return;
-            BlockInfo block = MainGame.Map.CityBlocks[(int)x, (int)y, (int)z];
-            if (block.Lid != null && block.Lid.TileNumber > 0)
-                return;
-            if (z % 1 == 0)
-            {
-                BlockInfo blockBelow = MainGame.Map.CityBlocks[(int)x, (int)y, (int)(z - 1)];
-                if (blockBelow.IsEmpty)
-                {
-                    z -= 0.1f;
-                }
-            }
+            //if (z == 0)
+            //    return;
+            //BlockInfo block = MainGame.Map.CityBlocks[(int)x, (int)y, (int)z];
+            //if (block.Lid != null && block.Lid.TileNumber > 0)
+            //    return;
+            //if (z % 1 == 0)
+            //{
+            //    BlockInfo blockBelow = MainGame.Map.CityBlocks[(int)x, (int)y, (int)(z - 1)];
+            //    if (blockBelow.IsEmpty)
+            //    {
+            //        z -= 0.1f;
+            //    }
+            //}
         }
 
         private static void SetMinMax(ref int minBlock, ref int maxBlock, float currentValue)
@@ -464,12 +475,6 @@ namespace Hiale.GTA2NET.Logic
 
             switch (slope)
             {
-                case SlopeType.None:
-                    polygon.Points.Add(new Vector2(x, y));
-                    polygon.Points.Add(new Vector2(x + 1, y));
-                    polygon.Points.Add(new Vector2(x + 1, y + 1));
-                    polygon.Points.Add(new Vector2(x, y + 1));
-                    break;
                 case SlopeType.DiagonalFacingDownLeft:
                     polygon.Points.Add(new Vector2(x, y));
                     polygon.Points.Add(new Vector2(x + 1, y));
@@ -513,9 +518,7 @@ namespace Hiale.GTA2NET.Logic
                 z--;
             float newValue = MainGame.GetHeightF(ref x, ref y, ref z);
             if (newValue != value)
-            {
                 value = newValue;
-            }
         }
     }
 }
