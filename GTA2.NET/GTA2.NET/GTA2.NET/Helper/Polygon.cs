@@ -1,44 +1,43 @@
 ﻿//Created: 23.02.2010
 //Source: http://www.codeproject.com/KB/GDI-plus/PolygonCollision.aspx --> ported to XNA
 
+using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Helper
 {
     public class Polygon
     {
-        private List<Vector2> points = new List<Vector2>();
-        private List<Vector2> edges = new List<Vector2>();
+        public List<Vector2> Edges { get; private set; }
+
+        public List<Vector2> Points { get; private set; }
+
+        public Polygon()
+        {
+            Points = new List<Vector2>();
+            Edges = new List<Vector2>();
+        }
 
         public void BuildEdges()
         {
             Vector2 p1;
             Vector2 p2;
-            edges.Clear();
-            for (int i = 0; i < points.Count; i++)
+            Edges.Clear();
+            for (int i = 0; i < Points.Count; i++)
             {
-                p1 = points[i];
-                if (i + 1 >= points.Count)
+                p1 = Points[i];
+                if (i + 1 >= Points.Count)
                 {
-                    p2 = points[0];
+                    p2 = Points[0];
                 }
                 else
                 {
-                    p2 = points[i + 1];
+                    p2 = Points[i + 1];
                 }
-                edges.Add(p2 - p1);
+                Edges.Add(p2 - p1);
             }
-        }
-
-        public List<Vector2> Edges
-        {
-            get { return edges; }
-        }
-
-        public List<Vector2> Points
-        {
-            get { return points; }
         }
 
         public Vector2 Center
@@ -47,13 +46,13 @@ namespace Hiale.GTA2NET.Helper
             {
                 float totalX = 0;
                 float totalY = 0;
-                for (int i = 0; i < points.Count; i++)
+                for (int i = 0; i < Points.Count; i++)
                 {
-                    totalX += points[i].X;
-                    totalY += points[i].Y;
+                    totalX += Points[i].X;
+                    totalY += Points[i].Y;
                 }
 
-                return new Vector2(totalX / (float)points.Count, totalY / (float)points.Count);
+                return new Vector2(totalX / (float)Points.Count, totalY / (float)Points.Count);
             }
         }
 
@@ -64,10 +63,10 @@ namespace Hiale.GTA2NET.Helper
 
         public void Offset(float x, float y)
         {
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < Points.Count; i++)
             {
-                Vector2 p = points[i];
-                points[i] = new Vector2(p.X + x, p.Y + y);
+                Vector2 p = Points[i];
+                Points[i] = new Vector2(p.X + x, p.Y + y);
             }
         }
 
@@ -75,13 +74,93 @@ namespace Hiale.GTA2NET.Helper
         {
             string result = "";
 
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < Points.Count; i++)
             {
                 if (result != "") result += " ";
-                result += "{" + points[i].ToString() + "}";
+                result += "{" + Points[i].ToString() + "}";
             }
 
             return result;
         }
+    }
+
+    public class PolygonLine : Polygon
+    {
+        public Direction BlockFaceType { get; set; }
+
+        public Vector2 Start
+        {
+            get { return Points[0]; }
+            set { Points[0] = value; }
+        }
+
+        public Vector2 End
+        {
+            get { return Points[1]; }
+            set { Points[1] = value; }
+        }
+
+
+        public PolygonLine()
+        {
+
+        }
+
+        public PolygonLine(Vector2 pointA, Vector2 pointB) : this(pointA, pointB, Direction.None)
+        {
+
+        }
+
+        public PolygonLine(Vector2 pointA, Vector2 pointB, Direction blockFaceType)
+        {
+            Points.Add(pointA);
+            Points.Add(pointB);
+            BlockFaceType = blockFaceType;
+        }
+
+        public void CropStart()
+        {
+            float x = End.X - Start.X;
+            float y = End.Y - Start.Y;
+            if (x > 0)
+                x -= BaseGame.Epsilon * 20;
+            else if (x < 0)
+                x += BaseGame.Epsilon * 20;
+            if (y > 0)
+                y -= BaseGame.Epsilon * 20;
+            else if (y < 0)
+                y += BaseGame.Epsilon * 20;
+            Start = new Vector2(End.X - x, End.Y - y);
+        }
+
+        /// <summary> 
+        /// Returns the intersection point between this segment and the  
+        /// provided segment, if one exists. If the two segments are parallel 
+        /// or coincident, then no intersection exists. 
+        /// </summary> 
+        /// <remarks> 
+        /// http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline2d/ 
+        /// </remarks> 
+        public Vector2? IntersectionWith(PolygonLine other)
+        {
+            float x1 = Points[0].X, x2 = Points[1].X, x3 = other.Points[0].X, x4 = other.Points[1].X;
+            float y1 = Points[0].Y, y2 = Points[1].Y, y3 = other.Points[0].Y, y4 = other.Points[1].Y;
+
+            float denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+
+            if (denom == 0)
+                // Lines are parallel (or coincident) 
+                return null;
+
+            float ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
+            float ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+
+            if (ua < 0 || ua > 1 || ub < 0 || ub > 1)
+                // Intersection point lies outside one or both segments. 
+                return null;
+            else
+                return new Vector2(x1 + ua * (x2 - x1), y1 + ua * (y2 - y1));
+        }
+
     }
 }
