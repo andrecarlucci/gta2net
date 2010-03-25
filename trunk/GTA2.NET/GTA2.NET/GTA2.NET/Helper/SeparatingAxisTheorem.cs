@@ -2,6 +2,7 @@
 //Source: http://www.codeproject.com/KB/GDI-plus/PolygonCollision.aspx --> ported to XNA
 
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Helper
@@ -12,6 +13,9 @@ namespace Hiale.GTA2NET.Helper
         public bool WillIntersect; // Are the polygons going to intersect forward in time?
         public bool Intersect; // Are the polygons currently intersecting
         public Vector2 MinimumTranslationVector; // The translation to apply to polygon A to push the polygons appart.
+        public Vector2 TranslationAxis;
+        public float MinIntervalDistance;
+        public List<float> Distances;
     }
 
     public class SeparatingAxisTheorem
@@ -22,6 +26,7 @@ namespace Hiale.GTA2NET.Helper
             polygonA.BuildEdges();
             polygonB.BuildEdges();
             PolygonCollisionResult result = new PolygonCollisionResult();
+            result.Distances = new List<float>();
             result.Intersect = true;
             result.WillIntersect = true;
 
@@ -76,16 +81,19 @@ namespace Hiale.GTA2NET.Helper
 
                 // Do the same test as above for the new projection
                 float intervalDistance = IntervalDistance(ref minA, ref maxA, ref minB, ref maxB);
-                if (intervalDistance > 0) result.WillIntersect = false;
+                if (intervalDistance > 0)
+                    result.WillIntersect = false;
 
                 // If the polygons are not intersecting and won't intersect, exit the loop
-                if (!result.Intersect && !result.WillIntersect) break;
+                if (!result.Intersect && !result.WillIntersect)
+                    break;
 
 
                 // Check if the current interval distance is the minimum one. If so store
                 // the interval distance and the current distance.
                 // This will be used to calculate the minimum translation vector
                 intervalDistance = Math.Abs(intervalDistance);
+                result.Distances.Add(intervalDistance);
                 if (intervalDistance < minIntervalDistance)
                 {
                     minIntervalDistance = intervalDistance;
@@ -100,7 +108,12 @@ namespace Hiale.GTA2NET.Helper
             // The minimum translation vector can be used to push the polygons appart.
             // First moves the polygons by their velocity
             // then move polygonA by MinimumTranslationVector.
-            if (result.WillIntersect) result.MinimumTranslationVector = translationAxis * minIntervalDistance;
+            if (result.WillIntersect)
+            {
+                result.TranslationAxis = translationAxis;
+                result.MinIntervalDistance = minIntervalDistance;
+                result.MinimumTranslationVector = translationAxis * minIntervalDistance;
+            }
 
             return result;
         }

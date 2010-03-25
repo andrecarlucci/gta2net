@@ -14,73 +14,58 @@ namespace Hiale.GTA2NET
     {
         private static readonly Stack<IGameScreen> GameScreens = new Stack<IGameScreen>();
 
-        private static Vector3 _globalScalar = Vector3.One;
         /// <summary>
         /// Scalar of the scene
         /// </summary>
-        public static Vector3 GlobalScalar
-        {
-            get { return _globalScalar; }
-            set { _globalScalar = value; }
-        }
+        public static Vector3 GlobalScalar { get; set; }
+
+        public static Map Map { get; internal set; }
 
         /// <summary>
-        /// Current _map
+        /// Current style (Maybe this will be deleted later, when all information are extracted)
         /// </summary>
-        private static Map _map;
-        public static Map Map
-        {
-            get { return MainGame._map; }
-            internal set { MainGame._map = value; }
-        }
+        public static Style Style { get; set; }
 
-        private static Style _style;
-        /// <summary>
-        /// Current _style
-        /// </summary>
-        public static Style Style
-        {
-            get { return MainGame._style; }
-            set { MainGame._style = value; }
-        }
+        //public static RandomHelper RandomHelper { get; set; }
 
         /// <summary>
         /// All available car data.
         /// </summary>
         public static List<CarInfo> CarInfos { get; private set; }
 
-        private static EventList<MovableObject> _cars;
+        private static EventList<GameplayObject> _cars;
         /// <summary>
         /// The cars currently drive on the map.
         /// </summary>
-        public static EventList<MovableObject> Cars
+        public static EventList<GameplayObject> Cars
         {
             get { return MainGame._cars; }
             set { MainGame._cars = value; }
         }
 
-        private static EventList<MovableObject> _pedestrians;
+        private static EventList<GameplayObject> _pedestrians;
         /// <summary>
         /// The pedestrian currently walks along the map
         /// </summary>
-        public static EventList<MovableObject> Pedestrians
+        public static EventList<GameplayObject> Pedestrians
         {
             get { return MainGame._pedestrians; }
             set { MainGame._pedestrians = value; }
         }
 
-        private static MovableObject _chasingObject;
+
+        private static GameplayObject _chasingObject;
         /// <summary>
         /// The object (guy or car) which the player is controlling. The camera chases this object.
         /// </summary>
-        public static MovableObject ChasingObject
+        public static GameplayObject ChasingObject
         {
             get { return MainGame._chasingObject; }
             set { MainGame._chasingObject = value; }
         }
 
-        private const float RotationScalar = 0.05f;
-        private const float ForwardScalar = 0.004f;
+        public const float RotationScalar = 50; //was 0.05
+        public const float ForwardScalar = 10;
 
         private static string _windowTitle;
         /// <summary>
@@ -91,10 +76,14 @@ namespace Hiale.GTA2NET
             get
             {
                 if (string.IsNullOrEmpty(_windowTitle))
-                    _windowTitle = "GTA2.NET";
+                    _windowTitle = string.Empty;
                 return _windowTitle;
             }
-            set { _windowTitle = value; }
+            set
+            {
+                if (value.Length > 0)
+                    _windowTitle = value + " - ";
+            }
         }
 
         /// <summary>
@@ -140,15 +129,15 @@ namespace Hiale.GTA2NET
             }
         }
 
-        private static float _elapsedGameTime;
-        /// <summary>
-        /// Time elapsed since the last call to update in ms.
-        /// </summary>
-        public static float ElapsedGameTime
-        {
-            get { return _elapsedGameTime; }
-            set { _elapsedGameTime = value; }
-        }
+        //private static double _elapsedGameTime;
+        ///// <summary>
+        ///// Time elapsed since the last call to update in ms.
+        ///// </summary>
+        //public static double ElapsedGameTime
+        //{
+        //    get { return _elapsedGameTime; }
+        //    set { _elapsedGameTime = value; }
+        //}
 
         /// <summary>
         /// Create Game
@@ -159,6 +148,13 @@ namespace Hiale.GTA2NET
         }
 
         Hiale.GTA2NET.Renderer.UIRenderer uiRenderer; //ToDo: intigrate better!!!
+
+        AI ai;
+
+        static MainGame()
+        {
+            GlobalScalar = Vector3.One;
+        }
         
         /// <summary>
         /// Load stuff
@@ -167,14 +163,14 @@ namespace Hiale.GTA2NET
         {
             base.Initialize();
 
-            _cars = new EventList<MovableObject>();
-            _pedestrians = new EventList<MovableObject>();
+            _cars = new EventList<GameplayObject>();
+            _pedestrians = new EventList<GameplayObject>();
 
             //_chasingObject = new Car();
             //_chasingObject.Position = new Vector3(65, 181, GetHighestPoint(65, 181));
 
-            MainGame._style = new Style();
-            _style.ReadFromFile("data\\bil.sty");
+            MainGame.Style = new Style();
+            Style.ReadFromFile("data\\bil.sty");
 
             Dictionary<int, CarPhysics> carPhysics = CarPhysicReader.ReadFromFile();
             CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
@@ -187,9 +183,15 @@ namespace Hiale.GTA2NET
             //
             //...
 
-            _chasingObject = new Car(new Vector3(69, 186, GetHighestPoint(69, 186)), CarInfos[10]);
+            _chasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), CarInfos[9]);
+            _chasingObject.PlayerControlled = true;
+            //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
+            ai = new AI(_chasingObject);
             Cars.Add(_chasingObject);
         }
+
+        //private double _playerForwardDelta;
+        //private double _playerRotationDelta;
 
         /// <summary>
         /// Update
@@ -200,53 +202,101 @@ namespace Hiale.GTA2NET
             base.Update(gameTime);
 
 
-            _elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            float elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            PlayerInput input = new PlayerInput();
+            HandleInput(ref input);
+            _chasingObject.SetPlayerInput(input, elapsedGameTime);
+
+            UpdateObjects(elapsedGameTime);
+
             
-
-            // Update player and game logic
-            HandleInput();
-            Window.Title = WindowTitle + " - " + Fps.ToString() + " fps";
-            //System.Threading.Thread.Sleep(20);
-        }
-
-        private float ForwardAmount; //ToDo: better name
-        private float RotationAbount;
-
-        private void HandleInput()
-        {
-            Vector3 cameraPos = BaseGame.CameraPos;
-            if (Input.KeyboardUpPressed)
-            {
-                ForwardAmount = ForwardScalar * _elapsedGameTime;
-            }
-            if (Input.KeyboardDownPressed)
-            {
-                ForwardAmount = -ForwardScalar * _elapsedGameTime;
-            }
-            if (Input.KeyboardLeftPressed)
-            {
-                RotationAbount = -RotationScalar * _elapsedGameTime;
-            }
-            if (Input.KeyboardRightPressed)
-            {
-                RotationAbount = RotationScalar * _elapsedGameTime;
-            }
-
-            //if (ForwardAmount != 0)
-            _chasingObject.Move(ref ForwardAmount, ref RotationAbount, ref _elapsedGameTime);
-            
-
             if (_chasingObject != null)
             {
+                Vector3 cameraPos;
                 Vector3 lookAt = _chasingObject.Position3;
                 lookAt.Y *= -1;
                 cameraPos = lookAt;
                 cameraPos.Z += 10 * GlobalScalar.Z;
                 BaseGame.ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
             }
+            
 
-            ForwardAmount = 0;
-            RotationAbount = 0;
+
+            Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString() + " fps";
+            //System.Threading.Thread.Sleep(50);
+        }
+
+        private void UpdateObjects(float elapsedGameTime)
+        {
+            //Update all cars
+            for (int i = 0; i < Cars.Count; i++)
+            {
+                Cars[i].Update(elapsedGameTime);
+            }
+
+            //Update all pedestrians
+            for (int i = 0; i < Pedestrians.Count; i++)
+            {
+                Pedestrians[i].Update(elapsedGameTime);
+            }
+        }
+
+
+
+        private void HandleInput(ref PlayerInput playerInput)
+        {
+            //Vector3 cameraPos = BaseGame.CameraPos;
+            if (Input.KeyboardUpPressed)
+            {
+                //_playerForwardDelta = ForwardScalar * _elapsedGameTime;
+                playerInput.Forward = 1;
+            }
+            if (Input.KeyboardDownPressed)
+            {
+                //_playerForwardDelta = -ForwardScalar * _elapsedGameTime;
+                playerInput.Forward = -1;
+            }
+            if (Input.KeyboardLeftPressed)
+            {
+                //_playerRotationDelta = -RotationScalar * _elapsedGameTime;
+                playerInput.Rotation = -1;
+            }
+            if (Input.KeyboardRightPressed)
+            {
+                //_playerRotationDelta = RotationScalar * _elapsedGameTime;
+                playerInput.Rotation = 1;
+            }
+
+            //float a = 0;
+            //float b = 0;
+            //ai.DoSomething(ref a, ref b);
+            //if (a > 0)
+            //    ForwardAmount = ForwardScalar * _elapsedGameTime;
+            //else if (a < 0)
+            //    ForwardAmount = -ForwardScalar * _elapsedGameTime;
+
+            //if (b > 0)
+            //    RotationAbount = -RotationScalar * _elapsedGameTime;
+            //else if (b < 0)
+            //    RotationAbount = RotationScalar * _elapsedGameTime;
+
+
+            //if (ForwardAmount != 0)
+            //_chasingObject.Move(ref _playerForwardDelta, ref _playerRotationDelta, ref _elapsedGameTime);
+            
+
+            //if (_chasingObject != null)
+            //{
+            //    Vector3 lookAt = _chasingObject.Position3;
+            //    lookAt.Y *= -1;
+            //    cameraPos = lookAt;
+            //    cameraPos.Z += 10 * GlobalScalar.Z;
+            //    BaseGame.ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
+            //}
+
+            //_playerForwardDelta = 0;
+            //_playerRotationDelta = 0;
         }
 
         //protected override void Draw(GameTime gameTime)

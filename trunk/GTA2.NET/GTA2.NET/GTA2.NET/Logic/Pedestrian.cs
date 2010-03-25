@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Logic
 {
-    public class Pedestrian : MovableObject
+    public class Pedestrian : GameplayObject
     {
         private Color _color;
 
@@ -23,7 +23,7 @@ namespace Hiale.GTA2NET.Logic
 
         public Pedestrian(Vector3 startUpPosition) : base(startUpPosition, 1, 1)
         {
-            Velocity = 1f;
+            //Velocity = 1f;
         }
         
     }

@@ -1,15 +1,12 @@
 ﻿//Created: 16.02.2010
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core;
 
 namespace Hiale.GTA2NET.Logic
 {
-    public class Car : MovableObject
+    public class Car : GameplayObject
     {
         public CarInfo CarInfo { get; private set; }
 
@@ -21,6 +18,13 @@ namespace Hiale.GTA2NET.Logic
         {
             CarInfo = carInfo;
             CreateSprite();
+        }
+
+        public override void Update(float elapsedTime)
+        {
+            //forwardDelta *= CarInfo.Physics.Thrust;
+            //rotationDelta *= CarInfo.Physics.TurnRatio * 2;
+            base.Update(elapsedTime);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Hiale.GTA2NET.Renderer
         //Sprite stuff
         Texture2D spriteTexture;
         //List<Sprite> sprites;
-        Dictionary<MovableObject, Sprite> sprites;
+        Dictionary<GameplayObject, Sprite> sprites;
         Dictionary<SpriteItem, Rectangle> spriteAtlas;
         
 
@@ -34,21 +34,21 @@ namespace Hiale.GTA2NET.Renderer
         public SpriteRenderer()
         {
             effect = new BasicEffect(BaseGame.Device, null);
-            sprites = new Dictionary<MovableObject, Sprite>();
+            sprites = new Dictionary<GameplayObject, Sprite>();
             vertexDeclaration = new VertexDeclaration(BaseGame.Device, VertexPositionNormalTexture.VertexElements);
             verticesCollection = new List<VertexPositionNormalTexture>();
             indicesCollection = new List<int>();
             //MainGame.Cars.ItemAdded += new EventHandler<GenericEventArgs<MovableObject>>(Cars_ItemAdded);
-            MainGame.Cars.ItemRemoved += new EventHandler<GenericEventArgs<MovableObject>>(Cars_ItemRemoved);
+            MainGame.Cars.ItemRemoved += new EventHandler<GenericEventArgs<GameplayObject>>(Cars_ItemRemoved);
             //new
-            MovableObject.ObjectCreated += new EventHandler<GenericEventArgs<MovableObject>>(MovableObject_ObjectCreated);
+            GameplayObject.ObjectCreated += new EventHandler<GenericEventArgs<GameplayObject>>(MovableObject_ObjectCreated);
         }
 
-        void MovableObject_ObjectCreated(object sender, GenericEventArgs<MovableObject> e)
+        void MovableObject_ObjectCreated(object sender, GenericEventArgs<GameplayObject> e)
         {
             if (!sprites.ContainsKey(e.Item))
             {
-                MovableObject baseObject = e.Item;
+                GameplayObject baseObject = e.Item;
                 int spriteIndex = 0;
                 if (baseObject is Car)
                 {
@@ -61,7 +61,7 @@ namespace Hiale.GTA2NET.Renderer
             }
         }
 
-        void Cars_ItemAdded(object sender, GenericEventArgs<MovableObject> e)
+        void Cars_ItemAdded(object sender, GenericEventArgs<GameplayObject> e)
         {
             //if (!sprites.ContainsKey(e.Item))
             //{
@@ -74,14 +74,14 @@ namespace Hiale.GTA2NET.Renderer
 
         void MovableObject_RotationChanged(object sender, EventArgs e)
         {
-            MovableObject moveableObject = (MovableObject)sender;
+            GameplayObject moveableObject = (GameplayObject)sender;
             Sprite currentSprite = sprites[moveableObject];
             //currentSprite.Rotate(moveableObject.Rotation - currentSprite.Rotation);
  }
 
         void MovableObject_PositionChanged(object sender, EventArgs e)
         {
-            MovableObject moveableObject = (MovableObject)sender;
+            GameplayObject moveableObject = (GameplayObject)sender;
             Sprite currentSprite = sprites[moveableObject];
             //currentSprite.Rotate(moveableObject.Rotation - currentSprite.Rotation, new Vector2(moveableObject.Position.X, moveableObject.Position.Y));
             //currentSprite.SetPosition(moveableObject.Position);
@@ -89,7 +89,7 @@ namespace Hiale.GTA2NET.Renderer
 
         }
 
-        void Cars_ItemRemoved(object sender, GenericEventArgs<MovableObject> e)
+        void Cars_ItemRemoved(object sender, GenericEventArgs<GameplayObject> e)
         {
             if (sprites.ContainsKey(e.Item))
                 sprites.Remove(e.Item);
@@ -105,7 +105,7 @@ namespace Hiale.GTA2NET.Renderer
         {
             verticesCollection.Clear();
             indicesCollection.Clear();
-            foreach (KeyValuePair<MovableObject, Sprite> kvp in sprites)
+            foreach (KeyValuePair<GameplayObject, Sprite> kvp in sprites)
             {
                 CreateVertices(kvp.Value);
             }

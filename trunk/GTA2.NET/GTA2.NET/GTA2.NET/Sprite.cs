@@ -55,19 +55,23 @@ namespace Hiale.GTA2NET
 
         private readonly float _heightHalf;
 
-        public Sprite(MovableObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<SpriteItem, Rectangle> spriteDictionary)
+        public Sprite(GameplayObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<SpriteItem, Rectangle> spriteDictionary)
         {
             SpriteItem item = new SpriteItem();
 
             //Bus
-            item.Sprite = 10;
-            item.Model = 11;
-            item.Remap = 4;
+            //item.Sprite = 10;
+            //item.Model = 11;
+            //item.Remap = 4;
 
             //Cop
             //item.Sprite = 11;
             //item.Model = 12;
             //item.Remap = 36;
+
+            item.Sprite = 9;
+            item.Model = 10;
+            item.Remap = 29;
 
             Rectangle sourceRectangle = spriteDictionary[item];
             Width = sourceRectangle.Width / 64f; //1 Unit = 64px
@@ -100,7 +104,7 @@ namespace Hiale.GTA2NET
             BottomRight = (new Vector3(0.5f * Width, -0.5f * Height, 0.0f) + position);
         }
 
-        public void SetPosition(MovableObject baseObject)
+        public void SetPosition(GameplayObject baseObject)
         {
             Vector3 center = baseObject.Position3;
             float rotation = baseObject.RotationAngle;
