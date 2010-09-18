@@ -224,7 +224,7 @@ namespace Hiale.GTA2NET
 
 
             Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString() + " fps";
-            System.Threading.Thread.Sleep(50);
+            //System.Threading.Thread.Sleep(50);
         }
 
         private void UpdateObjects(float elapsedGameTime)
