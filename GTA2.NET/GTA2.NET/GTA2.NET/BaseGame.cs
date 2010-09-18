@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
@@ -30,12 +27,18 @@ namespace Hiale.GTA2NET
         /// Graphics device manager, used for the graphics creation and holds
         /// the GraphicsDevice.
         /// </summary>
-        public static GraphicsDeviceManager graphicsManager = null;
+        public static GraphicsDeviceManager GraphicsManager = null;
 
         /// <summary>
         /// Our screen resolution: Width and height of visible render area.
         /// </summary>
-        protected static int width, height;
+        protected static int width;
+
+        /// <summary>
+        /// Our screen resolution: Width and height of visible render area.
+        /// </summary>
+        protected static int height;
+
         /// <summary>
         /// Aspect ratio of our current resolution
         /// </summary>
@@ -64,6 +67,12 @@ namespace Hiale.GTA2NET
         /// </summary>
         private static float startTimeThisSecond = 0;
 
+        private static BlendState _alphaBlendState;
+        public static BlendState AlphaBlendingState
+        {
+            get { return _alphaBlendState; }
+        }
+
         /// <summary>
         /// For more accurate frames per second calculations,
         /// just count for one second, then fpsLastSecond is updated.
@@ -90,14 +99,14 @@ namespace Hiale.GTA2NET
         {
             get
             {
-                return graphicsManager.GraphicsDevice;
+                return GraphicsManager.GraphicsDevice;
             }
         }
 
         /// <summary>
         /// Back buffer depth format
         /// </summary>
-        static DepthFormat backBufferDepthFormat = DepthFormat.Depth32;
+        static DepthFormat backBufferDepthFormat = DepthFormat.Depth24; //XNA 3.1, was Depth32
         /// <summary>
         /// Back buffer depth format
         /// </summary>
@@ -118,7 +127,7 @@ namespace Hiale.GTA2NET
         {
             get
             {
-                return graphicsManager.IsFullScreen;
+                return GraphicsManager.IsFullScreen;
             }
         }
 
@@ -375,19 +384,15 @@ namespace Hiale.GTA2NET
         protected BaseGame()
         {
             // Set graphics
-            graphicsManager = new GraphicsDeviceManager(this);
-
-            // Set minimum requirements
-            graphicsManager.MinimumPixelShaderProfile = ShaderProfile.PS_2_0;
-            graphicsManager.MinimumVertexShaderProfile = ShaderProfile.VS_2_0;
+            GraphicsManager = new GraphicsDeviceManager(this);
 
             ApplyResolutionChange();
 
-            graphicsManager.PreparingDeviceSettings +=  new EventHandler<PreparingDeviceSettingsEventArgs>(graphics_PrepareDevice);
+            GraphicsManager.PreparingDeviceSettings +=  GraphicsPrepareDevice;
 
             #if DEBUG
             // Disable vertical retrace to get highest framerates possible for testing performance.
-            graphicsManager.SynchronizeWithVerticalRetrace = false;
+            GraphicsManager.SynchronizeWithVerticalRetrace = false;
             #endif
         }
 
@@ -415,11 +420,11 @@ namespace Hiale.GTA2NET
             //Log.Initialize();
 
             // Set depth format
-            backBufferDepthFormat = graphicsManager.PreferredDepthStencilFormat;
+            backBufferDepthFormat = GraphicsManager.PreferredDepthStencilFormat;
 
             // Update resolution if it changes
-            graphicsManager.DeviceReset += new EventHandler(graphics_DeviceReset);
-            graphics_DeviceReset(null, EventArgs.Empty);
+            GraphicsManager.DeviceReset += GraphicsDeviceReset;
+            GraphicsDeviceReset(null, EventArgs.Empty);
 
             // Create matrices for our shaders, this makes it much easier
             // to manage all the required matrices since there is no fixed
@@ -428,6 +433,8 @@ namespace Hiale.GTA2NET
 
             // ViewMatrix is updated in camera class
             ViewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 250), Vector3.Zero, Vector3.Up);
+
+            _alphaBlendState = CreateAlphaBlendingState();
 
             // Projection matrix is set by DeviceReset
         }
@@ -443,8 +450,8 @@ namespace Hiale.GTA2NET
             Input.Update();
 
             lastFrameTotalTimeMs = totalTimeMs;
-            elapsedTimeThisFrameInMs =
-                (float)gameTime.ElapsedRealTime.TotalMilliseconds;
+            //elapsedTimeThisFrameInMs = (float)gameTime.ElapsedRealTime.TotalMilliseconds; //XNA 3.1
+            elapsedTimeThisFrameInMs = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             totalTimeMs += elapsedTimeThisFrameInMs;
 
             // Make sure elapsedTimeThisFrameInMs is never 0
@@ -568,7 +575,7 @@ namespace Hiale.GTA2NET
             // Apply device changes
             if (mustApplyDeviceChanges)
             {
-                graphicsManager.ApplyChanges();
+                GraphicsManager.ApplyChanges();
                 mustApplyDeviceChanges = false;
             }
         }
@@ -591,7 +598,7 @@ namespace Hiale.GTA2NET
         }
 
 
-        void graphics_PrepareDevice(object sender, PreparingDeviceSettingsEventArgs e)
+        private void GraphicsPrepareDevice(object sender, PreparingDeviceSettingsEventArgs e)
         {
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
             {
@@ -599,16 +606,16 @@ namespace Hiale.GTA2NET
                     e.GraphicsDeviceInformation.PresentationParameters;
 
                 presentParams.RenderTargetUsage = RenderTargetUsage.PlatformContents;
-                if (graphicsManager.PreferredBackBufferHeight == 720)
+                if (GraphicsManager.PreferredBackBufferHeight == 720)
                 {
-                    presentParams.MultiSampleType = MultiSampleType.FourSamples;
+                    //presentParams.MultiSampleType = MultiSampleType.FourSamples; //XNA 3.1
                     #if !DEBUG
                     presentParams.PresentationInterval = PresentInterval.One;
                     #endif
                 }
                 else
                 {
-                    presentParams.MultiSampleType = MultiSampleType.TwoSamples;
+                    //presentParams.MultiSampleType = MultiSampleType.TwoSamples; //XNA 3.1
                     #if !DEBUG
                     presentParams.PresentationInterval = PresentInterval.Two;
                     #endif
@@ -616,7 +623,7 @@ namespace Hiale.GTA2NET
             }
         }
 
-        void graphics_DeviceReset(object sender, EventArgs e)
+        private static void GraphicsDeviceReset(object sender, EventArgs e)
         {
             // Update width and height
             width = Device.Viewport.Width;
@@ -626,15 +633,18 @@ namespace Hiale.GTA2NET
 
             // Re-Set device
             // Restore z buffer state
-            BaseGame.Device.RenderState.DepthBufferEnable = true;
-            BaseGame.Device.RenderState.DepthBufferWriteEnable = true;
+            //BaseGame.Device.RenderState.DepthBufferEnable = true; //XNA 3.1
+            //BaseGame.Device.RenderState.DepthBufferWriteEnable = true; //XNA 3.1
+            Device.DepthStencilState = DepthStencilState.Default;
+            Device.SamplerStates[0] = SamplerState.PointWrap;
             // Set u/v addressing back to wrap
-            BaseGame.Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;  //not needed ???
-            BaseGame.Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
+            //BaseGame.Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;  //not needed ???
+            //BaseGame.Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
             // Restore normal alpha blending
-            BaseGame.Device.RenderState.AlphaBlendEnable = true;
-            BaseGame.Device.RenderState.SourceBlend = Blend.SourceAlpha;
-            BaseGame.Device.RenderState.DestinationBlend = Blend.InverseSourceAlpha;
+            //BaseGame.Device.RenderState.AlphaBlendEnable = true; //XNA 3.1
+            //BaseGame.Device.RenderState.SourceBlend = Blend.SourceAlpha; //XNA 3.1
+            //BaseGame.Device.RenderState.DestinationBlend = Blend.InverseSourceAlpha; //XNA 3.1
+            Device.BlendState = AlphaBlendingState;
 
             // Set 128 and greate alpha compare for Model.Render
             //BaseGame.Device.RenderState.ReferenceAlpha = 128;
@@ -674,12 +684,24 @@ namespace Hiale.GTA2NET
             graphicsManager.PreferredBackBufferHeight =
                 GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             #else
-            graphicsManager.PreferredBackBufferWidth = resolutionWidth;
-            graphicsManager.PreferredBackBufferHeight = resolutionHeight;
-            graphicsManager.IsFullScreen = false;
+            GraphicsManager.PreferredBackBufferWidth = resolutionWidth;
+            GraphicsManager.PreferredBackBufferHeight = resolutionHeight;
+            GraphicsManager.IsFullScreen = false;
 
             mustApplyDeviceChanges = true;
             #endif
+        }
+
+        public static BlendState CreateAlphaBlendingState()
+        {
+            var blendState = new BlendState();
+            blendState.ColorBlendFunction = BlendFunction.Add;
+            blendState.ColorSourceBlend = Blend.SourceAlpha;
+            blendState.ColorDestinationBlend = Blend.InverseSourceAlpha;
+            blendState.AlphaBlendFunction = BlendFunction.Add;
+            blendState.AlphaSourceBlend = Blend.SourceAlpha;
+            blendState.AlphaDestinationBlend = Blend.InverseSourceAlpha;
+            return blendState;
         }
 
         #region Helper methods for 3d-calculations

@@ -1,15 +1,13 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2.NET", "GTA2.NET\GTA2.NET.csproj", "{3AD64C1B-9692-4B06-9116-7C04DAEE3113}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2Core", "GTA2Core\GTA2Core.csproj", "{FD319863-BB38-49F5-98F9-4E5952F17CD1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2.NETContent", "GTA2.NET\Content\GTA2.NETContent.contentproj", "{944D7ADA-E4B3-4A0C-A3B3-E9B240A7C257}"
+EndProject
 Global
-	GlobalSection(SubversionScc) = preSolution
-		Svn-Managed = True
-		Manager = AnkhSVN - Subversion Support for Visual Studio
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
@@ -25,10 +23,12 @@ Global
 		{FD319863-BB38-49F5-98F9-4E5952F17CD1}.Release|x86.Build.0 = Release|x86
 		{944D7ADA-E4B3-4A0C-A3B3-E9B240A7C257}.Debug|x86.ActiveCfg = Debug|x86
 		{944D7ADA-E4B3-4A0C-A3B3-E9B240A7C257}.Release|x86.ActiveCfg = Release|x86
-		{606D38F6-76C0-459C-AF46-AA33FF276FE8}.Debug|x86.ActiveCfg = Debug|x86
-		{606D38F6-76C0-459C-AF46-AA33FF276FE8}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
 	EndGlobalSection
 EndGlobal

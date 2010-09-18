@@ -21,7 +21,7 @@ namespace Hiale.GTA2NET.Renderer
 
         //Triangle stuff
         VertexBuffer vertexBuffer;
-        VertexDeclaration vertexDeclaration;
+        //VertexDeclaration vertexDeclaration;
         IndexBuffer indexBuffer;
         List<int> indexBufferCollection;
         List<VertexPositionNormalTexture> cityVerticesCollection;
@@ -31,7 +31,7 @@ namespace Hiale.GTA2NET.Renderer
 
         public CityRenderer()
         {
-            effect = new BasicEffect(BaseGame.Device, null);
+            effect = new BasicEffect(BaseGame.Device);
             cityVerticesCollection = new List<VertexPositionNormalTexture>();
             indexBufferCollection = new List<int>();
             texturePosition = new Vector2[4];
@@ -975,10 +975,14 @@ namespace Hiale.GTA2NET.Renderer
         private void CopyToGraphicsDevice()
         {
             VertexPositionNormalTexture[] cubeVertices = cityVerticesCollection.ToArray();
-            vertexBuffer = new VertexBuffer(BaseGame.Device, cubeVertices.Length * VertexPositionNormalTexture.SizeInBytes, BufferUsage.None);
-            vertexBuffer.SetData<VertexPositionNormalTexture>(cubeVertices);
+            //vertexBuffer = new VertexBuffer(BaseGame.Device, cubeVertices.Length * VertexPositionNormalTexture.SizeInBytes, BufferUsage.None); //XNA 3.1
+            //vertexBuffer.SetData<VertexPositionNormalTexture>(cubeVertices); //XNA 3.1
 
-            vertexDeclaration = new VertexDeclaration(BaseGame.Device, VertexPositionNormalTexture.VertexElements);
+            //vertexDeclaration = new VertexDeclaration(BaseGame.Device, VertexPositionNormalTexture.VertexElements); //XNA 3.1
+
+            vertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), cubeVertices.Length, BufferUsage.None); //XNA 4.0
+            vertexBuffer.SetData<VertexPositionNormalTexture>(cubeVertices); //XNA 4.0
+            BaseGame.Device.SetVertexBuffer(vertexBuffer); //XNA 4.0
 
             int[] indexBufferData = indexBufferCollection.ToArray();
             indexBuffer = new IndexBuffer(BaseGame.Device, typeof(int), indexBufferData.Length, BufferUsage.None);
@@ -999,7 +1003,7 @@ namespace Hiale.GTA2NET.Renderer
                 MemoryStream stream = new MemoryStream();
                 dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
                 stream.Position = 0;
-                cityTexture = Texture2D.FromFile(BaseGame.Device, stream);
+                cityTexture = Texture2D.FromStream(BaseGame.Device, stream);
                 stream.Close();
                 dict.Dispose();                
             }
@@ -1007,12 +1011,14 @@ namespace Hiale.GTA2NET.Renderer
             {
                 dict = (TextureAtlasTiles)TextureAtlas.Deserialize(tilesDictPath, typeof(TextureAtlasTiles));
                 tileAtlas = dict.TileDictionary;
-                cityTexture = Texture2D.FromFile(BaseGame.Device, dict.ImagePath);
+                FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
+                cityTexture = Texture2D.FromStream(BaseGame.Device, fs);
+                fs.Close();
             }
         }
 
         public void DrawCity()
-        {           
+        {   
             effect.View = BaseGame.ViewMatrix;
             effect.Projection = BaseGame.ProjectionMatrix;
             effect.World = BaseGame.WorldMatrix;
@@ -1022,16 +1028,25 @@ namespace Hiale.GTA2NET.Renderer
             //effect.GraphicsDevice.RenderState.CullMode = CullMode.None;
             //effect.GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
 
-            effect.GraphicsDevice.RenderState.DepthBufferEnable = true; //SpriteBatch disables DepthBuffer automatically, we need to enable it again
-            effect.GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
+            //effect.GraphicsDevice.RenderState.DepthBufferEnable = true; //SpriteBatch disables DepthBuffer automatically, we need to enable it again //XNA 3.1
+            //effect.GraphicsDevice.RenderState.DepthBufferWriteEnable = true; //XNA 3.1
+            effect.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            effect.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 
-            effect.GraphicsDevice.VertexDeclaration = vertexDeclaration;
-            effect.GraphicsDevice.Indices = indexBuffer;
-            effect.GraphicsDevice.Vertices[0].SetSource(vertexBuffer, 0, VertexPositionNormalTexture.SizeInBytes);
-            effect.Begin();
+            effect.GraphicsDevice.BlendState = BaseGame.AlphaBlendingState;
+            //BaseGame.Device.RenderState.SourceBlend = Blend.SourceAlpha; //XNA 3.1
+            //BaseGame.Device.RenderState.DestinationBlend = Blend.InverseSourceAlpha; //XNA 3.1
+
+            BaseGame.Device.SetVertexBuffer(vertexBuffer); //XNA 4.0
+            BaseGame.Device.Indices = indexBuffer;
+            //effect.GraphicsDevice.VertexDeclaration = vertexDeclaration; //XNA 3.1
+            //effect.GraphicsDevice.Vertices[0].SetSource(vertexBuffer, 0, VertexPositionNormalTexture.SizeInBytes); //XNA 3.1
+
+
+            //effect.Begin(); //XNA 3.1
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
+                //pass.Begin(); //XNA 3.1
 
                 //Anisotropic
                 //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Anisotropic;
@@ -1042,11 +1057,11 @@ namespace Hiale.GTA2NET.Renderer
                 //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Point;
                 //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
                 //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
-
+                pass.Apply(); //XNA 4.0
                 effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, cityVerticesCollection.Count, 0, indexBufferCollection.Count / 3);
-                pass.End();
+                //pass.End(); //XNA 3.1
             }
-            effect.End();
+            //effect.End(); //XNA 3.1
         }      
     }
 }
