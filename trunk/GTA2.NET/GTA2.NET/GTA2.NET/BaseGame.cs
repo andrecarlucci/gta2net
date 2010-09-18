@@ -644,7 +644,7 @@ namespace Hiale.GTA2NET
             //BaseGame.Device.RenderState.AlphaBlendEnable = true; //XNA 3.1
             //BaseGame.Device.RenderState.SourceBlend = Blend.SourceAlpha; //XNA 3.1
             //BaseGame.Device.RenderState.DestinationBlend = Blend.InverseSourceAlpha; //XNA 3.1
-            Device.BlendState = AlphaBlendingState;
+            Device.BlendState = CreateAlphaBlendingState();
 
             // Set 128 and greate alpha compare for Model.Render
             //BaseGame.Device.RenderState.ReferenceAlpha = 128;
