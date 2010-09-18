@@ -25,7 +25,7 @@ namespace Hiale.GTA2NET.Renderer
         
 
         //Triangle stuff, use DynamicVertexBuffer?
-        VertexDeclaration vertexDeclaration;
+        VertexBuffer vertexBuffer;
         List<VertexPositionNormalTexture> verticesCollection;
         VertexPositionNormalTexture[] vertices;
         List<int> indicesCollection;
@@ -33,18 +33,18 @@ namespace Hiale.GTA2NET.Renderer
 
         public SpriteRenderer()
         {
-            effect = new BasicEffect(BaseGame.Device, null);
+            effect = new BasicEffect(BaseGame.Device);
             sprites = new Dictionary<GameplayObject, Sprite>();
-            vertexDeclaration = new VertexDeclaration(BaseGame.Device, VertexPositionNormalTexture.VertexElements);
+            //vertexDeclaration = new VertexDeclaration(BaseGame.Device, VertexPositionNormalTexture.VertexElements); //XNA 3.1
             verticesCollection = new List<VertexPositionNormalTexture>();
             indicesCollection = new List<int>();
             //MainGame.Cars.ItemAdded += new EventHandler<GenericEventArgs<MovableObject>>(Cars_ItemAdded);
-            MainGame.Cars.ItemRemoved += new EventHandler<GenericEventArgs<GameplayObject>>(Cars_ItemRemoved);
+            MainGame.Cars.ItemRemoved += new EventHandler<GenericEventArgs<GameplayObject>>(CarsItemRemoved);
             //new
-            GameplayObject.ObjectCreated += new EventHandler<GenericEventArgs<GameplayObject>>(MovableObject_ObjectCreated);
+            GameplayObject.ObjectCreated += new EventHandler<GenericEventArgs<GameplayObject>>(MovableObjectObjectCreated);
         }
 
-        void MovableObject_ObjectCreated(object sender, GenericEventArgs<GameplayObject> e)
+        private void MovableObjectObjectCreated(object sender, GenericEventArgs<GameplayObject> e)
         {
             if (!sprites.ContainsKey(e.Item))
             {
@@ -56,12 +56,12 @@ namespace Hiale.GTA2NET.Renderer
                 }
 
                 sprites.Add(e.Item, new Sprite(baseObject, baseObject.Position3, spriteIndex, spriteTexture, spriteAtlas));
-                e.Item.PositionChanged += new EventHandler(MovableObject_PositionChanged);
-                e.Item.RotationChanged += new EventHandler(MovableObject_RotationChanged);
+                e.Item.PositionChanged += new EventHandler(MovableObjectPositionChanged);
+                e.Item.RotationChanged += new EventHandler(MovableObjectRotationChanged);
             }
         }
 
-        void Cars_ItemAdded(object sender, GenericEventArgs<GameplayObject> e)
+        private void CarsItemAdded(object sender, GenericEventArgs<GameplayObject> e)
         {
             //if (!sprites.ContainsKey(e.Item))
             //{
@@ -72,14 +72,14 @@ namespace Hiale.GTA2NET.Renderer
 
         }
 
-        void MovableObject_RotationChanged(object sender, EventArgs e)
+        private void MovableObjectRotationChanged(object sender, EventArgs e)
         {
             GameplayObject moveableObject = (GameplayObject)sender;
             Sprite currentSprite = sprites[moveableObject];
             //currentSprite.Rotate(moveableObject.Rotation - currentSprite.Rotation);
  }
 
-        void MovableObject_PositionChanged(object sender, EventArgs e)
+        private void MovableObjectPositionChanged(object sender, EventArgs e)
         {
             GameplayObject moveableObject = (GameplayObject)sender;
             Sprite currentSprite = sprites[moveableObject];
@@ -89,7 +89,7 @@ namespace Hiale.GTA2NET.Renderer
 
         }
 
-        void Cars_ItemRemoved(object sender, GenericEventArgs<GameplayObject> e)
+        private void CarsItemRemoved(object sender, GenericEventArgs<GameplayObject> e)
         {
             if (sprites.ContainsKey(e.Item))
                 sprites.Remove(e.Item);
@@ -111,6 +111,11 @@ namespace Hiale.GTA2NET.Renderer
             }
             vertices = verticesCollection.ToArray();
             indices = indicesCollection.ToArray();
+
+            vertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), vertices.Length, BufferUsage.None); //XNA 4.0
+            vertexBuffer.SetData<VertexPositionNormalTexture>(vertices); //XNA 4.0
+            BaseGame.Device.SetVertexBuffer(vertexBuffer); //XNA 4.0
+
         }
 
         private void CreateVertices(Sprite sprite)
@@ -144,7 +149,7 @@ namespace Hiale.GTA2NET.Renderer
                 MemoryStream stream = new MemoryStream();
                 dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
                 stream.Position = 0;
-                spriteTexture = Texture2D.FromFile(BaseGame.Device, stream);
+                spriteTexture = Texture2D.FromStream(BaseGame.Device, stream);
                 stream.Close();
                 dict.Dispose();
             }
@@ -152,7 +157,9 @@ namespace Hiale.GTA2NET.Renderer
             {
                 dict = (TextureAtlasSprites)TextureAtlas.Deserialize(spriteDictPath, typeof(TextureAtlasSprites));
                 spriteAtlas = dict.SpriteDictionary;
-                spriteTexture = Texture2D.FromFile(BaseGame.Device, dict.ImagePath);
+                FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
+                spriteTexture = Texture2D.FromStream(BaseGame.Device, fs);
+                fs.Close();
             }            
         }
 
@@ -179,16 +186,25 @@ namespace Hiale.GTA2NET.Renderer
 
             //effect.GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
 
-            effect.GraphicsDevice.RenderState.DepthBufferEnable = true; //SpriteBatch disables DepthBuffer automatically, we need to enable it again
-            effect.GraphicsDevice.RenderState.DepthBufferWriteEnable = true;
+            //effect.GraphicsDevice.RenderState.DepthBufferEnable = true; //SpriteBatch disables DepthBuffer automatically, we need to enable it again //XNA 3.1
+            //effect.GraphicsDevice.RenderState.DepthBufferWriteEnable = true; //XNA 3.1
 
-            effect.GraphicsDevice.VertexDeclaration = vertexDeclaration;
+            effect.GraphicsDevice.BlendState = BaseGame.AlphaBlendingState;
+
+            //BaseGame.Device.BlendState = BlendState.Opaque;
+            //BaseGame.Device.DepthStencilState = DepthStencilState.Default;
+            //BaseGame.Device.SamplerStates[0] = SamplerState.LinearClamp; //needed?
+
+            BaseGame.Device.SetVertexBuffer(vertexBuffer); //XNA 4.0
+            //BaseGame.Device.Indices = 
+
+            //effect.GraphicsDevice.VertexDeclaration = vertexDeclaration; //XNA 3.1
             //effect.GraphicsDevice.Indices = dynIndexBuffer;
             //effect.GraphicsDevice.Vertices[0].SetSource(dynVertexBuffer, 0, VertexPositionNormalTexture.SizeInBytes);
-            effect.Begin();
+            //effect.Begin(); //XNA 3.1
             foreach (EffectPass pass in effect.CurrentTechnique.Passes)
             {
-                pass.Begin();
+                //pass.Begin(); //XNA 3.1
 
                 //Anisotropic
                 //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Anisotropic;
@@ -200,11 +216,13 @@ namespace Hiale.GTA2NET.Renderer
                 //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
                 //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
 
+                pass.Apply();
                 //effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, verticesCollection.Count, 0, indexBufferCollection.Count / 3);
-                effect.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, indices, 0, indices.Length / 3);
-                pass.End();
+                effect.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, indices, 0, indices.Length / 3); //XNA 3.1
+                //effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length / 3);
+                //pass.End(); //XNA 3.1
             }
-            effect.End();
+            //effect.End(); //XNA 3.1
         }
 
     }

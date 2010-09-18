@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
@@ -16,7 +17,9 @@ namespace Hiale.GTA2NET.Renderer
         public UIRenderer()
         {
             spriteBatch = new SpriteBatch(BaseGame.Device);
-            mousePointerTex = Texture2D.FromFile(BaseGame.Device, "textures\\MouseCursor.png");
+            FileStream fs = new FileStream("textures\\MouseCursor.png", FileMode.Open);
+            mousePointerTex = Texture2D.FromStream(BaseGame.Device, fs);
+            fs.Close();
             //nullTex = Texture2D.FromFile(BaseGame.Device, "textures\\Null.bmp");
         }
 

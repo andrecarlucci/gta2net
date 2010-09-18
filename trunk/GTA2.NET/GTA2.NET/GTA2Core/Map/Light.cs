@@ -1,6 +1,6 @@
 ﻿//Created 17.01.2010
 
-using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map
 {

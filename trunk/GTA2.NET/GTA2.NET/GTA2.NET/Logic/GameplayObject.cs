@@ -318,11 +318,12 @@ namespace Hiale.GTA2NET.Logic
             {
                 lineCollision = LineCollide(ref direction, ref topLeft, ref topRight, ref bottomRight, ref bottomLeft, ref newTopLeft, ref newTopRight, ref newBottomRight, ref newBottomLeft, ref blockLines);
 
-                //if (lineCollision.Collision)
-                //{
-                //    forward = 0;
-                //    collision = true;
-                //}
+                if (lineCollision.Collision)
+                {
+                    //forward = 0;
+                    //collision = true;
+                    //System.Diagnostics.Debug.WriteLine("OK");
+                }
                 bool satCollision = false;
                 satCollision  = SatCollision(ref direction, ref topLeft, ref topRight, ref bottomRight, ref bottomLeft, ref blockLines);
                 if (lineCollision.Collision || satCollision)
