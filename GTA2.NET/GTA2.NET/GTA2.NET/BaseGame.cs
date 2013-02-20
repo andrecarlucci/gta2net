@@ -1,6 +1,7 @@
 ﻿using System;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
+using ANX.Framework;
+using ANX.Framework.Graphics;
+using ANX.Framework;
 
 
 namespace Hiale.GTA2NET
@@ -9,7 +10,7 @@ namespace Hiale.GTA2NET
     /// Base game class for all the basic game support.
     /// Connects all our helper classes together and makes our life easier!
     /// </summary>
-    public class BaseGame : Microsoft.Xna.Framework.Game
+    public class BaseGame : ANX.Framework.Game
     {
         /// <summary>
         /// Background color
@@ -686,7 +687,7 @@ namespace Hiale.GTA2NET
             #else
             GraphicsManager.PreferredBackBufferWidth = resolutionWidth;
             GraphicsManager.PreferredBackBufferHeight = resolutionHeight;
-            GraphicsManager.IsFullScreen = false;
+            //GraphicsManager.IsFullScreen = false; //ANX not implemented
 
             mustApplyDeviceChanges = true;
             #endif

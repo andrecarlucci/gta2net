@@ -2,11 +2,12 @@
 
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Helper;
-using Microsoft.Xna.Framework.Graphics;
+using ANX.Framework.Graphics;
 using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.Helper;
-using Microsoft.Xna.Framework;
+using ANX.Framework;
 using System.IO;
+using Rectangle = ANX.Framework.Rectangle;
 
 namespace Hiale.GTA2NET.Renderer
 {
@@ -54,11 +55,13 @@ namespace Hiale.GTA2NET.Renderer
             //MainGame.Map.ReadFromFile("data\\bil.gmp");
             MainGame.Map.ReadFromFile("data\\MP1-comp.gmp");
             //MainGame.Map.ReadFromFile("data\\MP1-comp1.gmp");
+
+            //MapCollision collision = new MapCollision(MainGame.Map);
         }
 
         private void SetUpCity()
         {
-            for (int z = 0; z < MainGame.Map.CityBlocks.GetLength(2); z++)
+            for (var z = 0; z < MainGame.Map.CityBlocks.GetLength(2); z++)
             {
                 SetUpLayer(ref z, false);
                 SetUpLayer(ref z, true);
@@ -68,167 +71,166 @@ namespace Hiale.GTA2NET.Renderer
 
         private void SetUpLayer(ref int z, bool lidLayer)
         {
-            for (int x = 0; x < MainGame.Map.CityBlocks.GetLength(0); x++)
+            for (var x = 0; x < MainGame.Map.CityBlocks.GetLength(0); x++)
             {
-                for (int y = 0; y < MainGame.Map.CityBlocks.GetLength(1); y++)
+                for (var y = 0; y < MainGame.Map.CityBlocks.GetLength(1); y++)
                 {
-                    BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
-                    if (!block.IsEmpty && !SkipBlock(ref block))
+                    var block = MainGame.Map.CityBlocks[x, y, z];
+                    if (block.IsEmpty || SkipBlock(ref block))
+                        continue;
+                    block.Position = new Vector3(x, y, z);
+                    switch (block.SlopeType)
                     {
-                        block.Position = new Vector3(x, y, z);
-                        switch (block.SlopeType)
-                        {
-                            case SlopeType.None:
-                                SetUpCube(block, lidLayer);
-                                break;
-                            case SlopeType.Up26Low:
-                                SetUpSlope_Low(block, 26, 1);
-                                break;
-                            case SlopeType.Up26High:
-                                SetUpSlope_High(block, 26, 1);
-                                break;
-                            case SlopeType.Down26Low:
-                                SetUpSlope_Low(block, 26, 3);
-                                break;
-                            case SlopeType.Down26High:
-                                SetUpSlope_High(block, 26, 3);
-                                break;
-                            case SlopeType.Left26Low:
-                                SetUpSlope_Low(block, 26, 2);
-                                break;
-                            case SlopeType.Left26High:
-                                SetUpSlope_High(block, 26, 2);
-                                break;
-                            case SlopeType.Right26Low:
-                                SetUpSlope_Low(block, 26, 0);
-                                break;
-                            case SlopeType.Right26High:
-                                SetUpSlope_High(block, 26, 0);
-                                break;
-                            case SlopeType.Up7Low:
-                                SetUpSlope_Low(block, 7, 1);
-                                break;
-                            case SlopeType.Up7High0:
-                                SetUpSlope_High(block, 7, 1);
-                                break;
-                            case SlopeType.Up7High1:
-                                SetUpSlope_High(block, 8, 1);
-                                break;
-                            case SlopeType.Up7High2:
-                                SetUpSlope_High(block, 9, 1);
-                                break;
-                            case SlopeType.Up7High3:
-                                SetUpSlope_High(block, 10, 1);
-                                break;
-                            case SlopeType.Up7High4:
-                                SetUpSlope_High(block, 11, 1);
-                                break;
-                            case SlopeType.Up7High5:
-                                SetUpSlope_High(block, 12, 1);
-                                break;
-                            case SlopeType.Up7High6:
-                                SetUpSlope_High(block, 13, 1);
-                                break;
-                            case SlopeType.Down7Low:
-                                SetUpSlope_Low(block, 7, 3);
-                                break;
-                            case SlopeType.Down7High0:
-                                SetUpSlope_High(block, 7, 3);
-                                break;
-                            case SlopeType.Down7High1:
-                                SetUpSlope_High(block, 8, 3);
-                                break;
-                            case SlopeType.Down7High2:
-                                SetUpSlope_High(block, 9, 3);
-                                break;
-                            case SlopeType.Down7High3:
-                                SetUpSlope_High(block, 10, 3);
-                                break;
-                            case SlopeType.Down7High4:
-                                SetUpSlope_High(block, 11, 3);
-                                break;
-                            case SlopeType.Down7High5:
-                                SetUpSlope_High(block, 12, 3);
-                                break;
-                            case SlopeType.Down7High6:
-                                SetUpSlope_High(block, 13, 3);
-                                break;
-                            case SlopeType.Left7Low:
-                                SetUpSlope_Low(block, 7, 2);
-                                break;
-                            case SlopeType.Left7High0:
-                                SetUpSlope_High(block, 7, 2);
-                                break;
-                            case SlopeType.Left7High1:
-                                SetUpSlope_High(block, 8, 2);
-                                break;
-                            case SlopeType.Left7High2:
-                                SetUpSlope_High(block, 9, 2);
-                                break;
-                            case SlopeType.Left7High3:
-                                SetUpSlope_High(block, 10, 2);
-                                break;
-                            case SlopeType.Left7High4:
-                                SetUpSlope_High(block, 11, 2);
-                                break;
-                            case SlopeType.Left7High5:
-                                SetUpSlope_High(block, 12, 2);
-                                break;
-                            case SlopeType.Left7High6:
-                                SetUpSlope_High(block, 13, 2);
-                                break;
-                            case SlopeType.Right7Low:
-                                SetUpSlope_Low(block, 7, 0);
-                                break;
-                            case SlopeType.Right7High0:
-                                SetUpSlope_High(block, 7, 0);
-                                break;
-                            case SlopeType.Right7High1:
-                                SetUpSlope_High(block, 8, 0);
-                                break;
-                            case SlopeType.Right7High2:
-                                SetUpSlope_High(block, 9, 0);
-                                break;
-                            case SlopeType.Right7High3:
-                                SetUpSlope_High(block, 10, 0);
-                                break;
-                            case SlopeType.Right7High4:
-                                SetUpSlope_High(block, 11, 0);
-                                break;
-                            case SlopeType.Right7High5:
-                                SetUpSlope_High(block, 12, 0);
-                                break;
-                            case SlopeType.Right7High6:
-                                SetUpSlope_High(block, 13, 0);
-                                break;
-                            case SlopeType.Up45:
-                                SetUpSlope_Low(block, 45, 1);
-                                break;
-                            case SlopeType.Down45:
-                                SetUpSlope_Low(block, 45, 3);
-                                break;
-                            case SlopeType.Left45:
-                                SetUpSlope_Low(block, 45, 2);
-                                break;
-                            case SlopeType.Right45:
-                                SetUpSlope_Low(block, 45, 0);
-                                break;
-                            case SlopeType.DiagonalFacingUpLeft:
-                                SetUpSlope_Diagonal(block, 1);
-                                break;
-                            case SlopeType.DiagonalFacingUpRight:
-                                SetUpSlope_Diagonal(block, 0);
-                                break;
-                            case SlopeType.DiagonalFacingDownLeft:
-                                SetUpSlope_Diagonal(block, 2);
-                                break;
-                            case SlopeType.DiagonalFacingDownRight:
-                                SetUpSlope_Diagonal(block, 3);
-                                break;
-                            default:
-                                SetUpCube(block, lidLayer);
-                                break;
-                        }
+                        case SlopeType.None:
+                            SetUpCube(block, lidLayer);
+                            break;
+                        case SlopeType.Up26Low:
+                            SetUpSlope_Low(block, 26, 1);
+                            break;
+                        case SlopeType.Up26High:
+                            SetUpSlope_High(block, 26, 1);
+                            break;
+                        case SlopeType.Down26Low:
+                            SetUpSlope_Low(block, 26, 3);
+                            break;
+                        case SlopeType.Down26High:
+                            SetUpSlope_High(block, 26, 3);
+                            break;
+                        case SlopeType.Left26Low:
+                            SetUpSlope_Low(block, 26, 2);
+                            break;
+                        case SlopeType.Left26High:
+                            SetUpSlope_High(block, 26, 2);
+                            break;
+                        case SlopeType.Right26Low:
+                            SetUpSlope_Low(block, 26, 0);
+                            break;
+                        case SlopeType.Right26High:
+                            SetUpSlope_High(block, 26, 0);
+                            break;
+                        case SlopeType.Up7Low:
+                            SetUpSlope_Low(block, 7, 1);
+                            break;
+                        case SlopeType.Up7High0:
+                            SetUpSlope_High(block, 7, 1);
+                            break;
+                        case SlopeType.Up7High1:
+                            SetUpSlope_High(block, 8, 1);
+                            break;
+                        case SlopeType.Up7High2:
+                            SetUpSlope_High(block, 9, 1);
+                            break;
+                        case SlopeType.Up7High3:
+                            SetUpSlope_High(block, 10, 1);
+                            break;
+                        case SlopeType.Up7High4:
+                            SetUpSlope_High(block, 11, 1);
+                            break;
+                        case SlopeType.Up7High5:
+                            SetUpSlope_High(block, 12, 1);
+                            break;
+                        case SlopeType.Up7High6:
+                            SetUpSlope_High(block, 13, 1);
+                            break;
+                        case SlopeType.Down7Low:
+                            SetUpSlope_Low(block, 7, 3);
+                            break;
+                        case SlopeType.Down7High0:
+                            SetUpSlope_High(block, 7, 3);
+                            break;
+                        case SlopeType.Down7High1:
+                            SetUpSlope_High(block, 8, 3);
+                            break;
+                        case SlopeType.Down7High2:
+                            SetUpSlope_High(block, 9, 3);
+                            break;
+                        case SlopeType.Down7High3:
+                            SetUpSlope_High(block, 10, 3);
+                            break;
+                        case SlopeType.Down7High4:
+                            SetUpSlope_High(block, 11, 3);
+                            break;
+                        case SlopeType.Down7High5:
+                            SetUpSlope_High(block, 12, 3);
+                            break;
+                        case SlopeType.Down7High6:
+                            SetUpSlope_High(block, 13, 3);
+                            break;
+                        case SlopeType.Left7Low:
+                            SetUpSlope_Low(block, 7, 2);
+                            break;
+                        case SlopeType.Left7High0:
+                            SetUpSlope_High(block, 7, 2);
+                            break;
+                        case SlopeType.Left7High1:
+                            SetUpSlope_High(block, 8, 2);
+                            break;
+                        case SlopeType.Left7High2:
+                            SetUpSlope_High(block, 9, 2);
+                            break;
+                        case SlopeType.Left7High3:
+                            SetUpSlope_High(block, 10, 2);
+                            break;
+                        case SlopeType.Left7High4:
+                            SetUpSlope_High(block, 11, 2);
+                            break;
+                        case SlopeType.Left7High5:
+                            SetUpSlope_High(block, 12, 2);
+                            break;
+                        case SlopeType.Left7High6:
+                            SetUpSlope_High(block, 13, 2);
+                            break;
+                        case SlopeType.Right7Low:
+                            SetUpSlope_Low(block, 7, 0);
+                            break;
+                        case SlopeType.Right7High0:
+                            SetUpSlope_High(block, 7, 0);
+                            break;
+                        case SlopeType.Right7High1:
+                            SetUpSlope_High(block, 8, 0);
+                            break;
+                        case SlopeType.Right7High2:
+                            SetUpSlope_High(block, 9, 0);
+                            break;
+                        case SlopeType.Right7High3:
+                            SetUpSlope_High(block, 10, 0);
+                            break;
+                        case SlopeType.Right7High4:
+                            SetUpSlope_High(block, 11, 0);
+                            break;
+                        case SlopeType.Right7High5:
+                            SetUpSlope_High(block, 12, 0);
+                            break;
+                        case SlopeType.Right7High6:
+                            SetUpSlope_High(block, 13, 0);
+                            break;
+                        case SlopeType.Up45:
+                            SetUpSlope_Low(block, 45, 1);
+                            break;
+                        case SlopeType.Down45:
+                            SetUpSlope_Low(block, 45, 3);
+                            break;
+                        case SlopeType.Left45:
+                            SetUpSlope_Low(block, 45, 2);
+                            break;
+                        case SlopeType.Right45:
+                            SetUpSlope_Low(block, 45, 0);
+                            break;
+                        case SlopeType.DiagonalFacingUpLeft:
+                            SetUpSlopeDiagonal(block, 1);
+                            break;
+                        case SlopeType.DiagonalFacingUpRight:
+                            SetUpSlopeDiagonal(block, 0);
+                            break;
+                        case SlopeType.DiagonalFacingDownLeft:
+                            SetUpSlopeDiagonal(block, 2);
+                            break;
+                        case SlopeType.DiagonalFacingDownRight:
+                            SetUpSlopeDiagonal(block, 3);
+                            break;
+                        default:
+                            SetUpCube(block, lidLayer);
+                            break;
                     }
                 }
             }
@@ -265,12 +267,12 @@ namespace Hiale.GTA2NET.Renderer
         /// <param name="rotation"></param>
         private static void RotateSlope(ref FaceCoordinates frontCoordinates, byte rotation)
         {
-            for (int i = 0; i < rotation; i++)
+            for (var i = 0; i < rotation; i++)
             {
-                Vector3 topLeft = frontCoordinates.BottomLeft;
-                Vector3 topRight = frontCoordinates.TopLeft;
-                Vector3 bottomRight = frontCoordinates.TopRight;
-                Vector3 bottomLeft = frontCoordinates.BottomRight;
+                var topLeft = frontCoordinates.BottomLeft;
+                var topRight = frontCoordinates.TopLeft;
+                var bottomRight = frontCoordinates.TopRight;
+                var bottomLeft = frontCoordinates.BottomRight;
 
                 frontCoordinates.TopLeft = topLeft;
                 frontCoordinates.TopRight = topRight;
@@ -301,7 +303,7 @@ namespace Hiale.GTA2NET.Renderer
             }
         }
 
-        private void SetUpSlope_Diagonal(BlockInfo block, byte rotation)
+        private void SetUpSlopeDiagonal(BlockInfo block, byte rotation)
         {
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
@@ -321,18 +323,23 @@ namespace Hiale.GTA2NET.Renderer
 
                 if (block.Lid.Flip) //ToDo: This is just a dirty way! Problem: rotation Bug if flipped
                 {
-                    if (lidRotation == RotationType.Rotate90)
-                        lidRotation = RotationType.Rotate270;
-                    else if (lidRotation == RotationType.Rotate270)
-                        lidRotation = RotationType.Rotate90;
+                    switch (lidRotation)
+                    {
+                        case RotationType.Rotate90:
+                            lidRotation = RotationType.Rotate270;
+                            break;
+                        case RotationType.Rotate270:
+                            lidRotation = RotationType.Rotate90;
+                            break;
+                    }
                 }                
 
-                Vector2[] texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
+                var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
 
-                int startIndex = cityVerticesCollection.Count - 3;
+                var startIndex = cityVerticesCollection.Count - 3;
                 indexBufferCollection.Add(startIndex);
                 indexBufferCollection.Add(startIndex + 1);
                 indexBufferCollection.Add(startIndex + 2);
@@ -359,13 +366,13 @@ namespace Hiale.GTA2NET.Renderer
             //Diagonal face
             if (diagonalFace.TileNumber > 0)
             {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
+                var texPos = GetTexturePositions(tileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[2]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[0]));
 
-                int startIndex = cityVerticesCollection.Count - 4;
+                var startIndex = cityVerticesCollection.Count - 4;
                 indexBufferCollection.Add(startIndex + 2);
                 indexBufferCollection.Add(startIndex + 1);
                 indexBufferCollection.Add(startIndex);
@@ -403,7 +410,7 @@ namespace Hiale.GTA2NET.Renderer
             FaceCoordinates backCoordinates;
             PrepareCoordinates(block.Position, out frontCoordinates, out backCoordinates);
 
-            float slopeScalar = 1f;
+            var slopeScalar = 1f;
             switch (subType)
             { 
                 case 26:
@@ -417,11 +424,11 @@ namespace Hiale.GTA2NET.Renderer
                     break;
             }
 
-            Vector3 middleTopLeft = frontCoordinates.TopLeft;
-            Vector3 middleTopRight = frontCoordinates.TopRight;
-            Vector3 middleBottomRight = frontCoordinates.BottomRight;
-            Vector3 middleBottomLeft = frontCoordinates.BottomLeft;
-            FaceCoordinates middleCoordinates = new FaceCoordinates(ref middleTopLeft, ref middleTopRight, ref middleBottomRight, ref middleBottomLeft);
+            var middleTopLeft = frontCoordinates.TopLeft;
+            var middleTopRight = frontCoordinates.TopRight;
+            var middleBottomRight = frontCoordinates.BottomRight;
+            var middleBottomLeft = frontCoordinates.BottomLeft;
+            var middleCoordinates = new FaceCoordinates(ref middleTopLeft, ref middleTopRight, ref middleBottomRight, ref middleBottomLeft);
 
             if (rotation > 0)
             {
@@ -440,13 +447,13 @@ namespace Hiale.GTA2NET.Renderer
             {
                 RotationType lidRotation = block.Lid.Rotation;
                 RotateEnum(ref lidRotation, rotation);
-                Vector2[] texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
+                var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, texPos[2]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[3]));
 
-                int startIndex = cityVerticesCollection.Count - 4;
+                var startIndex = cityVerticesCollection.Count - 4;
                 indexBufferCollection.Add(startIndex);
                 indexBufferCollection.Add(startIndex + 1);
                 indexBufferCollection.Add(startIndex + 2);
@@ -486,8 +493,8 @@ namespace Hiale.GTA2NET.Renderer
             //Top face
             if (topFace.TileNumber > 0)
             {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
-                Vector2 center = GetCenterPosition(ref texPos[3], ref texPos[0], slopeScalar);
+                var texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                var center = GetCenterPosition(ref texPos[3], ref texPos[0], slopeScalar);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
@@ -500,8 +507,8 @@ namespace Hiale.GTA2NET.Renderer
             //Bottom face
             if (bottomFace.TileNumber > 0)
             {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
-                Vector2 center = GetCenterPosition(ref texPos[2], ref texPos[1], slopeScalar);
+                var texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                var center = GetCenterPosition(ref texPos[2], ref texPos[1], slopeScalar);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
@@ -515,15 +522,15 @@ namespace Hiale.GTA2NET.Renderer
             //Right face
             if (rightFace.TileNumber > 0) //this face is not supported by GTA2, the editor removes this face.
             {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
-                Vector2 center = GetCenterPosition(ref texPos[1], ref texPos[2], slopeScalar);
+                var texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
+                var center = GetCenterPosition(ref texPos[1], ref texPos[2], slopeScalar);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
                 center = GetCenterPosition(ref texPos[0], ref texPos[3], slopeScalar);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[3]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[2]));
 
-                int startIndex = cityVerticesCollection.Count - 4;
+                var startIndex = cityVerticesCollection.Count - 4;
                 indexBufferCollection.Add(startIndex + 2);
                 indexBufferCollection.Add(startIndex + 1);
                 indexBufferCollection.Add(startIndex + 0);
@@ -540,8 +547,8 @@ namespace Hiale.GTA2NET.Renderer
             FaceCoordinates backCoordinates;
             PrepareCoordinates(block.Position, out frontCoordinates, out backCoordinates);
 
-            float middleSlopeScalar = 1f;
-            float frontSlopeScalar = 0f;
+            var middleSlopeScalar = 1f;
+            var frontSlopeScalar = 0f;
             switch (subType)
             {
                 case 26:
@@ -578,11 +585,11 @@ namespace Hiale.GTA2NET.Renderer
                     break;
             }
 
-            Vector3 middleTopLeft = frontCoordinates.TopLeft;
-            Vector3 middleTopRight = frontCoordinates.TopRight;
-            Vector3 middleBottomRight = frontCoordinates.BottomRight;
-            Vector3 middleBottomLeft = frontCoordinates.BottomLeft;
-            FaceCoordinates middleCoordinates = new FaceCoordinates(ref middleTopLeft, ref middleTopRight, ref middleBottomRight, ref middleBottomLeft);
+            var middleTopLeft = frontCoordinates.TopLeft;
+            var middleTopRight = frontCoordinates.TopRight;
+            var middleBottomRight = frontCoordinates.BottomRight;
+            var middleBottomLeft = frontCoordinates.BottomLeft;
+            var middleCoordinates = new FaceCoordinates(ref middleTopLeft, ref middleTopRight, ref middleBottomRight, ref middleBottomLeft);
 
             if (rotation > 0)
             {
@@ -604,15 +611,15 @@ namespace Hiale.GTA2NET.Renderer
             //Front face (diagonal)
             if (block.Lid.TileNumber > 0)
             {
-                RotationType lidRotation = block.Lid.Rotation;
+                var lidRotation = block.Lid.Rotation;
                 RotateEnum(ref lidRotation, rotation);
-                Vector2[] texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
+                var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, texPos[2]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopLeft, Vector3.Zero, texPos[3]));
 
-                int startIndex = cityVerticesCollection.Count - 4;
+                var startIndex = cityVerticesCollection.Count - 4;
                 indexBufferCollection.Add(startIndex + 0);
                 indexBufferCollection.Add(startIndex + 1);
                 indexBufferCollection.Add(startIndex + 2);
@@ -656,8 +663,8 @@ namespace Hiale.GTA2NET.Renderer
             //Top face
             if (topFace.TileNumber > 0)
             {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
-                Vector2 center = GetCenterPosition(ref texPos[0], ref texPos[3], frontSlopeScalar);
+                var texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                var center = GetCenterPosition(ref texPos[0], ref texPos[3], frontSlopeScalar);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, center)); //was 3
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
@@ -676,15 +683,15 @@ namespace Hiale.GTA2NET.Renderer
             //Bottom face
             if (bottomFace.TileNumber > 0)
             {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
-                Vector2 center = GetCenterPosition(ref texPos[2], ref texPos[1], frontSlopeScalar);
+                var texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                var center = GetCenterPosition(ref texPos[2], ref texPos[1], frontSlopeScalar);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, center)); //was texPos[2]
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));                
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
                 center = GetCenterPosition(ref texPos[3], ref texPos[0], middleSlopeScalar);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, center));
 
-                int startIndex = cityVerticesCollection.Count - 4;
+                var startIndex = cityVerticesCollection.Count - 4;
                 indexBufferCollection.Add(startIndex);
                 indexBufferCollection.Add(startIndex + 1);
                 indexBufferCollection.Add(startIndex + 2);
@@ -719,79 +726,76 @@ namespace Hiale.GTA2NET.Renderer
             position.Y *= -1;
 
             //Coordinates of the cube
-            Vector3 topLeftFront = (new Vector3(0.0f, 0.0f, UnitSize) + position) * scalar;
-            Vector3 topRightFront = (new Vector3(UnitSize, 0.0f, UnitSize) + position) * scalar;
-            Vector3 bottomLeftFront = (new Vector3(0.0f, -UnitSize, UnitSize) + position) * scalar;
-            Vector3 bottomRightFront = (new Vector3(UnitSize, -UnitSize, UnitSize) + position) * scalar;
+            var topLeftFront = (new Vector3(0.0f, 0.0f, UnitSize) + position) * scalar;
+            var topRightFront = (new Vector3(UnitSize, 0.0f, UnitSize) + position) * scalar;
+            var bottomLeftFront = (new Vector3(0.0f, -UnitSize, UnitSize) + position) * scalar;
+            var bottomRightFront = (new Vector3(UnitSize, -UnitSize, UnitSize) + position) * scalar;
             frontCoords = new FaceCoordinates(ref topLeftFront, ref topRightFront, ref bottomRightFront, ref bottomLeftFront);
 
-            Vector3 topLeftBack = (new Vector3(0.0f, 0.0f, 0.0f) + position) * scalar;
-            Vector3 topRightBack = (new Vector3(UnitSize, 0.0f, 0.0f) + position) * scalar;
-            Vector3 bottomLeftBack = (new Vector3(0.0f, -UnitSize, 0.0f) + position) * scalar;
-            Vector3 bottomRightBack = (new Vector3(UnitSize, -UnitSize, 0.0f) + position) * scalar;
+            var topLeftBack = (new Vector3(0.0f, 0.0f, 0.0f) + position) * scalar;
+            var topRightBack = (new Vector3(UnitSize, 0.0f, 0.0f) + position) * scalar;
+            var bottomLeftBack = (new Vector3(0.0f, -UnitSize, 0.0f) + position) * scalar;
+            var bottomRightBack = (new Vector3(UnitSize, -UnitSize, 0.0f) + position) * scalar;
             backCoords = new FaceCoordinates(ref topLeftBack, ref topRightBack, ref bottomRightBack, ref bottomLeftBack);
         }
 
 
         private void CreateFrontVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Lid.TileNumber > 0)
-            {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], block.Lid.Rotation, block.Lid.Flip);
-                //Vector2[] TexPos = GetTexturePositions(tileAtlas[991], block.Lid.Rotation, block.Lid.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[3]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[0]));
+            if (block.Lid.TileNumber <= 0)
+                return;
+            var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], block.Lid.Rotation, block.Lid.Flip);
+            //Vector2[] TexPos = GetTexturePositions(tileAtlas[991], block.Lid.Rotation, block.Lid.Flip);
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[1]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[3]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[0]));
 
-                int startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 3);
-                indexBufferCollection.Add(startIndex + 2);
-            }
+            var startIndex = cityVerticesCollection.Count - 4;
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex + 1);
+            indexBufferCollection.Add(startIndex + 2);
+            indexBufferCollection.Add(startIndex + 1);
+            indexBufferCollection.Add(startIndex + 3);
+            indexBufferCollection.Add(startIndex + 2);
         }
 
         private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Top.TileNumber > 0)
-            {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[0]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[3]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[1]));
+            if (block.Top.TileNumber <= 0)
+                return;
+            var texPos = GetTexturePositions(tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[0]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[2]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[3]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[1]));
 
-                int startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 3);
-                indexBufferCollection.Add(startIndex + 1);
-            }
+            var startIndex = cityVerticesCollection.Count - 4;
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex + 1);
+            indexBufferCollection.Add(startIndex + 2);
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex + 3);
+            indexBufferCollection.Add(startIndex + 1);
         }
 
         private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Bottom.TileNumber > 0)
-            {
-                Vector2[] texPos = GetTexturePositions(tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
+            if (block.Bottom.TileNumber <= 0)
+                return;
+            var texPos = GetTexturePositions(tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
 
-                int startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 3);
-            }
+            var startIndex = cityVerticesCollection.Count - 4;
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex + 1);
+            indexBufferCollection.Add(startIndex + 2);
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex + 2);
+            indexBufferCollection.Add(startIndex + 3);
         }
 
         private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
@@ -801,35 +805,35 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace leftFace, byte rotation)
         {
-            if (leftFace.TileNumber > 0)
+            if (leftFace.TileNumber <= 0)
+                return;
+            var newFront = new FaceCoordinates();
+            var newBack = new FaceCoordinates();
+            switch (rotation)
             {
-                FaceCoordinates newFront = new FaceCoordinates();
-                FaceCoordinates newBack = new FaceCoordinates();
-                if (rotation == 0)
-                {
+                case 0:
                     newFront = CorrectLeftRightVertices(frontCoords, true);
                     newBack = CorrectLeftRightVertices(backCoords, true);
-                }
-                else if (rotation == 2)
-                {
+                    break;
+                case 2:
                     newFront = CorrectLeftRightVertices(frontCoords, false);
                     newBack = CorrectLeftRightVertices(backCoords, false);
-                }
-                Vector2[] texPos = GetTexturePositions(tileAtlas[leftFace.TileNumber], leftFace.Rotation, leftFace.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
-
-                //Left also has a strange index buffer order...
-                int startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 3);
-                indexBufferCollection.Add(startIndex);
+                    break;
             }
+            var texPos = GetTexturePositions(tileAtlas[leftFace.TileNumber], leftFace.Rotation, leftFace.Flip);
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
+
+            //Left also has a strange index buffer order...
+            var startIndex = cityVerticesCollection.Count - 4;
+            indexBufferCollection.Add(startIndex + 2);
+            indexBufferCollection.Add(startIndex + 1);
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex + 1);
+            indexBufferCollection.Add(startIndex + 3);
+            indexBufferCollection.Add(startIndex);
         }
 
         private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
@@ -839,41 +843,41 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace rightFace, byte rotation)
         {
-            if (rightFace.TileNumber > 0)
+            if (rightFace.TileNumber <= 0)
+                return;
+            var newFront = new FaceCoordinates();
+            var newBack = new FaceCoordinates();
+            switch (rotation)
             {
-                FaceCoordinates newFront = new FaceCoordinates();
-                FaceCoordinates newBack = new FaceCoordinates();
-                if (rotation == 0)
-                {
+                case 0:
                     newFront = CorrectLeftRightVertices(frontCoords, false);
                     newBack = CorrectLeftRightVertices(backCoords, false);
-                }
-                else if (rotation == 2)
-                {
+                    break;
+                case 2:
                     newFront = CorrectLeftRightVertices(frontCoords, true);
                     newBack = CorrectLeftRightVertices(backCoords, true);
-                }
-                //ToDo: Add more rotation codes...
-                Vector2[] texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
-
-                //...
-                int startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 3);
-                indexBufferCollection.Add(startIndex + 2);
+                    break;
             }
+            //ToDo: Add more rotation codes...
+            var texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
+            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+
+            //...
+            var startIndex = cityVerticesCollection.Count - 4;
+            indexBufferCollection.Add(startIndex + 2);
+            indexBufferCollection.Add(startIndex + 1);
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex);
+            indexBufferCollection.Add(startIndex + 3);
+            indexBufferCollection.Add(startIndex + 2);
         }
 
         private static FaceCoordinates CorrectLeftRightVertices(FaceCoordinates coordinates, bool left)
         {
-            FaceCoordinates newCoords = new FaceCoordinates();
+            var newCoords = new FaceCoordinates();
 
             float value;
             if (left)
@@ -904,26 +908,27 @@ namespace Hiale.GTA2NET.Renderer
             double pixelPerWidth = 1f/cityTexture.Width;
             double pixelPerHeight = 1f/cityTexture.Height;
 
-            Vector2 texTopLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
-            Vector2 texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
-            Vector2 texBottomRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
-            Vector2 texBottomLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
+            var texTopLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
+            var texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
+            var texBottomRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
+            var texBottomLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
             
             if (flip)
             {
-                Vector2 helper = texTopLeft;
+                var helper = texTopLeft;
                 texTopLeft = texTopRight;
                 texTopRight = helper;
                 helper = texBottomLeft;
                 texBottomLeft = texBottomRight;
                 texBottomRight = helper;
-                if (rotation == RotationType.Rotate90) //Hack
+                switch (rotation)
                 {
-                    rotation = RotationType.Rotate270;
-                }
-                else if (rotation == RotationType.Rotate270)
-                {
-                    rotation = RotationType.Rotate90;
+                    case RotationType.Rotate90:
+                        rotation = RotationType.Rotate270;
+                        break;
+                    case RotationType.Rotate270:
+                        rotation = RotationType.Rotate90;
+                        break;
                 }
             }
 
@@ -974,19 +979,14 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CopyToGraphicsDevice()
         {
-            VertexPositionNormalTexture[] cubeVertices = cityVerticesCollection.ToArray();
-            //vertexBuffer = new VertexBuffer(BaseGame.Device, cubeVertices.Length * VertexPositionNormalTexture.SizeInBytes, BufferUsage.None); //XNA 3.1
-            //vertexBuffer.SetData<VertexPositionNormalTexture>(cubeVertices); //XNA 3.1
+            var cubeVertices = cityVerticesCollection.ToArray();
 
-            //vertexDeclaration = new VertexDeclaration(BaseGame.Device, VertexPositionNormalTexture.VertexElements); //XNA 3.1
+            vertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), cubeVertices.Length, BufferUsage.None);
+            vertexBuffer.SetData(cubeVertices);
 
-            vertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), cubeVertices.Length, BufferUsage.None); //XNA 4.0
-            vertexBuffer.SetData<VertexPositionNormalTexture>(cubeVertices); //XNA 4.0
-            BaseGame.Device.SetVertexBuffer(vertexBuffer); //XNA 4.0
-
-            int[] indexBufferData = indexBufferCollection.ToArray();
+            var indexBufferData = indexBufferCollection.ToArray();
             indexBuffer = new IndexBuffer(BaseGame.Device, typeof(int), indexBufferData.Length, BufferUsage.None);
-            indexBuffer.SetData<int>(indexBufferData);
+            indexBuffer.SetData(indexBufferData);
         }
 
         private void LoadTexture()
@@ -995,12 +995,12 @@ namespace Hiale.GTA2NET.Renderer
             TextureAtlasTiles dict;
             if (!File.Exists(tilesDictPath))
             {
-                ZipStorer zip = ZipStorer.Open("Textures\\bil.zip", FileAccess.Read);
+                var zip = ZipStorer.Open("Textures\\bil.zip", FileAccess.Read);
                 dict = new TextureAtlasTiles( "Textures\\tiles.png", zip);
                 dict.BuildTextureAtlas();
                 dict.Serialize(tilesDictPath);
                 tileAtlas = dict.TileDictionary;
-                MemoryStream stream = new MemoryStream();
+                var stream = new MemoryStream();
                 dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
                 stream.Position = 0;
                 cityTexture = Texture2D.FromStream(BaseGame.Device, stream);
@@ -1011,9 +1011,10 @@ namespace Hiale.GTA2NET.Renderer
             {
                 dict = (TextureAtlasTiles)TextureAtlas.Deserialize(tilesDictPath, typeof(TextureAtlasTiles));
                 tileAtlas = dict.TileDictionary;
-                FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
-                cityTexture = Texture2D.FromStream(BaseGame.Device, fs);
-                fs.Close();
+                //FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
+                //cityTexture = Texture2D.FromStream(BaseGame.Device, fs); //ANX, not implemented
+                //fs.Close();
+                cityTexture = MainGame.Content.Load<Texture2D>("tiles");
             }
         }
 
@@ -1028,23 +1029,16 @@ namespace Hiale.GTA2NET.Renderer
             //effect.GraphicsDevice.RenderState.CullMode = CullMode.None;
             //effect.GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
 
-            //effect.GraphicsDevice.RenderState.DepthBufferEnable = true; //SpriteBatch disables DepthBuffer automatically, we need to enable it again //XNA 3.1
-            //effect.GraphicsDevice.RenderState.DepthBufferWriteEnable = true; //XNA 3.1
+
             effect.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             effect.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 
             effect.GraphicsDevice.BlendState = BaseGame.AlphaBlendingState;
-            //BaseGame.Device.RenderState.SourceBlend = Blend.SourceAlpha; //XNA 3.1
-            //BaseGame.Device.RenderState.DestinationBlend = Blend.InverseSourceAlpha; //XNA 3.1
 
-            BaseGame.Device.SetVertexBuffer(vertexBuffer); //XNA 4.0
+            BaseGame.Device.SetVertexBuffer(vertexBuffer);
             BaseGame.Device.Indices = indexBuffer;
-            //effect.GraphicsDevice.VertexDeclaration = vertexDeclaration; //XNA 3.1
-            //effect.GraphicsDevice.Vertices[0].SetSource(vertexBuffer, 0, VertexPositionNormalTexture.SizeInBytes); //XNA 3.1
 
-
-            //effect.Begin(); //XNA 3.1
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+            foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 //pass.Begin(); //XNA 3.1
 
@@ -1057,11 +1051,9 @@ namespace Hiale.GTA2NET.Renderer
                 //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Point;
                 //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
                 //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
-                pass.Apply(); //XNA 4.0
+                pass.Apply();
                 effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, cityVerticesCollection.Count, 0, indexBufferCollection.Count / 3);
-                //pass.End(); //XNA 3.1
             }
-            //effect.End(); //XNA 3.1
         }      
     }
 }

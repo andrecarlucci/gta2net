@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using ANX.Framework;
+using ANX.Framework.Content;
 using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.GameScreens;
 using Hiale.GTA2NET.Core.Map;
@@ -145,9 +146,13 @@ namespace Hiale.GTA2NET
         public MainGame() : base()
         {
             //
+            Content = base.Content;
+            Content.RootDirectory = "Textures";
         }
 
-        Hiale.GTA2NET.Renderer.UIRenderer uiRenderer; //ToDo: intigrate better!!!
+        public new static ContentManager Content;
+
+        Hiale.GTA2NET.Renderer.UiRenderer uiRenderer; //ToDo: intigrate better!!!
 
         AI ai;
 
@@ -178,7 +183,7 @@ namespace Hiale.GTA2NET
             BaseGame.ViewMatrix = Matrix.CreateLookAt(new Vector3(65, -181, 10), new Vector3(65, -181, 0), Vector3.Up);
             GameScreens.Push(new InGameScreen());
 
-            uiRenderer = new Hiale.GTA2NET.Renderer.UIRenderer();
+            uiRenderer = new Hiale.GTA2NET.Renderer.UiRenderer();
             IsFixedTimeStep = false;
             //
             //...
