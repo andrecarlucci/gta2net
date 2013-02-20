@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using ANX.Framework;
 
 namespace Hiale.GTA2NET.Helper
 {

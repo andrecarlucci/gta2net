@@ -1,6 +1,6 @@
 ﻿//Created: 11.02.2010
 
-using Microsoft.Xna.Framework;
+using ANX.Framework;
 
 namespace Hiale.GTA2NET.Helper
 {

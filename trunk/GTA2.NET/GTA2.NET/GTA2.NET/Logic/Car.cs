@@ -1,7 +1,7 @@
 ﻿//Created: 16.02.2010
 
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+using ANX.Framework;
 using Hiale.GTA2NET.Core;
 
 namespace Hiale.GTA2NET.Logic
