@@ -1,7 +1,8 @@
 ﻿using System;
-using ANX.Framework.Graphics;
-using ANX.Framework;
-using Color = ANX.Framework.Color;
+using System.IO;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Hiale.GTA2NET.Renderer
 {
@@ -14,11 +15,11 @@ namespace Hiale.GTA2NET.Renderer
         public UiRenderer()
         {
             spriteBatch = new SpriteBatch(BaseGame.Device);
-            //FileStream fs = new FileStream("textures\\MouseCursor.png", FileMode.Open);
-            //mousePointerTex = Texture2D.FromStream(BaseGame.Device, fs); //ANX-not implemented
-            //mousePointerTex = new Texture2D(BaseGame.Device, 64, 64);
-            //fs.Close();
-            mousePointerTex = MainGame.Content.Load<Texture2D>("MouseCursor");
+            var fs = new FileStream("textures\\MouseCursor.png", FileMode.Open);
+            mousePointerTex = Texture2D.FromStream(BaseGame.Device, fs);
+            mousePointerTex = new Texture2D(BaseGame.Device, 64, 64);
+            fs.Close();
+            //mousePointerTex = MainGame.Content.Load<Texture2D>("MouseCursor");
             //nullTex = Texture2D.FromFile(BaseGame.Device, "textures\\Null.bmp");
         }
 

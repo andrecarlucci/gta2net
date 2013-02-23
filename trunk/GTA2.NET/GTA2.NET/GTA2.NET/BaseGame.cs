@@ -1,7 +1,7 @@
 ﻿using System;
-using ANX.Framework;
-using ANX.Framework.Graphics;
-using ANX.Framework;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 
 namespace Hiale.GTA2NET
@@ -10,7 +10,7 @@ namespace Hiale.GTA2NET
     /// Base game class for all the basic game support.
     /// Connects all our helper classes together and makes our life easier!
     /// </summary>
-    public class BaseGame : ANX.Framework.Game
+    public class BaseGame : Microsoft.Xna.Framework.Game
     {
         /// <summary>
         /// Background color

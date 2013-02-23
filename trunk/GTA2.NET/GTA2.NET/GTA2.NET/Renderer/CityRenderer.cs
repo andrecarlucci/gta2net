@@ -2,12 +2,12 @@
 
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Helper;
-using ANX.Framework.Graphics;
+using Microsoft.Xna.Framework.Graphics;
 using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.Helper;
-using ANX.Framework;
+using Microsoft.Xna.Framework;
 using System.IO;
-using Rectangle = ANX.Framework.Rectangle;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Hiale.GTA2NET.Renderer
 {
@@ -1011,10 +1011,10 @@ namespace Hiale.GTA2NET.Renderer
             {
                 dict = (TextureAtlasTiles)TextureAtlas.Deserialize(tilesDictPath, typeof(TextureAtlasTiles));
                 tileAtlas = dict.TileDictionary;
-                //FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
-                //cityTexture = Texture2D.FromStream(BaseGame.Device, fs); //ANX, not implemented
-                //fs.Close();
-                cityTexture = MainGame.Content.Load<Texture2D>("tiles");
+                FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
+                cityTexture = Texture2D.FromStream(BaseGame.Device, fs); //ANX, not implemented
+                fs.Close();
+                //cityTexture = MainGame.Content.Load<Texture2D>("tiles");
             }
         }
 

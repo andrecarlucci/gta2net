@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.Helper;
-using ANX.Framework;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Logic
 {

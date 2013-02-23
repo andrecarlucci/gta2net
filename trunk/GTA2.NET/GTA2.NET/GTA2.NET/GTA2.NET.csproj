@@ -34,15 +34,10 @@
     <StartupObject>Hiale.GTA2NET.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ANX.Framework" />
-    <Reference Include="ANX.InputDevices.Windows.XInput" />
-    <Reference Include="ANX.InputSystem.Standard" />
-    <Reference Include="ANX.PlatformSystem.Windows" />
-    <Reference Include="ANX.RenderSystem.Windows.DX10, Version=0.7.27.23138, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="MonoGame.Framework, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\ANX.Framework\ANX.RenderSystem.Windows.DX10.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\MonoGame\v3.0\Assemblies\WindowsGL\MonoGame.Framework.dll</HintPath>
     </Reference>
-    <Reference Include="ANX.SoundSystem.Windows.XAudio" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Drawing" />
@@ -82,6 +77,10 @@
     <Content Include="Game.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
+      <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
+      <Name>Farseer Physics MonoGame</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GTA2Core\GTA2Core.csproj">
       <Project>{52279f3e-ae51-467e-954d-614724cff34d}</Project>
       <Name>GTA2Core</Name>

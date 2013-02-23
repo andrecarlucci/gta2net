@@ -18,7 +18,7 @@ namespace Hiale.GTA2NET.Core
 
         public static List<CarInfo> CreateCarInfoCollection(Dictionary<int, CarInfo> carInfos, Dictionary<int, CarPhysics> carPhysics)
         {
-            List<CarInfo> carInfoCollection = new List<CarInfo>();
+            var carInfoCollection = new List<CarInfo>();
             foreach (KeyValuePair<int, CarInfo> carInfoItem in carInfos)
             {
                 foreach (KeyValuePair<int, CarPhysics> carPhysicsItem in carPhysics)

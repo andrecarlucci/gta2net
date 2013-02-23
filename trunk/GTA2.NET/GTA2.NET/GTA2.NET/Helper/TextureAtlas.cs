@@ -8,7 +8,7 @@ using System.Xml.Serialization;
 using System.IO;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Style;
-using Rectangle=ANX.Framework.Rectangle;
+using Rectangle=Microsoft.Xna.Framework.Rectangle;
 
 
 namespace Hiale.GTA2NET.Helper
