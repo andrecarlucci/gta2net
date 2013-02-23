@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using ANX.Framework;
-using ANX.Framework.Content;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.GameScreens;
 using Hiale.GTA2NET.Core.Map;

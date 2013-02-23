@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Helper;
-using ANX.Framework;
-using ANX.Framework.Graphics;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Hiale.GTA2NET.Logic;
 
 namespace Hiale.GTA2NET

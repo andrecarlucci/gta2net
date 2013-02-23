@@ -10,7 +10,7 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             if (bitOffset > 31)
                 throw new NotSupportedException();
-            int bitValue = (int)Math.Pow(2, bitOffset);
+            var bitValue = (int)Math.Pow(2, bitOffset);
             return (value & bitValue) == bitValue;
         }
     }

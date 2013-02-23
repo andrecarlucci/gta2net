@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ANX.Framework;
-using ANX.Framework.Input;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace Hiale.GTA2NET
 {
@@ -40,7 +40,7 @@ namespace Hiale.GTA2NET
         /// the last frame for comparing stuff.
         /// </summary>
         private static KeyboardState keyboardState =
-            ANX.Framework.Input.Keyboard.GetState();
+            Microsoft.Xna.Framework.Input.Keyboard.GetState();
 
         /// <summary>
         /// Keys pressed last frame, for comparison if a key was just pressed.
@@ -891,7 +891,7 @@ namespace Hiale.GTA2NET
             #else
             // Handle mouse input variables
             mouseStateLastFrame = mouseState;
-            mouseState = ANX.Framework.Input.Mouse.GetState();
+            mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
 
             // Update mouseXMovement and mouseYMovement
             lastMouseXMovement += mouseState.X - mouseStateLastFrame.X;
@@ -912,17 +912,17 @@ namespace Hiale.GTA2NET
                 // App must be active
             //    RacingGameManager.IsAppActive)
             //{
-                //ANX.Framework.Input.Mouse.SetPosition(BaseGame.Width / 2, BaseGame.Height / 2);
+                //Microsoft.Xna.Framework.Input.Mouse.SetPosition(BaseGame.Width / 2, BaseGame.Height / 2);
                 // Also use this for the current mouse pos for next frame,
                 // else the mouseXMovement is messed up!
-                //mouseState = ANX.Framework.Input.Mouse.GetState();
+                //mouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
             //}
 
             // Check if mouse was moved this frame if it is not detected yet.
             // This allows us to ignore the mouse even when it is captured
             // on a windows machine if just the gamepad or keyboard is used.
             if (mouseDetected == false)// &&
-                //always returns false: ANX.Framework.Input.Mouse.IsCaptured)
+                //always returns false: Microsoft.Xna.Framework.Input.Mouse.IsCaptured)
                 mouseDetected = mouseState.X != mouseStateLastFrame.X ||
                     mouseState.Y != mouseStateLastFrame.Y ||
                     mouseState.LeftButton != mouseStateLastFrame.LeftButton;
@@ -930,12 +930,12 @@ namespace Hiale.GTA2NET
 
             // Handle keyboard input
             keysPressedLastFrame = new List<Keys>(keyboardState.GetPressedKeys());
-            keyboardState = ANX.Framework.Input.Keyboard.GetState();
+            keyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
 
             // And finally catch the XBox Controller input (only use 1 player here)
             gamePadStateLastFrame = gamePadState;
-            gamePadState =
-                ANX.Framework.Input.GamePad.GetState(PlayerIndex.One);
+            //gamePadState =
+            //    Microsoft.Xna.Framework.Input.GamePad.GetState(PlayerIndex.One); //MonoGame
         }
     }
 }

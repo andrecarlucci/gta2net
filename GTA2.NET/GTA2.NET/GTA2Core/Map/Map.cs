@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -7,13 +8,13 @@ namespace Hiale.GTA2NET.Core.Map
 {
     public class Map
     {
-        private bool loaded;
-        private BlockInfo[, ,] cityBlocks;
+        private bool _loaded;
+        private readonly BlockInfo[, ,] cityBlocks;
 
-        private List<Zone> Zones;
+        private readonly List<Zone> Zones;
         private List<MapObject> Objects;
-        private List<TileAnimation> Animations;
-        private List<Light> Lights;        
+        private readonly List<TileAnimation> Animations;
+        private readonly List<Light> Lights;        
 
         public Map()
         {
@@ -24,11 +25,11 @@ namespace Hiale.GTA2NET.Core.Map
             Animations = new List<TileAnimation>();
             Lights = new List<Light>();            
 
-            for (int i = 0; i < cityBlocks.GetLength(0); i++)
+            for (var i = 0; i < cityBlocks.GetLength(0); i++)
             {
-                for (int j = 0; j < cityBlocks.GetLength(1); j++)
+                for (var j = 0; j < cityBlocks.GetLength(1); j++)
                 {
-                    for (int k = 0; k < cityBlocks.GetLength(2); k++)
+                    for (var k = 0; k < cityBlocks.GetLength(2); k++)
                     {
                         cityBlocks[i, j, k] = new BlockInfo();
                     }
@@ -43,7 +44,7 @@ namespace Hiale.GTA2NET.Core.Map
         {
             get
             {
-                if (!loaded)
+                if (!_loaded)
                     throw new ArgumentException();
                 return cityBlocks;
             }
@@ -52,17 +53,17 @@ namespace Hiale.GTA2NET.Core.Map
         public void ReadFromFile(string fileName)
         {
             System.Diagnostics.Debug.WriteLine("Loading map from file \"" + fileName + "\"");
-            FileStream stream = new FileStream(fileName, FileMode.Open);
-            BinaryReader reader = new BinaryReader(stream);
+            var stream = new FileStream(fileName, FileMode.Open);
+            var reader = new BinaryReader(stream);
             System.Text.Encoding encoder = System.Text.Encoding.ASCII;
             reader.ReadBytes(4); //GBMP
             int version = reader.ReadUInt16();
             System.Diagnostics.Debug.WriteLine("Map version: " + version);
             while (stream.Position < stream.Length)
             {
-                string chunkType = encoder.GetString(reader.ReadBytes(4));
-                int chunkSize = (int)reader.ReadUInt32();
-                System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " + chunkSize.ToString());
+                var chunkType = encoder.GetString(reader.ReadBytes(4));
+                var chunkSize = (int)reader.ReadUInt32();
+                System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " + chunkSize.ToString(CultureInfo.InvariantCulture));
                 switch (chunkType)
                 {
                     case "DMAP":
@@ -87,30 +88,26 @@ namespace Hiale.GTA2NET.Core.Map
                 }
             }
             reader.Close();
-            loaded = true;
+            _loaded = true;
         }
 
         private void ReadDMAP(BinaryReader reader)
         {
-            uint[,] baseOffsets = new uint[256, 256];
-            for (int i = 0; i < 256; i++)
+            var baseOffsets = new uint[256, 256];
+            for (var i = 0; i < 256; i++)
             {
-                for (int j = 0; j < 256; j++)
-                {
+                for (var j = 0; j < 256; j++)
                     baseOffsets[i,j] = reader.ReadUInt32();
-                }
             }
-            uint columnCount = reader.ReadUInt32();
-            uint[] columns = new uint[columnCount];
-            for (int i = 0; i < columnCount; i++)
-            {
+            var columnCount = reader.ReadUInt32();
+            var columns = new uint[columnCount];
+            for (var i = 0; i < columnCount; i++)
                 columns[i] = reader.ReadUInt32();
-            }
-            uint blockCount = reader.ReadUInt32();
-            BlockInfo[] blocks = new BlockInfo[blockCount];
-            for (int i = 0; i < blockCount; i++)
+            var blockCount = reader.ReadUInt32();
+            var blocks = new BlockInfo[blockCount];
+            for (var i = 0; i < blockCount; i++)
             {
-                BlockInfo blockInfo = new BlockInfo();
+                var blockInfo = new BlockInfo();
                 blockInfo.Left = new BlockFace(reader.ReadUInt16(), false);
                 blockInfo.Right = new BlockFace(reader.ReadUInt16(), false);
                 blockInfo.Top = new BlockFace(reader.ReadUInt16(), false);
@@ -126,12 +123,12 @@ namespace Hiale.GTA2NET.Core.Map
 
         private void ReadZones(BinaryReader reader, int chunkSize, System.Text.Encoding encoder)
         {
-            int position = 0;
+            var position = 0;
             while (position < chunkSize)
             {
-                Zone zone = new Zone();
+                var zone = new Zone();
                 zone.Type = (ZoneType)reader.ReadSByte();
-                zone.Rectangle = new Microsoft.Xna.Framework.Rectangle(reader.ReadSByte(), reader.ReadSByte(), reader.ReadSByte(), reader.ReadSByte());
+                zone.Rectangle = new Rectangle(reader.ReadSByte(), reader.ReadSByte(), reader.ReadSByte(), reader.ReadSByte());
                 int nameLength = reader.ReadSByte();
                 zone.Name = encoder.GetString(reader.ReadBytes(nameLength));
                 Zones.Add(zone);
@@ -144,16 +141,14 @@ namespace Hiale.GTA2NET.Core.Map
             int position = 0;
             while (position < chunkSize)
             {
-                TileAnimation anim = new TileAnimation();
+                var anim = new TileAnimation();
                 anim.BaseTile = reader.ReadUInt16();
                 anim.FrameRate = reader.ReadByte();
                 anim.Repeat = reader.ReadByte();
-                byte animLength = reader.ReadByte();
+                var animLength = reader.ReadByte();
                 reader.ReadByte(); //Unused
                 for (byte i = 0; i < animLength; i++)
-                {
                     anim.Tiles.Add(reader.ReadUInt16());
-                }
                 Animations.Add(anim);
                 position = position + 6 + animLength * 2;
             }
@@ -170,7 +165,6 @@ namespace Hiale.GTA2NET.Core.Map
                 reader.ReadUInt16(); //y
                 reader.ReadByte(); //Rotation
                 reader.ReadByte(); //Type
-
             }
         }
 
@@ -179,8 +173,8 @@ namespace Hiale.GTA2NET.Core.Map
             int position = 0;
             while (position < chunkSize)
             {
-                Light light = new Light();
-                byte[] color = reader.ReadBytes(4);
+                var light = new Light();
+                var color = reader.ReadBytes(4);
                 light.Color = new Color(color[1], color[2], color[3], color[0]);
                 light.X = reader.ReadUInt16();
                 light.Y = reader.ReadUInt16();
@@ -197,14 +191,14 @@ namespace Hiale.GTA2NET.Core.Map
 
         private void CreateUncompressedMap(uint[,] baseOffsets, uint[] columns, BlockInfo[] blocks)
         {
-            for (int i = 0; i < 256; i++)
+            for (var i = 0; i < 256; i++)
             {
-                for (int j = 0; j < 256; j++)
+                for (var j = 0; j < 256; j++)
                 {
-                    uint columnIndex = baseOffsets[j,i];
-                    uint height = columns[columnIndex] & 0xFF;
-                    uint offset = (columns[columnIndex] & 0xFF00) >> 8;
-                    for (int k = 0; k < height; k++)
+                    var columnIndex = baseOffsets[j,i];
+                    var height = columns[columnIndex] & 0xFF;
+                    var offset = (columns[columnIndex] & 0xFF00) >> 8;
+                    for (var k = 0; k < height; k++)
                     {
                         if (k >= offset)
                         {

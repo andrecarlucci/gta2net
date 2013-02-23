@@ -2,8 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using ANX.Framework;
-using ANX.Framework.Graphics;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Helper;
 using System.IO;
@@ -127,10 +127,10 @@ namespace Hiale.GTA2NET.Renderer
             {
                 dict = (TextureAtlasSprites)TextureAtlas.Deserialize(spriteDictPath, typeof(TextureAtlasSprites));
                 spriteAtlas = dict.SpriteDictionary;
-                //FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
-                //spriteTexture = Texture2D.FromStream(BaseGame.Device, fs);
-                //fs.Close();
-                spriteTexture = MainGame.Content.Load<Texture2D>("sprites");
+                FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
+                spriteTexture = Texture2D.FromStream(BaseGame.Device, fs);
+                fs.Close();
+                //spriteTexture = MainGame.Content.Load<Texture2D>("sprites");
             }            
         }
 

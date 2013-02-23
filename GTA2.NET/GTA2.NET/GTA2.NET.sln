@@ -1,34 +1,32 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2.NET", "GTA2.NET\GTA2.NET.csproj", "{3AD64C1B-9692-4B06-9116-7C04DAEE3113}"
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2.NET", "GTA2.NET\GTA2.NET.csproj", "{0723ACF8-539B-4D11-981D-E2066822EAA7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2Core", "GTA2Core\GTA2Core.csproj", "{FD319863-BB38-49F5-98F9-4E5952F17CD1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2Core", "GTA2Core\GTA2Core.csproj", "{52279F3E-AE51-467E-954D-614724CFF34D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2.NETContent", "GTA2.NET\Content\GTA2.NETContent.contentproj", "{944D7ADA-E4B3-4A0C-A3B3-E9B240A7C257}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farseer Physics MonoGame", "Farseer Physics MonoGame\Farseer Physics MonoGame.csproj", "{EA88836E-6C88-423C-BEA7-3125077CFA5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x86 = Debug|x86
-		Release|x86 = Release|x86
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3AD64C1B-9692-4B06-9116-7C04DAEE3113}.Debug|x86.ActiveCfg = Debug|x86
-		{3AD64C1B-9692-4B06-9116-7C04DAEE3113}.Debug|x86.Build.0 = Debug|x86
-		{3AD64C1B-9692-4B06-9116-7C04DAEE3113}.Release|x86.ActiveCfg = Release|x86
-		{3AD64C1B-9692-4B06-9116-7C04DAEE3113}.Release|x86.Build.0 = Release|x86
-		{FD319863-BB38-49F5-98F9-4E5952F17CD1}.Debug|x86.ActiveCfg = Debug|x86
-		{FD319863-BB38-49F5-98F9-4E5952F17CD1}.Debug|x86.Build.0 = Debug|x86
-		{FD319863-BB38-49F5-98F9-4E5952F17CD1}.Release|x86.ActiveCfg = Release|x86
-		{FD319863-BB38-49F5-98F9-4E5952F17CD1}.Release|x86.Build.0 = Release|x86
-		{944D7ADA-E4B3-4A0C-A3B3-E9B240A7C257}.Debug|x86.ActiveCfg = Debug|x86
-		{944D7ADA-E4B3-4A0C-A3B3-E9B240A7C257}.Release|x86.ActiveCfg = Release|x86
+		{0723ACF8-539B-4D11-981D-E2066822EAA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0723ACF8-539B-4D11-981D-E2066822EAA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0723ACF8-539B-4D11-981D-E2066822EAA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0723ACF8-539B-4D11-981D-E2066822EAA7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52279F3E-AE51-467E-954D-614724CFF34D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52279F3E-AE51-467E-954D-614724CFF34D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52279F3E-AE51-467E-954D-614724CFF34D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52279F3E-AE51-467E-954D-614724CFF34D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA88836E-6C88-423C-BEA7-3125077CFA5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA88836E-6C88-423C-BEA7-3125077CFA5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA88836E-6C88-423C-BEA7-3125077CFA5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA88836E-6C88-423C-BEA7-3125077CFA5A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(SubversionScc) = preSolution
-		Svn-Managed = True
-		Manager = AnkhSVN - Subversion Support for Visual Studio
 	EndGlobalSection
 EndGlobal

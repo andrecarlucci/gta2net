@@ -15,19 +15,19 @@ namespace Hiale.GTA2NET.Core
         {
             if (!File.Exists(FileName))
                 throw new FileNotFoundException("File not found!", FileName);
-            StreamReader reader = new StreamReader(FileName);
+            var reader = new StreamReader(FileName);
             string text = reader.ReadToEnd();
             reader.Close();
-            Dictionary<int, CarPhysics> cars = new Dictionary<int, CarPhysics>();
+            var cars = new Dictionary<int, CarPhysics>();
             try
             {
-                Regex regEx = new Regex(@"f?(.*?)\ ?\{(.*)\}", RegexOptions.Multiline);
+                var regEx = new Regex(@"f?(.*?)\ ?\{(.*)\}", RegexOptions.Multiline);
                 MatchCollection matches = regEx.Matches(text);
                 CarPhysics currentCar = null;
-                for (int i = 0; i < matches.Count; i++)
+                for (var i = 0; i < matches.Count; i++)
                 {
-                    string value = matches[i].Groups[1].Value;
-                    string type = matches[i].Groups[2].Value;
+                    var value = matches[i].Groups[1].Value;
+                    var type = matches[i].Groups[2].Value;
                     if (value.Length < 1) //value is empty --> title / {carname}
                     {
                         currentCar = new CarPhysics();
