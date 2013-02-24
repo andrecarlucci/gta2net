@@ -2,7 +2,11 @@
 //23.02.2013 - Old version was crap
 
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using Microsoft.Xna.Framework;
+using Color = System.Drawing.Color;
+using Point = System.Drawing.Point;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -22,9 +26,13 @@ namespace Hiale.GTA2NET.Core.Map
         private void CreateMapCollision()
         {
             //we create a list of unpassable obsticles of each layer (z coord)
-            var unpassableSpace = new List<Obstacle>[_map.CityBlocks.GetLength(2)];
-            for (var i = 0; i < unpassableSpace.Length; i++)
-                unpassableSpace[i] = new List<Obstacle>();
+            var obstacles = new List<Obstacle>[_map.CityBlocks.GetLength(2)];
+            var straightObstacles = new List<Obstacle>[_map.CityBlocks.GetLength(2)];
+            for (var i = 0; i < obstacles.Length; i++)
+            {
+                obstacles[i] = new List<Obstacle>();
+                straightObstacles[i] = new List<Obstacle>();
+            }
 
             for (var z = 0; z < _map.CityBlocks.GetLength(2); z++)
             {
@@ -35,55 +43,114 @@ namespace Hiale.GTA2NET.Core.Map
                         var block = _map.CityBlocks[x, y, z];
                         if (block.IsEmpty)
                             continue;
-                        if (block.SlopeType == SlopeType.None)
+                        if (block.Left)
                         {
-                            if (block.Left)
-                                unpassableSpace[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x, y + 1), ObstacleType.Vertical));
-                            if (block.Top)
-                                unpassableSpace[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y), ObstacleType.Horizontal));
-                            if (block.Right)
-                                unpassableSpace[z - 1].Add(new Obstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), ObstacleType.Vertical));
-                            if (block.Bottom)
-                                unpassableSpace[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), ObstacleType.Horizontal));
+                            switch (block.SlopeType)
+                            {
+                                case SlopeType.DiagonalFacingUpLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y), ObstacleType.Other));
+                                    break;
+                                case SlopeType.DiagonalFacingDownLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y + 1), ObstacleType.Other));
+                                    break;
+                                default:
+                                    straightObstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x, y + 1), ObstacleType.Vertical));
+                                    break;
+                            }
                         }
-                        //ToDo: slope types...
+                        if (block.Top)
+                        {
+                            switch (block.SlopeType)
+                            {
+                                default:
+                                    straightObstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y), ObstacleType.Horizontal));
+                                    break;
+                            }
+                        }
+                        if (block.Right)
+                        {
+                            switch (block.SlopeType)
+                            {
+                                case SlopeType.DiagonalFacingUpRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y + 1), ObstacleType.Other));
+                                    break;
+                                case SlopeType.DiagonalFacingDownRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y), ObstacleType.Other));
+                                    break;
+                                default:
+                                    straightObstacles[z - 1].Add(new Obstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), ObstacleType.Vertical));
+                                    break;
+                            }
+                        }
+                        if (block.Bottom)
+                        {
+                            switch (block.SlopeType)
+                            {
+                                default:
+                                    straightObstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), ObstacleType.Horizontal));
+                                    break;
+                            }
+                        }
                     }
 
                 }
             }
-            OptimizeStraightVertices(unpassableSpace);
+            OptimizeStraightVertices(straightObstacles, obstacles);
+
+            //for Debug
+
+            for (var z = 0; z < obstacles.Length; z++)
+            {
+                using (var bmp = new Bitmap(2560, 2560))
+                {
+                    using (var g = Graphics.FromImage(bmp))
+                    {
+                        g.Clear(Color.White);
+                        foreach (var obstacle in obstacles[z])
+                        {
+                            g.DrawLine(new Pen(Color.Red), new Point((int) obstacle.Start.X*10, (int) obstacle.Start.Y*10), new Point((int) obstacle.End.X*10, (int) obstacle.End.Y*10));
+                        }
+                        bmp.Save(z + ".png", ImageFormat.Png);
+                    }
+                }
+            }
+            System.Diagnostics.Debug.WriteLine("OK");
+
         }
 
-        private void OptimizeStraightVertices(List<Obstacle>[] obstacleArray)
+        /// <summary> 
+        /// Combines straight obstacles to optimize collision detection.
+        /// </summary>
+        /// <param name="straightObstacles"></param>
+        /// <param name="obstacles"></param>
+        private void OptimizeStraightVertices(List<Obstacle>[] straightObstacles, List<Obstacle>[] obstacles)
         {
-            var optimizedObstacles = new List<Obstacle>[obstacleArray.Length];
-            for (var z = 0; z < obstacleArray.Length; z++)
+            //var optimizedObstacles = new List<Obstacle>[straightObstacles.Length];
+            for (var z = 0; z < straightObstacles.Length; z++)
             {
-                var obstacleGridHorizontal = new bool[256, 256 + 1];
-                var obstacleGridVertical = new bool[256 + 1, 256];
-                foreach (var obstacle in obstacleArray[z])
+                var obstaclesHorizontal = new bool[256, 256 + 1];
+                var obstaclesVertical = new bool[256 + 1, 256];
+                foreach (var straightObstacle in straightObstacles[z])
                 {
-                    if (obstacle.Type == ObstacleType.Horizontal)
-                        obstacleGridHorizontal[(int) obstacle.Start.X, (int) obstacle.Start.Y] = true;
-                    else if (obstacle.Type == ObstacleType.Vertical)
-                        obstacleGridVertical[(int)obstacle.Start.X, (int)obstacle.Start.Y] = true;
+                    if (straightObstacle.Type == ObstacleType.Horizontal)
+                        obstaclesHorizontal[(int) straightObstacle.Start.X, (int) straightObstacle.Start.Y] = true;
+                    else if (straightObstacle.Type == ObstacleType.Vertical)
+                        obstaclesVertical[(int)straightObstacle.Start.X, (int)straightObstacle.Start.Y] = true;
                 }
 
-                var obstacles = new List<Obstacle>();
-
                 //Horizontal
-                for (var y = 0; y < obstacleGridHorizontal.GetLength(1); y++)
+                for (var y = 0; y < obstaclesHorizontal.GetLength(1); y++)
                 {
                     var start = new Vector2();
                     var open = false;
-                    for (var x = 0; x < obstacleGridHorizontal.GetLength(0); x++)
+                    for (var x = 0; x < obstaclesHorizontal.GetLength(0); x++)
                     {
-                        if (!obstacleGridHorizontal[x, y])
+                        if (!obstaclesHorizontal[x, y])
                         {
                             if (open)
                             {
                                 var end = new Vector2(x, y);
-                                obstacles.Add(new Obstacle(start, end, ObstacleType.Horizontal));
+                                obstacles[z] .Add(new Obstacle(start, end, ObstacleType.Horizontal));
                                 open = false;
                             }
                             continue;
@@ -96,18 +163,18 @@ namespace Hiale.GTA2NET.Core.Map
                 }
 
                 //Vertical
-                for (var x = 0; x < obstacleGridVertical.GetLength(0); x++)
+                for (var x = 0; x < obstaclesVertical.GetLength(0); x++)
                 {
                     var start = new Vector2();
                     var open = false;
-                    for (var y = 0; y < obstacleGridVertical.GetLength(1); y++)
+                    for (var y = 0; y < obstaclesVertical.GetLength(1); y++)
                     {
-                        if (!obstacleGridVertical[x, y])
+                        if (!obstaclesVertical[x, y])
                         {
                             if (open)
                             {
                                 var end = new Vector2(x, y);
-                                obstacles.Add(new Obstacle(start, end, ObstacleType.Vertical));
+                                obstacles[z].Add(new Obstacle(start, end, ObstacleType.Vertical));
                                 open = false;
                             }
                             continue;
@@ -118,9 +185,8 @@ namespace Hiale.GTA2NET.Core.Map
                         start = new Vector2(x, y);
                     }
                 }
-                optimizedObstacles[z] = obstacles;
+
             }
-            System.Diagnostics.Debug.WriteLine("OK");
         }
 
 

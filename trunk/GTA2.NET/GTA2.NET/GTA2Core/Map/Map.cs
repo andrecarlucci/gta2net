@@ -14,7 +14,22 @@ namespace Hiale.GTA2NET.Core.Map
         private readonly List<Zone> Zones;
         private List<MapObject> Objects;
         private readonly List<TileAnimation> Animations;
-        private readonly List<Light> Lights;        
+        private readonly List<Light> Lights;  
+      
+        public int Width //x
+        {
+            get { return CityBlocks.GetLength(0); }
+        }
+
+        public int Length //y
+        {
+            get { return CityBlocks.GetLength(1); }
+        }
+
+        public int Height //z
+        {
+            get { return CityBlocks.GetLength(2); }
+        }
 
         public Map()
         {

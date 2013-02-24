@@ -52,11 +52,9 @@ namespace Hiale.GTA2NET.Renderer
         private void LoadMap()
         {
             MainGame.Map = new Map();
-            //MainGame.Map.ReadFromFile("data\\bil.gmp");
             MainGame.Map.ReadFromFile("data\\MP1-comp.gmp");
-            //MainGame.Map.ReadFromFile("data\\MP1-comp1.gmp");
 
-            MapCollision collision = new MapCollision(MainGame.Map);
+            var collision = new MapCollision(MainGame.Map);
         }
 
         private void SetUpCity()
