@@ -14,7 +14,6 @@ namespace Hiale.GTA2NET.Core.Map
 
     public enum SlopeType : byte
     {
-        //ToDo: add more
         None = 0,
         Up26Low = 1,
         Up26High = 2,
@@ -63,6 +62,19 @@ namespace Hiale.GTA2NET.Core.Map
         DiagonalFacingUpLeft = 45,
         DiagonalFacingUpRight = 46,
         DiagonalFacingDownLeft = 47,
-        DiagonalFacingDownRight = 48,        
+        DiagonalFacingDownRight = 48,
+        DiagonalSlopeFacingUpLeft = 49, //there 2 versions of these, see documentation, check if they require a different behaviour.
+        DiagonalSlopeFacingUpRight = 50, //as above
+        DiagonalSlopeFacingDownLeft = 51, //as above
+        DiagonalSlopeFacingDownRight = 52, //as above
+        PartialBlockLeft = 53,
+        PartialBlockRight = 54,
+        PartialBlockTop = 55,
+        PartialBlockBottom = 56,
+        PartialBlockTopLeft = 57,
+        PartialBlockTopRight = 58,
+        PartialBlockBottomRight = 59,
+        PartialBlockBottomLeft = 60,
+        PartialCentreBlock = 61
     }
 }
