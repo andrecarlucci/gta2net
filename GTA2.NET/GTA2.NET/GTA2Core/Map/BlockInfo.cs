@@ -66,7 +66,7 @@ namespace Hiale.GTA2NET.Core.Map
         {
             get
             {
-                if ((Left == null && Right == null && Top == null && Bottom == null && Lid == null) || ((Left.TileNumber == 0 && Right.TileNumber == 0 && Top.TileNumber == 0 && Bottom.TileNumber == 0 && Lid.TileNumber == 0)))
+                if ((Left == null && Right == null && Top == null && Bottom == null && Lid == null) || ((!Left && !Right && !Top && !Bottom && !Lid)))
                     return true;
                 return false;
             }
@@ -78,7 +78,7 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 if (IsEmpty)
                     return false;
-                if (Lid != null && Lid.TileNumber > 0 && (Left == null || Left.TileNumber == 0) && (Right == null || Right.TileNumber == 0) && (Top == null || Top.TileNumber == 0) && (Bottom == null || Bottom.TileNumber == 0))
+                if (Lid != null && Lid && (Left == null || !Left) && (Right == null || !Right) && (Top == null || !Top) && (Bottom == null || !Bottom))
                     return true;
                 return false;
             }

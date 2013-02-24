@@ -56,7 +56,7 @@ namespace Hiale.GTA2NET.Renderer
             MainGame.Map.ReadFromFile("data\\MP1-comp.gmp");
             //MainGame.Map.ReadFromFile("data\\MP1-comp1.gmp");
 
-            //MapCollision collision = new MapCollision(MainGame.Map);
+            MapCollision collision = new MapCollision(MainGame.Map);
         }
 
         private void SetUpCity()
@@ -316,7 +316,7 @@ namespace Hiale.GTA2NET.Renderer
             }
 
             //Front face (diagonal)
-            if (block.Lid.TileNumber > 0)
+            if (block.Lid)
             {
                 RotationType lidRotation = block.Lid.Rotation;
                 RotateEnum(ref lidRotation, rotation);
@@ -364,7 +364,7 @@ namespace Hiale.GTA2NET.Renderer
             }
 
             //Diagonal face
-            if (diagonalFace.TileNumber > 0)
+            if (diagonalFace)
             {
                 var texPos = GetTexturePositions(tileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
                 cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
@@ -443,7 +443,7 @@ namespace Hiale.GTA2NET.Renderer
             middleCoordinates.BottomLeft.Z -= slopeScalar * MainGame.GlobalScalar.Z;
 
             //Front face (diagonal)
-            if (block.Lid.TileNumber > 0)
+            if (block.Lid)
             {
                 RotationType lidRotation = block.Lid.Rotation;
                 RotateEnum(ref lidRotation, rotation);
@@ -491,7 +491,7 @@ namespace Hiale.GTA2NET.Renderer
             }
 
             //Top face
-            if (topFace.TileNumber > 0)
+            if (topFace)
             {
                 var texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
                 var center = GetCenterPosition(ref texPos[3], ref texPos[0], slopeScalar);
@@ -505,7 +505,7 @@ namespace Hiale.GTA2NET.Renderer
                 indexBufferCollection.Add(startIndex + 0);
             }
             //Bottom face
-            if (bottomFace.TileNumber > 0)
+            if (bottomFace)
             {
                 var texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
                 var center = GetCenterPosition(ref texPos[2], ref texPos[1], slopeScalar);
@@ -520,7 +520,7 @@ namespace Hiale.GTA2NET.Renderer
             }
 
             //Right face
-            if (rightFace.TileNumber > 0) //this face is not supported by GTA2, the editor removes this face.
+            if (rightFace) //this face is not supported by GTA2, the editor removes this face.
             {
                 var texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
                 var center = GetCenterPosition(ref texPos[1], ref texPos[2], slopeScalar);
@@ -609,7 +609,7 @@ namespace Hiale.GTA2NET.Renderer
             middleCoordinates.BottomLeft.Z -= middleSlopeScalar * MainGame.GlobalScalar.Z;
 
             //Front face (diagonal)
-            if (block.Lid.TileNumber > 0)
+            if (block.Lid)
             {
                 var lidRotation = block.Lid.Rotation;
                 RotateEnum(ref lidRotation, rotation);
@@ -661,7 +661,7 @@ namespace Hiale.GTA2NET.Renderer
             }
 
             //Top face
-            if (topFace.TileNumber > 0)
+            if (topFace)
             {
                 var texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
                 var center = GetCenterPosition(ref texPos[0], ref texPos[3], frontSlopeScalar);
@@ -681,7 +681,7 @@ namespace Hiale.GTA2NET.Renderer
                 indexBufferCollection.Add(startIndex + 0);
             }
             //Bottom face
-            if (bottomFace.TileNumber > 0)
+            if (bottomFace)
             {
                 var texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
                 var center = GetCenterPosition(ref texPos[2], ref texPos[1], frontSlopeScalar);
@@ -742,7 +742,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateFrontVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Lid.TileNumber <= 0)
+            if (!block.Lid)
                 return;
             var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], block.Lid.Rotation, block.Lid.Flip);
             //Vector2[] TexPos = GetTexturePositions(tileAtlas[991], block.Lid.Rotation, block.Lid.Flip);
@@ -762,7 +762,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Top.TileNumber <= 0)
+            if (!block.Top)
                 return;
             var texPos = GetTexturePositions(tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
             cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[0]));
@@ -781,7 +781,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
-            if (block.Bottom.TileNumber <= 0)
+            if (!block.Bottom)
                 return;
             var texPos = GetTexturePositions(tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
             cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
@@ -805,7 +805,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace leftFace, byte rotation)
         {
-            if (leftFace.TileNumber <= 0)
+            if (!leftFace)
                 return;
             var newFront = new FaceCoordinates();
             var newBack = new FaceCoordinates();
@@ -843,7 +843,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace rightFace, byte rotation)
         {
-            if (rightFace.TileNumber <= 0)
+            if (!rightFace)
                 return;
             var newFront = new FaceCoordinates();
             var newBack = new FaceCoordinates();

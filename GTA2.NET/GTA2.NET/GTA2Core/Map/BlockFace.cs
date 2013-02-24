@@ -144,6 +144,11 @@ namespace Hiale.GTA2NET.Core.Map
             Rotation = rotation;
         }
 
+        public static implicit operator bool(BlockFace blockface)
+        {
+            return blockface.TileNumber > 0;
+        }
+
         public override string ToString()
         {
             string rotation = string.Empty;
