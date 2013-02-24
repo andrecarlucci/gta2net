@@ -48,9 +48,11 @@ namespace Hiale.GTA2NET.Core.Map
                             switch (block.SlopeType)
                             {
                                 case SlopeType.DiagonalFacingUpLeft:
+                                case SlopeType.DiagonalSlopeFacingUpLeft:
                                     obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y), ObstacleType.Other));
                                     break;
                                 case SlopeType.DiagonalFacingDownLeft:
+                                case SlopeType.DiagonalSlopeFacingDownLeft:
                                     obstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y + 1), ObstacleType.Other));
                                     break;
                                 default:
@@ -72,9 +74,11 @@ namespace Hiale.GTA2NET.Core.Map
                             switch (block.SlopeType)
                             {
                                 case SlopeType.DiagonalFacingUpRight:
+                                case SlopeType.DiagonalSlopeFacingUpRight:
                                     obstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y + 1), ObstacleType.Other));
                                     break;
                                 case SlopeType.DiagonalFacingDownRight:
+                                case SlopeType.DiagonalSlopeFacingDownRight:
                                     obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y), ObstacleType.Other));
                                     break;
                                 default:
@@ -98,7 +102,6 @@ namespace Hiale.GTA2NET.Core.Map
             OptimizeStraightVertices(straightObstacles, obstacles);
 
             //for Debug
-
             for (var z = 0; z < obstacles.Length; z++)
             {
                 using (var bmp = new Bitmap(2560, 2560))
