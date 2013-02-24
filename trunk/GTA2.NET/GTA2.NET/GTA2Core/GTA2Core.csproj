@@ -54,11 +54,11 @@
     <Compile Include="Helper\ZipStorer.cs" />
     <Compile Include="Map\BlockFace.cs" />
     <Compile Include="Map\BlockInfo.cs" />
-    <Compile Include="Map\BoundingBox.cs" />
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Map\MapCollision.cs" />
     <Compile Include="Map\MapObject.cs" />
+    <Compile Include="Map\Obstacle.cs" />
     <Compile Include="Map\RoadTrafficType.cs" />
     <Compile Include="Map\SlopeType.cs" />
     <Compile Include="Map\TileAnimation.cs" />

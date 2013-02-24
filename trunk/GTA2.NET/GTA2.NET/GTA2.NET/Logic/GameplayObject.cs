@@ -659,7 +659,7 @@ namespace Hiale.GTA2NET.Logic
 
         private static void GetLines(ref int x, ref int y, ref BlockInfo block, ICollection<PolygonLine> blockLines)
         {
-            if (block.Top.TileNumber > 0)
+            if (block.Top)
             {
                 PolygonLine polygon = CreatePolygon(ref x, ref y, ref block, Direction.Up);
                 if (polygon.Points.Count > 0)
@@ -667,7 +667,7 @@ namespace Hiale.GTA2NET.Logic
                     blockLines.Add(polygon);
                 }
             }
-            if (block.Bottom.TileNumber > 0)
+            if (block.Bottom)
             {
                 PolygonLine polygon = CreatePolygon(ref x, ref y, ref block, Direction.Down);
                 if (polygon.Points.Count > 0)
@@ -675,7 +675,7 @@ namespace Hiale.GTA2NET.Logic
                     blockLines.Add(polygon);
                 }
             }
-            if (block.Left.TileNumber > 0)
+            if (block.Left)
             {
                 PolygonLine polygon = CreatePolygon(ref x, ref y, ref block, Direction.Left);
                 if (polygon.Points.Count > 0)
@@ -683,7 +683,7 @@ namespace Hiale.GTA2NET.Logic
                     blockLines.Add(polygon);
                 }
             }
-            if (block.Right.TileNumber > 0)
+            if (block.Right)
             {
                 PolygonLine polygon = CreatePolygon(ref x, ref y, ref block, Direction.Right);
                 if (polygon.Points.Count > 0)
@@ -698,7 +698,7 @@ namespace Hiale.GTA2NET.Logic
             //if (z == 0)
             //    return;
             //BlockInfo block = MainGame.Map.CityBlocks[(int)x, (int)y, (int)z];
-            //if (block.Lid != null && block.Lid.TileNumber > 0)
+            //if (block.Lid != null && block.Lid)
             //    return;
             //if (z % 1 == 0)
             //{
