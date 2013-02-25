@@ -67,14 +67,14 @@ namespace Hiale.GTA2NET.Core.Map
         DiagonalSlopeFacingUpRight = 50, //as above
         DiagonalSlopeFacingDownLeft = 51, //as above
         DiagonalSlopeFacingDownRight = 52, //as above
-        PartialBlockLeft = 53,
-        PartialBlockRight = 54,
-        PartialBlockTop = 55,
-        PartialBlockBottom = 56,
-        PartialBlockTopLeft = 57,
-        PartialBlockTopRight = 58,
-        PartialBlockBottomRight = 59,
-        PartialBlockBottomLeft = 60,
-        PartialCentreBlock = 61
+        PartialBlockLeft = 53, //24 pixels
+        PartialBlockRight = 54, //24 pixels
+        PartialBlockTop = 55, //24 pixels
+        PartialBlockBottom = 56, //24 pixels
+        PartialBlockTopLeft = 57, //24 pixels
+        PartialBlockTopRight = 58, //24 pixels
+        PartialBlockBottomRight = 59, //24 pixels
+        PartialBlockBottomLeft = 60, //24 pixels
+        PartialCentreBlock = 61 //16 pixels
     }
 }

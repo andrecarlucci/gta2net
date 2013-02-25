@@ -53,6 +53,7 @@ namespace Hiale.GTA2NET.Renderer
         {
             MainGame.Map = new Map();
             MainGame.Map.ReadFromFile("data\\MP1-comp.gmp");
+            //MainGame.Map.ReadFromFile("data\\bil.gmp");
 
             var collision = new MapCollision(MainGame.Map);
         }

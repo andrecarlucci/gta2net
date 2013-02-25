@@ -97,22 +97,20 @@ namespace Hiale.GTA2NET.Core.Map
 
             //parse ushort value
             //Bits 0-9: Tile number
-            int tile = 0;
-            for (int i = 0; i < 10; i++)
-            {
+            var tile = 0;
+            for (var i = 0; i < 10; i++)
                 tile = tile + (value & (int)Math.Pow(2, i));
-            }
             TileNumber = tile;
 
-            if (IsCeiling)
+            if (!IsCeiling)
             {
                 _wall = BitHelper.CheckBit(value, 10); //Bit 10
                 _bulletWall = BitHelper.CheckBit(value, 11); //Bit 11
             }
             else
             {
-                bool bit10 = BitHelper.CheckBit(value, 10);
-                bool bit11 = BitHelper.CheckBit(value, 11);
+                var bit10 = BitHelper.CheckBit(value, 10);
+                var bit11 = BitHelper.CheckBit(value, 11);
                 if (!bit10 && !bit11)
                     _lightningLevel = 0;
                 if (bit10 && !bit11)

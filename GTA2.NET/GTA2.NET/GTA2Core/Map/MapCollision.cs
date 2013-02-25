@@ -43,7 +43,7 @@ namespace Hiale.GTA2NET.Core.Map
                         var block = _map.CityBlocks[x, y, z];
                         if (block.IsEmpty)
                             continue;
-                        if (block.Left)
+                        if (block.Left && block.Left.Wall)
                         {
                             switch (block.SlopeType)
                             {
@@ -55,21 +55,55 @@ namespace Hiale.GTA2NET.Core.Map
                                 case SlopeType.DiagonalSlopeFacingDownLeft:
                                     obstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y + 1), ObstacleType.Other));
                                     break;
+                                case SlopeType.PartialBlockRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y), new Vector2(x + 1, y), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockTop:
+                                case SlopeType.PartialBlockTopLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x, y + BlockInfo.PartialBlockScalar), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockBottom:
+                                case SlopeType.PartialBlockBottomLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x, y + 1), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockTopRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y), new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockBottomRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1), ObstacleType.Vertical));
+                                    break;
                                 default:
                                     straightObstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x, y + 1), ObstacleType.Vertical));
                                     break;
                             }
                         }
-                        if (block.Top)
+                        if (block.Top && block.Left.Wall)
                         {
                             switch (block.SlopeType)
                             {
+                                case SlopeType.PartialBlockLeft:
+                                case SlopeType.PartialBlockTopLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + BlockInfo.PartialBlockScalar, y), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockRight:
+                                case SlopeType.PartialBlockTopRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y), new Vector2(x + 1, y), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockBottom:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + 1 - BlockInfo.PartialBlockScalar), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockBottomRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + 1 - BlockInfo.PartialBlockScalar), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockBottomLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), ObstacleType.Horizontal));
+                                    break;
                                 default:
                                     straightObstacles[z - 1].Add(new Obstacle(new Vector2(x, y), new Vector2(x + 1, y), ObstacleType.Horizontal));
                                     break;
                             }
                         }
-                        if (block.Right)
+                        if (block.Right && block.Left.Wall)
                         {
                             switch (block.SlopeType)
                             {
@@ -81,15 +115,49 @@ namespace Hiale.GTA2NET.Core.Map
                                 case SlopeType.DiagonalSlopeFacingDownRight:
                                     obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y), ObstacleType.Other));
                                     break;
+                                case SlopeType.PartialBlockLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + BlockInfo.PartialBlockScalar, y), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockTop:
+                                case SlopeType.PartialBlockTopRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + BlockInfo.PartialBlockScalar), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockBottom:
+                                case SlopeType.PartialBlockBottomRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + 1), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockTopLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + BlockInfo.PartialBlockScalar, y), new Vector2(x + BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), ObstacleType.Vertical));
+                                    break;
+                                case SlopeType.PartialBlockBottomLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1), ObstacleType.Vertical));
+                                    break;
                                 default:
                                     straightObstacles[z - 1].Add(new Obstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), ObstacleType.Vertical));
                                     break;
                             }
                         }
-                        if (block.Bottom)
+                        if (block.Bottom && block.Left.Wall)
                         {
                             switch (block.SlopeType)
                             {
+                                case SlopeType.PartialBlockLeft:
+                                case SlopeType.PartialBlockBottomLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockRight:
+                                case SlopeType.PartialBlockBottomRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1), new Vector2(x + 1, y + 1), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockTop:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + BlockInfo.PartialBlockScalar), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockTopLeft:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x, y + BlockInfo.PartialBlockScalar), new Vector2(x + BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), ObstacleType.Horizontal));
+                                    break;
+                                case SlopeType.PartialBlockTopRight:
+                                    obstacles[z - 1].Add(new Obstacle(new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + BlockInfo.PartialBlockScalar), ObstacleType.Horizontal));
+                                    break;
                                 default:
                                     straightObstacles[z - 1].Add(new Obstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), ObstacleType.Horizontal));
                                     break;
