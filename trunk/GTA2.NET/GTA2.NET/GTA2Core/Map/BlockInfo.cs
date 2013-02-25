@@ -8,6 +8,8 @@ namespace Hiale.GTA2NET.Core.Map
 {
     public class BlockInfo
     {
+        public static float PartialBlockScalar = 0.375f;
+
         /// <summary>
         /// Position of this block in a map.
         /// </summary>
@@ -108,6 +110,7 @@ namespace Hiale.GTA2NET.Core.Map
         //    }
         //}
 
+        //the player can walk on these
         public bool IsMovableSlope
         {
             get
