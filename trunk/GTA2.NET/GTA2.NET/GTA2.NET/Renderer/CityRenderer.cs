@@ -43,7 +43,7 @@ namespace Hiale.GTA2NET.Renderer
         public void LoadCity()
         {
             LoadTexture();
-            LoadMap();
+            //LoadMap();
             SetUpCity();
             CopyToGraphicsDevice();
             SetUpEffect();
@@ -55,7 +55,7 @@ namespace Hiale.GTA2NET.Renderer
             MainGame.Map.ReadFromFile("data\\MP1-comp.gmp");
             //MainGame.Map.ReadFromFile("data\\bil.gmp");
 
-            var collision = new MapCollision(MainGame.Map);
+            //var collision = new MapCollision(MainGame.Map);
         }
 
         private void SetUpCity()
@@ -1010,10 +1010,9 @@ namespace Hiale.GTA2NET.Renderer
             {
                 dict = (TextureAtlasTiles)TextureAtlas.Deserialize(tilesDictPath, typeof(TextureAtlasTiles));
                 tileAtlas = dict.TileDictionary;
-                FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
-                cityTexture = Texture2D.FromStream(BaseGame.Device, fs); //ANX, not implemented
+                var fs = new FileStream(dict.ImagePath, FileMode.Open);
+                cityTexture = Texture2D.FromStream(BaseGame.Device, fs);
                 fs.Close();
-                //cityTexture = MainGame.Content.Load<Texture2D>("tiles");
             }
         }
 

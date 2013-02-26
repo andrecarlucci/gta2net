@@ -35,51 +35,39 @@ namespace Hiale.GTA2NET.Renderer
             sprites = new Dictionary<GameplayObject, Sprite>();
             verticesCollection = new List<VertexPositionNormalTexture>();
             indicesCollection = new List<int>();
-            MainGame.Cars.ItemRemoved += CarsItemRemoved;
-            //new
-            GameplayObject.ObjectCreated += MovableObjectObjectCreated;
         }
 
-        private void MovableObjectObjectCreated(object sender, GenericEventArgs<GameplayObject> e)
+        private void CarsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            if (sprites.ContainsKey(e.Item))
+            if (e.NewItems.Count < 1)
                 return;
-            var baseObject = e.Item;
-            var spriteIndex = 0;
-            if (baseObject is Car)
-                spriteIndex = (baseObject as Car).CarInfo.Model;
-            sprites.Add(e.Item, new Sprite(baseObject, baseObject.Position3, spriteIndex, spriteTexture, spriteAtlas));
-            e.Item.PositionChanged += MovableObjectPositionChanged;
-        }
-
-        private void MovableObjectPositionChanged(object sender, EventArgs e)
-        {
-            var moveableObject = (GameplayObject)sender;
-            var currentSprite = sprites[moveableObject];
-            currentSprite.SetPosition(moveableObject);
-
-        }
-
-        private void CarsItemRemoved(object sender, GenericEventArgs<GameplayObject> e)
-        {
-            if (sprites.ContainsKey(e.Item))
-                sprites.Remove(e.Item);
+            var car = (Car) e.NewItems[0];
+            if (sprites.ContainsKey(car))
+                return;
+            var spriteIndex = car.CarInfo.Model;
+            sprites.Add(car, new Sprite(car, car.Position3, spriteIndex, spriteTexture, spriteAtlas));
         }
 
         public void LoadSprites()
         {
             LoadTexture();
             SetUpEffect();
+            foreach (var car in MainGame.Cars)
+                sprites.Add(car, new Sprite(car, car.Position3, car.CarInfo.Model, spriteTexture, spriteAtlas));
+            MainGame.Cars.CollectionChanged += CarsCollectionChanged;
         }
 
         private void CreateAllVertices()
         {
             verticesCollection.Clear();
             indicesCollection.Clear();
-            foreach (KeyValuePair<GameplayObject, Sprite> kvp in sprites)
+            foreach (var sprite in sprites)
             {
-                CreateVertices(kvp.Value);
+                sprite.Value.SetPosition(sprite.Key); //Update position
+                CreateVertices(sprite.Value);
             }
+            if (verticesCollection.Count < 1)
+                return;
             vertices = verticesCollection.ToArray();
             indices = indicesCollection.ToArray();
 

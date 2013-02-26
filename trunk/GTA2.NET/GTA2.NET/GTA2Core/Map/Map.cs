@@ -129,7 +129,6 @@ namespace Hiale.GTA2NET.Core.Map
                 blockInfo.Bottom = new BlockFace(reader.ReadUInt16(), false);
                 blockInfo.Lid = new BlockFace(reader.ReadUInt16(), true);
                 blockInfo.Arrows = (RoadTrafficType)reader.ReadByte(); //ToDo: Check, don't know if this works...
-                //blockInfo.SlopeType = reader.ReadByte();
                 blockInfo.ParseSlope(reader.ReadByte());
                 blocks[i] = blockInfo;
             }

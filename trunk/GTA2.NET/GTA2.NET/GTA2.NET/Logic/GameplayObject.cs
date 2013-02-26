@@ -24,7 +24,6 @@ namespace Hiale.GTA2NET.Logic
 
         public bool PlayerControlled { get; set; }
 
-        public static event EventHandler<GenericEventArgs<GameplayObject>> ObjectCreated;
         public event EventHandler PositionChanged;
         public event EventHandler RotationChanged;
 
@@ -212,8 +211,8 @@ namespace Hiale.GTA2NET.Logic
 
         protected void CreateSprite()
         {
-            if (ObjectCreated != null)
-                ObjectCreated(this, new GenericEventArgs<GameplayObject>(this));
+            //if (ObjectCreated != null)
+            //    ObjectCreated(this, new GenericEventArgs<GameplayObject>(this));
         }
 
 
