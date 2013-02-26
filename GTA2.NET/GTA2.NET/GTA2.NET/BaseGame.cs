@@ -16,13 +16,15 @@ namespace Hiale.GTA2NET
         /// Background color
         /// </summary>
         private static readonly Color BackgroundColor = Color.Red;
+
         /// <summary>
         /// Field of view and near and far plane distances for the
         /// ProjectionMatrix creation.
         /// </summary>
-        private const float FieldOfView = MathHelper.PiOver2,
-            NearPlane = 1,
-            FarPlane = 1750;
+        private const float FieldOfView = MathHelper.PiOver2, //PiOver2 = 90°C
+                            NearPlane = 1,
+                            //FarPlane = 1750;
+                            FarPlane = 8;
 
         /// <summary>
         /// Graphics device manager, used for the graphics creation and holds
@@ -687,7 +689,7 @@ namespace Hiale.GTA2NET
             #else
             GraphicsManager.PreferredBackBufferWidth = resolutionWidth;
             GraphicsManager.PreferredBackBufferHeight = resolutionHeight;
-            //GraphicsManager.IsFullScreen = false; //ANX not implemented
+            GraphicsManager.IsFullScreen = false;
 
             mustApplyDeviceChanges = true;
             #endif

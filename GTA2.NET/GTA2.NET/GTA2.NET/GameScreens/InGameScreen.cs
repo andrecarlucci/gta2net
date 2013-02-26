@@ -9,8 +9,8 @@ namespace Hiale.GTA2NET.GameScreens
 {
     public class InGameScreen : IGameScreen
     {
-        CityRenderer cityRenderer;
-        SpriteRenderer spriteRenderer;
+        readonly CityRenderer cityRenderer;
+        readonly SpriteRenderer spriteRenderer;
 
         public InGameScreen()
         {
@@ -22,7 +22,7 @@ namespace Hiale.GTA2NET.GameScreens
 
         public bool Render()
         {            
-            if (Input.GamePadBackJustPressed)
+            if (Input.GamePadBackJustPressed) //move to another place
                 return true;            
 
             cityRenderer.DrawCity();

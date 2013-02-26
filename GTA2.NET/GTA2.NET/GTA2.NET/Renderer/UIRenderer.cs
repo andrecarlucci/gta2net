@@ -8,19 +8,20 @@ namespace Hiale.GTA2NET.Renderer
 {
     public class UiRenderer
     {
-        SpriteBatch spriteBatch;
-        Texture2D mousePointerTex;
-        Texture2D nullTex;
+        readonly SpriteBatch spriteBatch;
+        readonly Texture2D mousePointerTex;
+        readonly Texture2D nullTex;
 
         public UiRenderer()
         {
             spriteBatch = new SpriteBatch(BaseGame.Device);
             var fs = new FileStream("textures\\MouseCursor.png", FileMode.Open);
             mousePointerTex = Texture2D.FromStream(BaseGame.Device, fs);
-            mousePointerTex = new Texture2D(BaseGame.Device, 64, 64);
             fs.Close();
             //mousePointerTex = MainGame.Content.Load<Texture2D>("MouseCursor");
-            //nullTex = Texture2D.FromFile(BaseGame.Device, "textures\\Null.bmp");
+            nullTex = new Texture2D(BaseGame.Device, 1, 1);
+            Int32[] pixel = { 0xFF }; // White. 0xFF is Red, 0xFF0000 is Blue
+            nullTex.SetData(pixel);
         }
 
         public void DrawMouseMounter()
@@ -35,13 +36,13 @@ namespace Hiale.GTA2NET.Renderer
             spriteBatch.End();
         }
 
-        void DrawLine(Vector2 a, Vector2 b)
+        private void DrawLine(Vector2 a, Vector2 b)
         {
             var origin = new Vector2(0.5f, 0.0f);
             var diff = b - a;
             var scale = new Vector2(1.0f, diff.Length() / nullTex.Height);
             var angle = (float)(Math.Atan2(diff.Y, diff.X)) - MathHelper.PiOver2;
-            spriteBatch.Draw(nullTex, a, null, Color.Black, angle, origin, scale, SpriteEffects.None, 1.0f);            
+            spriteBatch.Draw(nullTex, a, null, Color.White, angle, origin, scale, SpriteEffects.None, 1.0f);            
         }
 
     }

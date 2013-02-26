@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using FarseerPhysics.Collision.Shapes;
+using FarseerPhysics.Common;
+using FarseerPhysics.Dynamics;
+using FarseerPhysics.Factories;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Hiale.GTA2NET.Core;
@@ -8,6 +13,7 @@ using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.Core.Style;
 using Hiale.GTA2NET.Helper;
 using Hiale.GTA2NET.Logic;
+using Microsoft.Xna.Framework.Input;
 
 namespace Hiale.GTA2NET
 {
@@ -27,46 +33,32 @@ namespace Hiale.GTA2NET
         /// </summary>
         public static Style Style { get; set; }
 
-        //public static RandomHelper RandomHelper { get; set; }
-
         /// <summary>
         /// All available car data.
         /// </summary>
         public static List<CarInfo> CarInfos { get; private set; }
 
-        private static EventList<GameplayObject> _cars;
         /// <summary>
         /// The cars currently drive on the map.
         /// </summary>
-        public static EventList<GameplayObject> Cars
-        {
-            get { return MainGame._cars; }
-            set { MainGame._cars = value; }
-        }
+        public static ObservableCollection<Car> Cars { get; private set; }
 
-        private static EventList<GameplayObject> _pedestrians;
         /// <summary>
         /// The pedestrian currently walks along the map
         /// </summary>
-        public static EventList<GameplayObject> Pedestrians
-        {
-            get { return MainGame._pedestrians; }
-            set { MainGame._pedestrians = value; }
-        }
+        public static ObservableCollection<Car> Pedestrians { get; private set; }
 
 
-        private static GameplayObject _chasingObject;
         /// <summary>
         /// The object (guy or car) which the player is controlling. The camera chases this object.
         /// </summary>
-        public static GameplayObject ChasingObject
-        {
-            get { return MainGame._chasingObject; }
-            set { MainGame._chasingObject = value; }
-        }
+        public static GameplayObject ChasingObject { get; private set; }
 
         public const float RotationScalar = 50; //was 0.05
         public const float ForwardScalar = 10;
+
+        //Physic stuff
+        private World _world;
 
         private static string _windowTitle;
         /// <summary>
@@ -88,7 +80,7 @@ namespace Hiale.GTA2NET
         }
 
         /// <summary>
-        /// In menu
+        /// In menu?
         /// </summary>
         /// <returns>Bool</returns>
         public static bool InMenu
@@ -146,16 +138,10 @@ namespace Hiale.GTA2NET
         public MainGame() : base()
         {
             //
-            Content = base.Content;
-            Content.RootDirectory = "Textures";
         }
 
-        public new static ContentManager Content;
-
-        Hiale.GTA2NET.Renderer.UiRenderer uiRenderer; //ToDo: intigrate better!!!
-
-        AI ai;
-
+        Renderer.UiRenderer uiRenderer; //ToDo: intigrate better!!!
+        
         static MainGame()
         {
             GlobalScalar = Vector3.One;
@@ -168,35 +154,58 @@ namespace Hiale.GTA2NET
         {
             base.Initialize();
 
-            _cars = new EventList<GameplayObject>();
-            _pedestrians = new EventList<GameplayObject>();
-
             //_chasingObject = new Car();
             //_chasingObject.Position = new Vector3(65, 181, GetHighestPoint(65, 181));
 
-            MainGame.Style = new Style();
-            Style.ReadFromFile("data\\bil.sty");
+            ViewMatrix = Matrix.CreateLookAt(new Vector3(65, -181, 10), new Vector3(65, -181, 0), Vector3.Up);
+            //GameScreens.Push(new InGameScreen());
 
-            Dictionary<int, CarPhysics> carPhysics = CarPhysicReader.ReadFromFile();
-            CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
-
-            BaseGame.ViewMatrix = Matrix.CreateLookAt(new Vector3(65, -181, 10), new Vector3(65, -181, 0), Vector3.Up);
-            GameScreens.Push(new InGameScreen());
-
-            uiRenderer = new Hiale.GTA2NET.Renderer.UiRenderer();
+            uiRenderer = new Renderer.UiRenderer();
             IsFixedTimeStep = false;
-            //
-            //...
 
-            _chasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), CarInfos[9]);
-            _chasingObject.PlayerControlled = true;
-            //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
-            ai = new AI(_chasingObject);
-            Cars.Add(_chasingObject);
+            LoadMap();
         }
 
-        //private double _playerForwardDelta;
-        //private double _playerRotationDelta;
+        private void LoadMap()
+        {
+            if (_world == null)
+                _world = new World(new Vector2(0, 10f));
+            else
+                _world.Clear();
+
+            Map = new Map();
+            Map.ReadFromFile("data\\MP1-comp.gmp");
+
+            Style = new Style();
+            Style.ReadFromFile("data\\bil.sty");
+
+            var collision = new MapCollision(Map);
+            var vertices = collision.CreateMapVertices();
+
+            foreach (var obstacle in vertices[1])
+            {
+                var body = new Body(_world);
+                body.BodyType = BodyType.Static;
+                body.Friction = 0.2f;
+                FixtureFactory.AttachEdge(obstacle.Start, obstacle.End, body);
+            }
+
+            var carPhysics = CarPhysicReader.ReadFromFile();
+            CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
+
+            Cars = new ObservableCollection<Car>();
+            Pedestrians = new ObservableCollection<Car>();
+
+            ChasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), CarInfos[9]);
+            ChasingObject.PlayerControlled = true;
+            //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
+            Cars.Add((Car) ChasingObject);
+
+            GameScreens.Push(new InGameScreen());
+        }
+
+
+        private bool leftClicked;
 
         /// <summary>
         /// Update
@@ -206,26 +215,36 @@ namespace Hiale.GTA2NET
             // Update game engine
             base.Update(gameTime);
 
+            _world.Step(Math.Min((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f, (1f / 30f)));
+
+            var mouseState = Mouse.GetState();
 
             float elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             PlayerInput input = new PlayerInput();
             HandleInput(ref input);
-            _chasingObject.SetPlayerInput(input, elapsedGameTime);
+            ChasingObject.SetPlayerInput(input, elapsedGameTime);
+            
 
             UpdateObjects(elapsedGameTime);
 
             
-            if (_chasingObject != null)
+            if (ChasingObject != null)
             {
-                Vector3 cameraPos;
-                Vector3 lookAt = _chasingObject.Position3;
+                Vector3 lookAt = ChasingObject.Position3;
                 lookAt.Y *= -1;
-                cameraPos = lookAt;
+                Vector3 cameraPos = lookAt;
                 cameraPos.Z += 10 * GlobalScalar.Z;
-                BaseGame.ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
+                ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
             }
-            
+
+            if (mouseState.LeftButton == ButtonState.Pressed && !leftClicked)
+            {
+                System.Diagnostics.Debug.WriteLine(FindWhereClicked(mouseState));
+                leftClicked = true;
+            }
+            else if (mouseState.LeftButton == ButtonState.Released)
+                leftClicked = false;
 
 
             Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString() + " fps";
@@ -302,6 +321,41 @@ namespace Hiale.GTA2NET
 
             //_playerForwardDelta = 0;
             //_playerRotationDelta = 0;
+        }
+
+        private Ray FindWhereClicked(MouseState ms)
+        {
+            var nearScreenPoint = new Vector3(ms.X, ms.Y, 0);
+            var farScreenPoint = new Vector3(ms.X, ms.Y, 1);
+            var nearWorldPoint = Device.Viewport.Unproject(nearScreenPoint, ProjectionMatrix, ViewMatrix, Matrix.Identity);
+            var farWorldPoint = Device.Viewport.Unproject(farScreenPoint, ProjectionMatrix, ViewMatrix, Matrix.Identity);
+
+            var direction = farWorldPoint - nearWorldPoint;
+            direction.Normalize();
+
+            var ray = new Ray(nearWorldPoint, direction);
+
+            var xmin = Math.Min(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X));
+            var xmax = Math.Max(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X)) + 1;
+            var ymin = Math.Min(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y));
+            var ymax = Math.Max(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y)) + 1;
+            var zmin = Math.Min(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z));
+            zmin = 0;
+            var zmax = Math.Max(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z)) + 1;
+
+            for (int z = (int) zmax; z >= zmin; z-- )
+            {
+                for (int x = (int) xmin; x <= xmax; x++)
+                {
+                    for (int y = (int) ymin; y <= ymax; y++)
+                    {
+                        BoundingBox box = new BoundingBox(new Vector3(x,y,z), new Vector3(x+1,y+1,z+1));
+                        if (ray.Intersects(box).HasValue)
+                            System.Diagnostics.Debug.WriteLine("OK");
+                    }
+                }
+            }
+            return ray;
         }
 
         //protected override void Draw(GameTime gameTime)

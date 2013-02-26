@@ -47,7 +47,6 @@
     <Compile Include="BaseGame.cs" />
     <Compile Include="GameScreens\IGameScreen.cs" />
     <Compile Include="GameScreens\InGameScreen.cs" />
-    <Compile Include="Helper\EventList.cs" />
     <Compile Include="Helper\FaceCoordinates.cs" />
     <Compile Include="Helper\PlayerInput.cs" />
     <Compile Include="Helper\Polygon.cs" />

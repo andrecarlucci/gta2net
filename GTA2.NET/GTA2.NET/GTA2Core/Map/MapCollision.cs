@@ -20,10 +20,9 @@ namespace Hiale.GTA2NET.Core.Map
         public MapCollision(Map map)
         {
             _map = map;
-            CreateMapCollision();
         }
 
-        private void CreateMapCollision()
+        public List<Obstacle>[] CreateMapVertices()
         {
             //we create a list of unpassable obsticles of each layer (z coord)
             var obstacles = new List<Obstacle>[_map.CityBlocks.GetLength(2)];
@@ -170,23 +169,22 @@ namespace Hiale.GTA2NET.Core.Map
             OptimizeStraightVertices(straightObstacles, obstacles);
 
             //for Debug
-            for (var z = 0; z < obstacles.Length; z++)
-            {
-                using (var bmp = new Bitmap(2560, 2560))
-                {
-                    using (var g = Graphics.FromImage(bmp))
-                    {
-                        g.Clear(Color.White);
-                        foreach (var obstacle in obstacles[z])
-                        {
-                            g.DrawLine(new Pen(Color.Red), new Point((int) obstacle.Start.X*10, (int) obstacle.Start.Y*10), new Point((int) obstacle.End.X*10, (int) obstacle.End.Y*10));
-                        }
-                        bmp.Save(z + ".png", ImageFormat.Png);
-                    }
-                }
-            }
-            System.Diagnostics.Debug.WriteLine("OK");
-
+            //for (var z = 0; z < obstacles.Length; z++)
+            //{
+            //    using (var bmp = new Bitmap(2560, 2560))
+            //    {
+            //        using (var g = Graphics.FromImage(bmp))
+            //        {
+            //            g.Clear(Color.White);
+            //            foreach (var obstacle in obstacles[z])
+            //            {
+            //                g.DrawLine(new Pen(Color.Red), new Point((int) obstacle.Start.X*10, (int) obstacle.Start.Y*10), new Point((int) obstacle.End.X*10, (int) obstacle.End.Y*10));
+            //            }
+            //            bmp.Save(z + ".png", ImageFormat.Png);
+            //        }
+            //    }
+            //}
+            return obstacles;
         }
 
         /// <summary> 
