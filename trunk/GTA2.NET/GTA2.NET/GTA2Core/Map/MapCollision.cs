@@ -22,6 +22,152 @@ namespace Hiale.GTA2NET.Core.Map
             _map = map;
         }
 
+        public void FloodFill(Vector2 start)
+        {
+            //var blocks = new SlopeType[256,256];
+            var blocks = new CollisionMapType[256, 256];
+
+            int z = 2; //fix for now
+
+            var stack = new Stack<Vector2>();
+            stack.Push(start);
+            do
+            {
+                var currentPos = stack.Pop();
+                DebugThis((int)currentPos.X, (int)currentPos.Y);
+                var currentBlock = _map.CityBlocks[(int)currentPos.X, (int)currentPos.Y, z];
+                if (CheckBlockBounds(currentPos))
+                {
+                    switch (currentBlock.SlopeType)
+                    {
+                        case SlopeType.DiagonalFacingUpLeft:
+                        case SlopeType.DiagonalFacingUpRight:
+                        case SlopeType.DiagonalFacingDownLeft:
+                        case SlopeType.DiagonalFacingDownRight:
+                        case SlopeType.PartialCentreBlock:
+                            blocks[(int) currentPos.X, (int) currentPos.Y] = CollisionMapType.Special;
+                            continue;
+                    }
+
+
+                    //blocks[(int) currentPos.X, (int) currentPos.Y] = SlopeType.None; //SET
+                    blocks[(int) currentPos.X, (int) currentPos.Y] = CollisionMapType.Free;
+                }
+
+                BlockInfo newBlock;
+                var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
+                DebugThis((int)newPos.X, (int)newPos.Y);
+                if (CheckBlockBounds(newPos) && blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
+                {
+                    newBlock = _map.CityBlocks[(int) newPos.X, (int) newPos.Y, z];
+                    if (newBlock.SlopeType != SlopeType.None)
+                    {
+                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Special;
+                    }
+                    else if ((!currentBlock.Right.Wall && !newBlock.Left.Wall))
+                        stack.Push(newPos);
+                    else
+                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                }
+                newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
+                DebugThis((int)newPos.X, (int)newPos.Y);
+                if (CheckBlockBounds(newPos) && blocks[(int) newPos.X, (int) newPos.Y] == CollisionMapType.None)
+                {
+                    newBlock = _map.CityBlocks[(int)newPos.X, (int)newPos.Y, z];
+                    if (newBlock.SlopeType != SlopeType.None)
+                    {
+                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Special;
+                    }
+                    else if ((!currentBlock.Bottom.Wall && !newBlock.Top.Wall))
+                        stack.Push(newPos);
+                    else
+                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                }
+                newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
+                DebugThis((int)newPos.X, (int)newPos.Y);
+                if (CheckBlockBounds(newPos) && blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
+                {
+                    newBlock = _map.CityBlocks[(int)newPos.X, (int)newPos.Y, z];
+                    if (newBlock.SlopeType != SlopeType.None)
+                    {
+                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Special;
+                    }
+                    else if ((!currentBlock.Left.Wall && !newBlock.Right.Wall))
+                        stack.Push(newPos);
+                    else
+                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                }
+                newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
+                DebugThis((int) newPos.X, (int) newPos.Y);
+                if (CheckBlockBounds(newPos) && blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
+                {
+                    newBlock = _map.CityBlocks[(int)newPos.X, (int)newPos.Y, z];
+                    if (newBlock.SlopeType != SlopeType.None)
+                    {
+                        blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Special;
+                    }
+                    else if ((!currentBlock.Top.Wall && !newBlock.Bottom.Wall))
+                        stack.Push(newPos);
+                    else
+                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                }
+
+            } while (stack.Count > 0);
+
+            using (var bmp = new Bitmap(2560, 2560))
+            {
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.Clear(Color.White);
+                    //foreach (var obstacle in obstacles[z])
+                    //{
+                    //    g.DrawLine(new Pen(Color.Red), new Point((int)obstacle.Start.X * 10, (int)obstacle.Start.Y * 10), new Point((int)obstacle.End.X * 10, (int)obstacle.End.Y * 10));
+                    //}
+
+                    for (var x = 0; x < blocks.GetLength(0); x++ )
+                    {
+                        for (var y = 0; y < blocks.GetLength(1); y++)
+                        {
+                            if (DebugThis(x,y))
+                            {
+                                g.FillRectangle(new SolidBrush(Color.Turquoise), x * 10, y * 10, 10, 10);
+                                continue;
+                            }
+                            if (blocks[x, y] == CollisionMapType.Forbidden)
+                                g.FillRectangle(new SolidBrush(Color.Red), x*10, y*10, 10, 10);
+                            if (blocks[x, y] == CollisionMapType.Free)
+                                g.FillRectangle(new SolidBrush(Color.Green), x * 10, y * 10, 10, 10);
+                            if (blocks[x, y] == CollisionMapType.Special)
+                                g.FillRectangle(new SolidBrush(Color.Blue), x * 10, y * 10, 10, 10);
+                            if (blocks[x, y] == CollisionMapType.None)
+                                g.FillRectangle(new SolidBrush(Color.Yellow), x * 10, y * 10, 10, 10);
+                        }
+                    }
+
+
+                        bmp.Save(z + ".png", ImageFormat.Png);
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine(blocks);
+
+        }
+
+        private bool DebugThis(int x, int y)
+        {
+            if (x == 115 && y == 193)
+            {
+                System.Diagnostics.Debug.WriteLine("OK");
+                return true;
+            }
+            return false;
+        }
+
+        private bool CheckBlockBounds(Vector2 newPos)
+        {
+            return (newPos.X > -1) && (newPos.Y > -1) && (newPos.X < _map.Width) && (newPos.Y < _map.Length);
+        }
+
         public List<Obstacle>[] CreateMapVertices()
         {
             //we create a list of unpassable obsticles of each layer (z coord)
@@ -76,7 +222,7 @@ namespace Hiale.GTA2NET.Core.Map
                                     break;
                             }
                         }
-                        if (block.Top && block.Left.Wall)
+                        if (block.Top && block.Top.Wall)
                         {
                             switch (block.SlopeType)
                             {
@@ -102,7 +248,7 @@ namespace Hiale.GTA2NET.Core.Map
                                     break;
                             }
                         }
-                        if (block.Right && block.Left.Wall)
+                        if (block.Right && block.Right.Wall)
                         {
                             switch (block.SlopeType)
                             {
@@ -136,7 +282,7 @@ namespace Hiale.GTA2NET.Core.Map
                                     break;
                             }
                         }
-                        if (block.Bottom && block.Left.Wall)
+                        if (block.Bottom && block.Bottom.Wall)
                         {
                             switch (block.SlopeType)
                             {
@@ -169,21 +315,21 @@ namespace Hiale.GTA2NET.Core.Map
             OptimizeStraightVertices(straightObstacles, obstacles);
 
             //for Debug
-            //for (var z = 0; z < obstacles.Length; z++)
-            //{
-            //    using (var bmp = new Bitmap(2560, 2560))
-            //    {
-            //        using (var g = Graphics.FromImage(bmp))
-            //        {
-            //            g.Clear(Color.White);
-            //            foreach (var obstacle in obstacles[z])
-            //            {
-            //                g.DrawLine(new Pen(Color.Red), new Point((int) obstacle.Start.X*10, (int) obstacle.Start.Y*10), new Point((int) obstacle.End.X*10, (int) obstacle.End.Y*10));
-            //            }
-            //            bmp.Save(z + ".png", ImageFormat.Png);
-            //        }
-            //    }
-            //}
+            for (var z = 0; z < obstacles.Length; z++)
+            {
+                using (var bmp = new Bitmap(2560, 2560))
+                {
+                    using (var g = Graphics.FromImage(bmp))
+                    {
+                        g.Clear(Color.White);
+                        foreach (var obstacle in obstacles[z])
+                        {
+                            g.DrawLine(new Pen(Color.Red), new Point((int)obstacle.Start.X * 10, (int)obstacle.Start.Y * 10), new Point((int)obstacle.End.X * 10, (int)obstacle.End.Y * 10));
+                        }
+                        bmp.Save(z + ".png", ImageFormat.Png);
+                    }
+                }
+            }
             return obstacles;
         }
 

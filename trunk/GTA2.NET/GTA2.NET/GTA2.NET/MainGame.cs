@@ -174,21 +174,24 @@ namespace Hiale.GTA2NET
                 _world.Clear();
 
             Map = new Map();
+            //Map.ReadFromFile("data\\MP1-comp.gmp");
             Map.ReadFromFile("data\\MP1-comp.gmp");
+            //Map.ReadFromFile("data\\bil.gmp");
 
             Style = new Style();
             Style.ReadFromFile("data\\bil.sty");
 
             var collision = new MapCollision(Map);
-            var vertices = collision.CreateMapVertices();
+            //var vertices = collision.CreateMapVertices();
+            collision.FloodFill(new Vector2(73,192));
 
-            foreach (var obstacle in vertices[1])
-            {
-                var body = new Body(_world);
-                body.BodyType = BodyType.Static;
-                body.Friction = 0.2f;
-                FixtureFactory.AttachEdge(obstacle.Start, obstacle.End, body);
-            }
+            //foreach (var obstacle in vertices[1])
+            //{
+            //    var body = new Body(_world);
+            //    body.BodyType = BodyType.Static;
+            //    body.Friction = 0.2f;
+            //    FixtureFactory.AttachEdge(obstacle.Start, obstacle.End, body);
+            //}
 
             var carPhysics = CarPhysicReader.ReadFromFile();
             CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
@@ -323,6 +326,8 @@ namespace Hiale.GTA2NET
             //_playerRotationDelta = 0;
         }
 
+        public static Ray ClickRay;
+
         private Ray FindWhereClicked(MouseState ms)
         {
             var nearScreenPoint = new Vector3(ms.X, ms.Y, 0);
@@ -335,26 +340,28 @@ namespace Hiale.GTA2NET
 
             var ray = new Ray(nearWorldPoint, direction);
 
-            var xmin = Math.Min(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X));
-            var xmax = Math.Max(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X)) + 1;
-            var ymin = Math.Min(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y));
-            var ymax = Math.Max(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y)) + 1;
-            var zmin = Math.Min(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z));
-            zmin = 0;
-            var zmax = Math.Max(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z)) + 1;
+            ClickRay = ray;
 
-            for (int z = (int) zmax; z >= zmin; z-- )
-            {
-                for (int x = (int) xmin; x <= xmax; x++)
-                {
-                    for (int y = (int) ymin; y <= ymax; y++)
-                    {
-                        BoundingBox box = new BoundingBox(new Vector3(x,y,z), new Vector3(x+1,y+1,z+1));
-                        if (ray.Intersects(box).HasValue)
-                            System.Diagnostics.Debug.WriteLine("OK");
-                    }
-                }
-            }
+            //var xmin = Math.Min(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X));
+            //var xmax = Math.Max(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X)) + 1;
+            //var ymin = Math.Min(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y));
+            //var ymax = Math.Max(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y)) + 1;
+            //var zmin = Math.Min(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z));
+            //zmin = 0;
+            //var zmax = Math.Max(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z)) + 1;
+
+            //for (int z = (int) zmax; z >= zmin; z-- )
+            //{
+            //    for (int x = (int) xmin; x <= xmax; x++)
+            //    {
+            //        for (int y = (int) ymin; y <= ymax; y++)
+            //        {
+            //            BoundingBox box = new BoundingBox(new Vector3(x,y,z), new Vector3(x+1,y+1,z+1));
+            //            if (ray.Intersects(box).HasValue)
+            //                System.Diagnostics.Debug.WriteLine("OK");
+            //        }
+            //    }
+            //}
             return ray;
         }
 
