@@ -48,68 +48,107 @@ namespace Hiale.GTA2NET.Core.Map
                             blocks[(int) currentPos.X, (int) currentPos.Y] = CollisionMapType.Special;
                             continue;
                     }
-
-
-                    //blocks[(int) currentPos.X, (int) currentPos.Y] = SlopeType.None; //SET
-                    blocks[(int) currentPos.X, (int) currentPos.Y] = CollisionMapType.Free;
+                    if (currentBlock.IsEmpty)
+                        blocks[(int) currentPos.X, (int) currentPos.Y] = CollisionMapType.Free;
+                    else
+                        blocks[(int) currentPos.X, (int) currentPos.Y] = CollisionMapType.Unknwon;
                 }
 
                 BlockInfo newBlock;
                 var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
                 DebugThis((int)newPos.X, (int)newPos.Y);
-                if (CheckBlockBounds(newPos) && blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
+                if (CheckBlockBounds(newPos))
                 {
-                    newBlock = _map.CityBlocks[(int) newPos.X, (int) newPos.Y, z];
-                    if (newBlock.SlopeType != SlopeType.None)
+                    if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
                     {
-                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Special;
+                        newBlock = _map.CityBlocks[(int) newPos.X, (int) newPos.Y, z];
+                        if (newBlock.IsEmpty)
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Free;
+                        if (newBlock.SlopeType != SlopeType.None)
+                        {
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Special;
+                        }
+                        else if (!newBlock.Left.Wall) //else if ((!currentBlock.Right.Wall && !newBlock.Left.Wall))
+                            stack.Push(newPos);
+                        else
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Forbidden;
+
                     }
-                    else if ((!currentBlock.Right.Wall && !newBlock.Left.Wall))
-                        stack.Push(newPos);
-                    else
-                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                    else if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.Unknwon)
+                    {
+                        blocks[(int)newPos.X, (int)newPos.Y] = UnknwonBlocks((int)newPos.X, (int)newPos.Y, z);
+                    }
                 }
                 newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
                 DebugThis((int)newPos.X, (int)newPos.Y);
-                if (CheckBlockBounds(newPos) && blocks[(int) newPos.X, (int) newPos.Y] == CollisionMapType.None)
+                if (CheckBlockBounds(newPos))
                 {
-                    newBlock = _map.CityBlocks[(int)newPos.X, (int)newPos.Y, z];
-                    if (newBlock.SlopeType != SlopeType.None)
+                    if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
                     {
-                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Special;
+                        newBlock = _map.CityBlocks[(int) newPos.X, (int) newPos.Y, z];
+                        if (newBlock.IsEmpty)
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Free;
+                        if (newBlock.SlopeType != SlopeType.None)
+                        {
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Special;
+                        }
+                        else if (!newBlock.Top.Wall)
+                            stack.Push(newPos);
+                        else
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Forbidden;
+
                     }
-                    else if ((!currentBlock.Bottom.Wall && !newBlock.Top.Wall))
-                        stack.Push(newPos);
-                    else
-                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                    else if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.Unknwon)
+                    {
+                        blocks[(int)newPos.X, (int)newPos.Y] = UnknwonBlocks((int)newPos.X, (int)newPos.Y, z);
+                    }
                 }
                 newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
                 DebugThis((int)newPos.X, (int)newPos.Y);
-                if (CheckBlockBounds(newPos) && blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
+                if (CheckBlockBounds(newPos))
                 {
-                    newBlock = _map.CityBlocks[(int)newPos.X, (int)newPos.Y, z];
-                    if (newBlock.SlopeType != SlopeType.None)
+                    if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
                     {
-                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Special;
+                        newBlock = _map.CityBlocks[(int) newPos.X, (int) newPos.Y, z];
+                        if (newBlock.IsEmpty)
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Free;
+                        if (newBlock.SlopeType != SlopeType.None)
+                        {
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Special;
+                        }
+                        else if (!newBlock.Right.Wall)
+                            stack.Push(newPos);
+                        else
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Forbidden;
+
                     }
-                    else if ((!currentBlock.Left.Wall && !newBlock.Right.Wall))
-                        stack.Push(newPos);
-                    else
-                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                    else if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.Unknwon)
+                    {
+                        blocks[(int)newPos.X, (int)newPos.Y] = UnknwonBlocks((int)newPos.X, (int)newPos.Y, z);
+                    }
                 }
                 newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
                 DebugThis((int) newPos.X, (int) newPos.Y);
-                if (CheckBlockBounds(newPos) && blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
+                if (CheckBlockBounds(newPos))
                 {
-                    newBlock = _map.CityBlocks[(int)newPos.X, (int)newPos.Y, z];
-                    if (newBlock.SlopeType != SlopeType.None)
+                    if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.None)
                     {
-                        blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Special;
+                        newBlock = _map.CityBlocks[(int) newPos.X, (int) newPos.Y, z];
+                        if (newBlock.IsEmpty)
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Free;
+                        if (newBlock.SlopeType != SlopeType.None)
+                        {
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Special;
+                        }
+                        else if (!newBlock.Bottom.Wall)
+                            stack.Push(newPos);
+                        else
+                            blocks[(int) newPos.X, (int) newPos.Y] = CollisionMapType.Forbidden;
                     }
-                    else if ((!currentBlock.Top.Wall && !newBlock.Bottom.Wall))
-                        stack.Push(newPos);
-                    else
-                        blocks[(int)newPos.X, (int)newPos.Y] = CollisionMapType.Forbidden;
+                    else if (blocks[(int)newPos.X, (int)newPos.Y] == CollisionMapType.Unknwon)
+                    {
+                        blocks[(int)newPos.X, (int)newPos.Y] = UnknwonBlocks((int)newPos.X, (int)newPos.Y, z);
+                    }
                 }
 
             } while (stack.Count > 0);
@@ -119,19 +158,14 @@ namespace Hiale.GTA2NET.Core.Map
                 using (var g = Graphics.FromImage(bmp))
                 {
                     g.Clear(Color.White);
-                    //foreach (var obstacle in obstacles[z])
-                    //{
-                    //    g.DrawLine(new Pen(Color.Red), new Point((int)obstacle.Start.X * 10, (int)obstacle.Start.Y * 10), new Point((int)obstacle.End.X * 10, (int)obstacle.End.Y * 10));
-                    //}
-
                     for (var x = 0; x < blocks.GetLength(0); x++ )
                     {
                         for (var y = 0; y < blocks.GetLength(1); y++)
                         {
                             if (DebugThis(x,y))
                             {
-                                g.FillRectangle(new SolidBrush(Color.Turquoise), x * 10, y * 10, 10, 10);
-                                continue;
+                                //g.FillRectangle(new SolidBrush(Color.Turquoise), x * 10, y * 10, 10, 10);
+                                //continue;
                             }
                             if (blocks[x, y] == CollisionMapType.Forbidden)
                                 g.FillRectangle(new SolidBrush(Color.Red), x*10, y*10, 10, 10);
@@ -141,6 +175,8 @@ namespace Hiale.GTA2NET.Core.Map
                                 g.FillRectangle(new SolidBrush(Color.Blue), x * 10, y * 10, 10, 10);
                             if (blocks[x, y] == CollisionMapType.None)
                                 g.FillRectangle(new SolidBrush(Color.Yellow), x * 10, y * 10, 10, 10);
+                            if (blocks[x, y] == CollisionMapType.Unknwon)
+                                g.FillRectangle(new SolidBrush(Color.Violet), x * 10, y * 10, 10, 10);
                         }
                     }
 
@@ -153,9 +189,48 @@ namespace Hiale.GTA2NET.Core.Map
 
         }
 
+        private CollisionMapType UnknwonBlocks(int x, int y, int z)
+        {
+            //return CollisionMapType.Free;
+            var newBlock = _map.CityBlocks[x, y, z];
+            if (newBlock.Left)
+            {
+                if (CheckBlockBounds(new Vector2(x - 1, y)))
+                {
+                    if (_map.CityBlocks[x - 1, y, z].Right)
+                        return CollisionMapType.Free;
+                }
+            }
+            if (newBlock.Top)
+            {
+                if (CheckBlockBounds(new Vector2(x, y - 1)))
+                {
+                    if (_map.CityBlocks[x, y - 1, z].Bottom)
+                        return CollisionMapType.Free;
+                }
+            }
+            if (newBlock.Right)
+            {
+                if (CheckBlockBounds(new Vector2(x + 1, y)))
+                {
+                    if (_map.CityBlocks[x + 1, y, z].Left)
+                        return CollisionMapType.Free;
+                }
+            }
+            if (newBlock.Bottom)
+            {
+                if (CheckBlockBounds(new Vector2(x, y + 1)))
+                {
+                    if (_map.CityBlocks[x, y + 1, z].Top)
+                        return CollisionMapType.Free;
+                }
+            }
+            return CollisionMapType.Forbidden;
+        }
+
         private bool DebugThis(int x, int y)
         {
-            if (x == 115 && y == 193)
+            if (x == 121 && y == 183)
             {
                 System.Diagnostics.Debug.WriteLine("OK");
                 return true;
