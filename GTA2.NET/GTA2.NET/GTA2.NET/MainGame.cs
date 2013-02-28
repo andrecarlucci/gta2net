@@ -174,7 +174,6 @@ namespace Hiale.GTA2NET
                 _world.Clear();
 
             Map = new Map();
-            //Map.ReadFromFile("data\\MP1-comp.gmp");
             Map.ReadFromFile("data\\MP1-comp.gmp");
             //Map.ReadFromFile("data\\bil.gmp");
 
@@ -183,7 +182,9 @@ namespace Hiale.GTA2NET
 
             var collision = new MapCollision(Map);
             //var vertices = collision.CreateMapVertices();
+
             collision.FloodFill(new Vector2(73,192));
+            //collision.FloodFill(new Vector2(239, 192)); //BIL.gmp
 
             //foreach (var obstacle in vertices[1])
             //{
