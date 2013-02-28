@@ -123,11 +123,11 @@ namespace Hiale.GTA2NET.Core.Map
             for (var i = 0; i < blockCount; i++)
             {
                 var blockInfo = new BlockInfo();
-                blockInfo.Left = new BlockFace(reader.ReadUInt16(), false);
-                blockInfo.Right = new BlockFace(reader.ReadUInt16(), false);
-                blockInfo.Top = new BlockFace(reader.ReadUInt16(), false);
-                blockInfo.Bottom = new BlockFace(reader.ReadUInt16(), false);
-                blockInfo.Lid = new BlockFace(reader.ReadUInt16(), true);
+                blockInfo.Left = new BlockFaceEdge(reader.ReadUInt16());
+                blockInfo.Right = new BlockFaceEdge(reader.ReadUInt16());
+                blockInfo.Top = new BlockFaceEdge(reader.ReadUInt16());
+                blockInfo.Bottom = new BlockFaceEdge(reader.ReadUInt16());
+                blockInfo.Lid = new BlockFaceLid(reader.ReadUInt16());
                 blockInfo.Arrows = (RoadTrafficType)reader.ReadByte(); //ToDo: Check, don't know if this works...
                 blockInfo.ParseSlope(reader.ReadByte());
                 blocks[i] = blockInfo;

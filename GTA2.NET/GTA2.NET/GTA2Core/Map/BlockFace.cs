@@ -13,59 +13,12 @@ namespace Hiale.GTA2NET.Core.Map
         Rotate270
     }
 
-    public class BlockFace
+    public abstract class BlockFace
     {
-        /// <summary>
-        /// IsCeiling indicates if this face is a ceiling (true) or left, right, top, bottom. Several properties cannot be used in either selection.
-        /// </summary>
-        public bool IsCeiling { get; private set; }
-
         /// <summary>
         /// Tile graphic number simply indicates which of the possible 1024 tile graphics to draw on this surface. It serves as an index into the tile information in the style file. A value of 0 means leave it blank. 992-1022 are reserved for internal use by the game engine. 1023 is used as a dummy tile number to mark 3-sided diagonal slopes.
         /// </summary>
         public int TileNumber { get; private set; }
-
-        private readonly bool _wall;
-        /// <summary>
-        /// Wall indicates whether or not a car, ped or object should collide with this tile.
-        /// </summary>
-        public bool Wall
-        {
-            get
-            {
-                if (IsCeiling)
-                    throw new NotSupportedException("A ceiling cannot have a Wall property! Use LightningLevel instead.");
-                return _wall;
-            }
-        }
-
-        private readonly bool _bulletWall;
-        /// <summary>
-        /// BulletWall indicates whether or not a bullet should collide with this tile.
-        /// </summary>
-        public bool BulletWall
-        {
-            get
-            {
-                if (IsCeiling)
-                    throw new NotSupportedException("A ceiling cannot have a ButtetWall property! Use LightningLevel instead.");
-                return _bulletWall;
-            }
-        }
-
-        private readonly byte _lightningLevel;
-        /// <summary>
-        /// Lighting level marks which shading level to apply to a lid tile. 0 is normal brightness. 1-3 are increasing levels of darkness.
-        /// </summary>
-        public byte LightningLevel
-        {
-            get 
-            {
-                if (!IsCeiling)
-                    throw new NotSupportedException("A left, right, top & bottom face cannot have a LightningLevel property! Use Wall and BulletWall instead.");
-                return _lightningLevel;
-            }      
-        }
 
         /// <summary>
         /// Flat indicates whether or not this tile should be treated as a flat. This means that it gets drawn transparently, and (except for a lid ) the tile opposite is used as the graphic for the reverse side.
@@ -83,15 +36,20 @@ namespace Hiale.GTA2NET.Core.Map
         /// </summary>
         public RotationType Rotation { get; private set; }
 
+        protected BlockFace()
+        {
+            TileNumber = 0;
+            Flat = false;
+            Flip = false;
+            Rotation = RotationType.RotateNone;
+        }
+
         /// <summary>
         /// Represents a face (left, right, top, bottom, lid) of a block.
         /// </summary>
         /// <param name="value">Base ushort value of this face.</param>
-        /// <param name="ceiling">Whether this face is a ceiling face.</param>
-        public BlockFace(ushort value, bool ceiling)
+        protected BlockFace(ushort value)
         {
-            IsCeiling = ceiling;
-
             if (value == 0)
                 return;
 
@@ -102,30 +60,11 @@ namespace Hiale.GTA2NET.Core.Map
                 tile = tile + (value & (int)Math.Pow(2, i));
             TileNumber = tile;
 
-            if (!IsCeiling)
-            {
-                _wall = BitHelper.CheckBit(value, 10); //Bit 10
-                _bulletWall = BitHelper.CheckBit(value, 11); //Bit 11
-            }
-            else
-            {
-                var bit10 = BitHelper.CheckBit(value, 10);
-                var bit11 = BitHelper.CheckBit(value, 11);
-                if (!bit10 && !bit11)
-                    _lightningLevel = 0;
-                if (bit10 && !bit11)
-                    _lightningLevel = 1;
-                if (bit10 && bit11)
-                    _lightningLevel = 2;
-                if (bit10 && bit11)
-                    _lightningLevel = 3;
-            }
-
             Flat = BitHelper.CheckBit(value, 12); //Bit 12
             Flip = BitHelper.CheckBit(value, 13); //Bit 13
 
-            bool bit14 = BitHelper.CheckBit(value, 14);
-            bool bit15 = BitHelper.CheckBit(value, 15);
+            var bit14 = BitHelper.CheckBit(value, 14);
+            var bit15 = BitHelper.CheckBit(value, 15);
             if (!bit14 && !bit15)
                 Rotation = RotationType.RotateNone;
             if (bit14 && !bit15)
@@ -134,12 +73,6 @@ namespace Hiale.GTA2NET.Core.Map
                 Rotation = RotationType.Rotate180;
             if (bit14 && bit15)
                 Rotation = RotationType.Rotate270;
-        }
-
-        public BlockFace(int tileNumber, RotationType rotation) //remove, just for debugging purpose
-        {
-            TileNumber = tileNumber;
-            Rotation = rotation;
         }
 
         public static implicit operator bool(BlockFace blockface)

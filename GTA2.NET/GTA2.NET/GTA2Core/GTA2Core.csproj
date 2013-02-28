@@ -53,7 +53,10 @@
     <Compile Include="Helper\BitHelper.cs" />
     <Compile Include="Helper\ZipStorer.cs" />
     <Compile Include="Map\BlockFace.cs" />
+    <Compile Include="Map\BlockFaceEdge.cs" />
+    <Compile Include="Map\BlockFaceLid.cs" />
     <Compile Include="Map\BlockInfo.cs" />
+    <Compile Include="Map\CollisionMapType.cs" />
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Map\MapCollision.cs" />

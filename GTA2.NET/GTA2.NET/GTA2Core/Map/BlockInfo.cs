@@ -15,15 +15,15 @@ namespace Hiale.GTA2NET.Core.Map
         /// </summary>
         public Vector3 Position { get; set; } //remove?
 
-        public BlockFace Left { get; set; }
+        public BlockFaceEdge Left { get; set; }
 
-        public BlockFace Right { get; set; }
+        public BlockFaceEdge Right { get; set; }
 
-        public BlockFace Top { get; set; }
+        public BlockFaceEdge Top { get; set; }
 
-        public BlockFace Bottom { get; set; }
+        public BlockFaceEdge Bottom { get; set; }
 
-        public BlockFace Lid { get; set; }
+        public BlockFaceLid Lid { get; set; }
 
         /// <summary>
         /// ToDo
@@ -40,6 +40,15 @@ namespace Hiale.GTA2NET.Core.Map
 
         public SlopeType SlopeType { get; private set; }
 
+        public BlockInfo()
+        {
+            Left = BlockFaceEdge.Empty;
+            Right = BlockFaceEdge.Empty;
+            Top = BlockFaceEdge.Empty;
+            Bottom = BlockFaceEdge.Empty;
+            Lid = BlockFaceLid.Empty;
+        }
+
         public void ParseSlope(byte type)
         {
             BaseSlopeType = type;
@@ -47,7 +56,7 @@ namespace Hiale.GTA2NET.Core.Map
             if (type == 0)
                 return;
 
-            int groundType = 0;
+            var groundType = 0;
             groundType += (type & 1);
             groundType += (type & 2);
             GroundType = (GroundType)groundType;
@@ -55,14 +64,30 @@ namespace Hiale.GTA2NET.Core.Map
             if (type < 4)
                 return;
 
-            int slopeType = 0;
+            var slopeType = 0;
             for (int i = 2; i < 8; i++)
             {
                 if (BitHelper.CheckBit(type, i))
                     slopeType += (int)Math.Pow(2, i - 2);
             }
             SlopeType = (SlopeType)slopeType;
+
+            //make some corrections to the collision bits.
+            switch (SlopeType)
+            {
+                case SlopeType.DiagonalFacingUpLeft:
+                case SlopeType.DiagonalFacingDownLeft:
+                    Left.Wall = true;
+                    Left.BulletWall = true;
+                    break;
+                case SlopeType.DiagonalFacingUpRight:
+                case SlopeType.DiagonalFacingDownRight:
+                    Right.Wall = true;
+                    Right.BulletWall = true;
+                    break;
+            }
         }
+        
 
         public bool IsEmpty
         {
