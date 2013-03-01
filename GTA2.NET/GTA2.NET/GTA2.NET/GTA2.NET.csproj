@@ -75,13 +75,13 @@
     <Content Include="Game.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
-      <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
-      <Name>Farseer Physics MonoGame</Name>
-    </ProjectReference>
     <ProjectReference Include="..\GTA2.NET Core\GTA2.NET Core.csproj">
       <Project>{52279f3e-ae51-467e-954d-614724cff34d}</Project>
       <Name>GTA2.NET Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Third party\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
+      <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
+      <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
