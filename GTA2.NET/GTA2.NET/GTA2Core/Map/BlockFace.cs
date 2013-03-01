@@ -13,6 +13,15 @@ namespace Hiale.GTA2NET.Core.Map
         Rotate270
     }
 
+    public enum BlockFaceDirection
+    {
+        Left,
+        Right,
+        Top,
+        Bottom,
+        Lid
+    }
+
     public abstract class BlockFace
     {
         /// <summary>
