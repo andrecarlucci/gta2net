@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Hiale.GTA2NET.Core</RootNamespace>
-    <AssemblyName>GTA2Core</AssemblyName>
+    <AssemblyName>Core</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -49,6 +49,7 @@
     <Compile Include="CarInfo.cs" />
     <Compile Include="CarPhysicReader.cs" />
     <Compile Include="CarPhysics.cs" />
+    <Compile Include="Collision\ObstacleType.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Helper\BitHelper.cs" />
     <Compile Include="Helper\ZipStorer.cs" />
@@ -56,12 +57,12 @@
     <Compile Include="Map\BlockFaceEdge.cs" />
     <Compile Include="Map\BlockFaceLid.cs" />
     <Compile Include="Map\BlockInfo.cs" />
-    <Compile Include="Map\CollisionMapType.cs" />
+    <Compile Include="Collision\CollisionMapType.cs" />
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
-    <Compile Include="Map\MapCollision.cs" />
+    <Compile Include="Collision\MapCollision.cs" />
     <Compile Include="Map\MapObject.cs" />
-    <Compile Include="Map\Obstacle.cs" />
+    <Compile Include="Collision\Obstacle.cs" />
     <Compile Include="Map\RoadTrafficType.cs" />
     <Compile Include="Map\SlopeType.cs" />
     <Compile Include="Map\TileAnimation.cs" />

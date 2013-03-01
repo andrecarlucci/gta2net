@@ -8,13 +8,17 @@ namespace Hiale.GTA2NET.Core.Map
 {
     public class Map
     {
+        public const int MaxWidth = 256;
+        public const int MaxLength = 256;
+        public const int MaxHeight = 8;
+
         private bool _loaded;
         private readonly BlockInfo[, ,] cityBlocks;
 
         private readonly List<Zone> Zones;
         private List<MapObject> Objects;
         private readonly List<TileAnimation> Animations;
-        private readonly List<Light> Lights;  
+        private readonly List<Light> Lights;
       
         public int Width //x
         {
@@ -33,7 +37,7 @@ namespace Hiale.GTA2NET.Core.Map
 
         public Map()
         {
-            cityBlocks = new BlockInfo[256, 256, 8];
+            cityBlocks = new BlockInfo[MaxWidth, MaxLength, MaxHeight];
 
             Zones = new List<Zone>();
             Objects = new List<MapObject>();
@@ -223,5 +227,30 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
+        public void Save(string filename)
+        {
+            var stream = new FileStream(filename, FileMode.CreateNew);
+            var writer = new BinaryWriter(stream);
+            writer.Write("GTA2.NET");
+            writer.Write("0.1"); //we only save blocks at the moment
+            for (var z = 0; z < CityBlocks.GetLength(2); z++)
+            {
+                for (var x = 0; x < cityBlocks.GetLength(0); x++)
+                {
+                    for (var y = 0; y < cityBlocks.GetLength(1); y++)
+                    {
+                        BlockInfo block = cityBlocks[x, y, z];
+                        if (!block.IsEmpty)
+                        {
+                            writer.Write(x);
+                            writer.Write(y);
+                            writer.Write(z);
+                            writer.Write(block.Left.TileNumber);
+                            writer.Write(block.Left.TileNumber);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
