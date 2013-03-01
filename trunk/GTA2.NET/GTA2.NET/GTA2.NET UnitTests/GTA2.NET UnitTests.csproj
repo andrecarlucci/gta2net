@@ -74,7 +74,7 @@
       <Project>{0723acf8-539b-4d11-981d-e2066822eaa7}</Project>
       <Name>GTA2.NET</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GTA2.NETCore\GTA2.NET Core.csproj">
+    <ProjectReference Include="..\GTA2.NET Core\GTA2.NET Core.csproj">
       <Project>{52279f3e-ae51-467e-954d-614724cff34d}</Project>
       <Name>GTA2.NET Core</Name>
     </ProjectReference>
