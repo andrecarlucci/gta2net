@@ -54,7 +54,6 @@
     <Compile Include="Helper\SeparatingAxisTheorem.cs" />
     <Compile Include="Helper\SerializableDictionary.cs" />
     <Compile Include="Helper\SpriteItem.cs" />
-    <Compile Include="Helper\Temp.cs" />
     <Compile Include="Helper\TextureAtlas.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Logic\AI.cs" />
@@ -80,7 +79,7 @@
       <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
       <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GTA2.NETCore\GTA2.NET Core.csproj">
+    <ProjectReference Include="..\GTA2.NET Core\GTA2.NET Core.csproj">
       <Project>{52279f3e-ae51-467e-954d-614724cff34d}</Project>
       <Name>GTA2.NET Core</Name>
     </ProjectReference>
