@@ -80,9 +80,9 @@
       <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
       <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>
-    <ProjectReference Include="..\GTA2Core\GTA2Core.csproj">
+    <ProjectReference Include="..\GTA2.NETCore\GTA2.NET Core.csproj">
       <Project>{52279f3e-ae51-467e-954d-614724cff34d}</Project>
-      <Name>GTA2Core</Name>
+      <Name>GTA2.NET Core</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
