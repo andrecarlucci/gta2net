@@ -85,6 +85,16 @@ namespace Hiale.GTA2NET.Core.Collision
             }
 
             //Pass 2
+            RemoveUnknownBlocks(blocks);
+
+            //Pass 3
+            FindLineObstacles(blocks);
+
+            return blocks;
+        }
+
+        private void RemoveUnknownBlocks(CollisionMapType[,,] blocks)
+        {
             for (var z = _map.Height - 1; z >= 0; z--)
             {
                 for (var x = 0; x < _map.Width; x++)
@@ -101,20 +111,61 @@ namespace Hiale.GTA2NET.Core.Collision
                     }
                 }
             }
+        }
 
-            //Pass 3
+        private void FindLineObstacles(CollisionMapType[,,] blocks)
+        {
+            var lines = new List<LineObstacle>();
+
+            //we check all 'Blocked blocks' which are 1 block wide, maybe they are not all blocked, but only a line is blocked for example a fence.
             for (var z = _map.Height - 1; z >= 0; z--)
             {
                 for (var x = 0; x < _map.Width; x++)
                 {
                     for (var y = 0; y < _map.Length; y++)
                     {
+                        if (blocks[x, y, z] == CollisionMapType.Block)
+                        {
+                            if (_map.CityBlocks[x, y, z].Left && !_map.CityBlocks[x, y, z].Right) //left
+                            {
+                                if ((x + 1) < _map.Width && blocks[x + 1, y, z] == CollisionMapType.Free)
+                                {
+                                    blocks[x, y, z] = CollisionMapType.Free;
+                                    lines.Add(new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
+                                }
+                            }
+
+                            if (_map.CityBlocks[x, y, z].Right && !_map.CityBlocks[x, y, z].Left) //right
+                            {
+                                if ((x - 1) < _map.Width && blocks[x - 1, y, z] == CollisionMapType.Free)
+                                {
+                                    blocks[x, y, z] = CollisionMapType.Free;
+                                    lines.Add(new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+                                }
+                            }
+
+                            if (_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom) //top
+                            {
+                                if ((y + 1) < _map.Length && blocks[x, y + 1, z] == CollisionMapType.Free)
+                                {
+                                    blocks[x, y, z] = CollisionMapType.Free;
+                                    lines.Add(new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                                }
+                            }
+
+                            if (_map.CityBlocks[x, y, z].Bottom && !_map.CityBlocks[x, y, z].Top) //bottom
+                            {
+                                if ((y - 1) < _map.Length && blocks[x, y - 1, z] == CollisionMapType.Free)
+                                {
+                                    blocks[x, y, z] = CollisionMapType.Free;
+                                    lines.Add(new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+                                }
+                            }
+                        }
+
                     }
                 }
             }
-
-
-            return blocks;
         }
 
         private bool CheckNeighbor(int x, int y, int z, CollisionMapType[,,] blocks, BlockFaceDirection direction, bool invert)
