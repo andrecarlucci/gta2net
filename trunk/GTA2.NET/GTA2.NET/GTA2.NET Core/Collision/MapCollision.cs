@@ -23,6 +23,34 @@ namespace Hiale.GTA2NET.Core.Collision
             _map = map;
         }
 
+        public List<IObstacle> CollisionMap(Vector2 start)
+        {
+            CollisionMapType[,,] blocks = FloodFill(start);
+
+            //Pass 2
+            RemoveUnknownBlocks(blocks);
+
+            //Pass 3
+            var obstacles = new List<IObstacle>();
+            FindLineObstacles(blocks, obstacles);
+
+            for (var z = _map.Height - 1; z >= 0; z--)
+            {
+                for (var x = 0; x < _map.Width; x++)
+                {
+                    for (var y = 0; y < _map.Length; y++)
+                    {
+                        if (blocks[x, y, z] == CollisionMapType.Block)
+                        {
+                            obstacles.Add(new RectangleObstacle(z, new Vector2(x,y), 1,1));
+                        }
+                    }
+                }
+            }
+
+            return obstacles;
+        }
+
         public CollisionMapType[,,] FloodFill(Vector2 start)
         {
             return FloodFill(start, false);
@@ -84,11 +112,12 @@ namespace Hiale.GTA2NET.Core.Collision
                 } while (stack.Count > 0);
             }
 
-            //Pass 2
-            RemoveUnknownBlocks(blocks);
+            ////Pass 2
+            //RemoveUnknownBlocks(blocks);
 
-            //Pass 3
-            FindLineObstacles(blocks);
+            ////Pass 3
+            //var obstacles = new List<IObstacle>();
+            //FindLineObstacles(blocks, obstacles);
 
             return blocks;
         }
@@ -113,58 +142,296 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
-        private void FindLineObstacles(CollisionMapType[,,] blocks)
+        private bool DebugThis(int x, int y, int z)
         {
-            var lines = new List<LineObstacle>();
+            if (x == 70 && y == 194 && z == 2)
+            {
+                System.Diagnostics.Debug.WriteLine("OK");
+                return true;
+            }
+            return false;
+        }
+
+        private void FindLineObstacles(CollisionMapType[, ,] blocks, List<IObstacle> obstacles)
+        {
+            //var lines = new List<LineObstacle>();
+
+            var stackX = new Stack<Vector2>();
+            var stackY = new Stack<int>();
+            var specialCases = new List<Vector2>();
 
             //we check all 'Blocked blocks' which are 1 block wide, maybe they are not all blocked, but only a line is blocked for example a fence.
             for (var z = _map.Height - 1; z >= 0; z--)
             {
+                specialCases.Clear();
+                var rawLineObstacles = new List<LineObstacle>();
                 for (var x = 0; x < _map.Width; x++)
                 {
                     for (var y = 0; y < _map.Length; y++)
                     {
-                        if (blocks[x, y, z] == CollisionMapType.Block)
+                        DebugThis(x, y, z);
+                        if (blocks[x, y, z] != CollisionMapType.Block)
+                            continue;
+                        if (_map.CityBlocks[x, y, z].Left && !_map.CityBlocks[x, y, z].Right) //left
                         {
-                            if (_map.CityBlocks[x, y, z].Left && !_map.CityBlocks[x, y, z].Right) //left
+                            if ((x + 1) < _map.Width && blocks[x + 1, y, z] == CollisionMapType.Free)
                             {
-                                if ((x + 1) < _map.Width && blocks[x + 1, y, z] == CollisionMapType.Free)
-                                {
-                                    blocks[x, y, z] = CollisionMapType.Free;
-                                    lines.Add(new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
-                                }
-                            }
-
-                            if (_map.CityBlocks[x, y, z].Right && !_map.CityBlocks[x, y, z].Left) //right
-                            {
-                                if ((x - 1) < _map.Width && blocks[x - 1, y, z] == CollisionMapType.Free)
-                                {
-                                    blocks[x, y, z] = CollisionMapType.Free;
-                                    lines.Add(new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
-                                }
-                            }
-
-                            if (_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom) //top
-                            {
-                                if ((y + 1) < _map.Length && blocks[x, y + 1, z] == CollisionMapType.Free)
-                                {
-                                    blocks[x, y, z] = CollisionMapType.Free;
-                                    lines.Add(new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
-                                }
-                            }
-
-                            if (_map.CityBlocks[x, y, z].Bottom && !_map.CityBlocks[x, y, z].Top) //bottom
-                            {
-                                if ((y - 1) < _map.Length && blocks[x, y - 1, z] == CollisionMapType.Free)
-                                {
-                                    blocks[x, y, z] = CollisionMapType.Free;
-                                    lines.Add(new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
-                                }
+                                //I have to check this item again, because x + 1 could be different after the loop
+                                stackX.Push(new Vector2(x, y));
+                                //blocks[x, y, z] = CollisionMapType.Free;
+                                //rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
                             }
                         }
 
+                        if (_map.CityBlocks[x, y, z].Right && !_map.CityBlocks[x, y, z].Left) //right
+                        {
+                            if ((x - 1) < _map.Width && blocks[x - 1, y, z] == CollisionMapType.Free)
+                            {
+                                if (!_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom)
+                                    blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+                                specialCases.Add(new Vector2(x, y));
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom) //top
+                        {
+                            if ((y + 1) < _map.Length && blocks[x, y + 1, z] == CollisionMapType.Free)
+                            {
+                                //I have to check this item again, because y + 1 could be different after the loop
+                                //blocks[x, y, z] = CollisionMapType.Free;
+                                //rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                                stackY.Push(y);
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Bottom && !_map.CityBlocks[x, y, z].Top) //bottom
+                        {
+                            if ((y - 1) < _map.Length && blocks[x, y - 1, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+                            }
+                        }
+                    }
+                    while (stackY.Count > 0)
+                    {
+                        var y = stackY.Pop();
+                        if ((y + 1) < _map.Length && blocks[x, y + 1, z] == CollisionMapType.Free)
+                        {
+                            if (!_map.CityBlocks[x, y, z].Left)
+                                blocks[x, y, z] = CollisionMapType.Free;
+                            rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                            specialCases.Add(new Vector2(x, y));
+                        }
+                    }
+                } //x
+                while (stackX.Count > 0)
+                {
+                    var vector2 = stackX.Pop();
+                    var x = (int) vector2.X;
+                    var y = (int) vector2.Y;
+                    if ((x + 1) < _map.Width && blocks[x + 1, y, z] == CollisionMapType.Free)
+                    {
+                        blocks[x, y, z] = CollisionMapType.Free;
+                        rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
                     }
                 }
+                foreach (var specialCase in specialCases)
+                {
+                    blocks[(int) specialCase.X, (int) specialCase.Y, z] = CollisionMapType.Free;
+                }
+                var lineObstacles = OptimizeStraightVertices(rawLineObstacles, z);
+                obstacles.AddRange(lineObstacles);
+            }
+        }
+
+        private void FindLineObstacles2(CollisionMapType[, ,] blocks, List<IObstacle> obstacles)
+        {
+            //var lines = new List<LineObstacle>();
+
+            //we check all 'Blocked blocks' which are 1 block wide, maybe they are not all blocked, but only a line is blocked for example a fence.
+            for (var z = _map.Height - 1; z >= 0; z--)
+            {
+                if (z != 2)
+                    continue;
+                var rawLineObstacles = new List<LineObstacle>();
+
+                for (var x = 0; x < _map.Width; x++)
+                {
+                    for (var y = 0; y < _map.Length; y++)
+                    {
+                        if (blocks[x, y, z] != CollisionMapType.Block)
+                            continue;
+                        var stack = new Stack<Vector2>();
+                        stack.Push(new Vector2(x, y));
+                        do
+                        {
+                            var current = stack.Pop();
+                            var x2 = (int) current.X;
+                            var y2 = (int) current.Y;
+
+                            if (blocks[x2, y2, z] == CollisionMapType.Free)
+                            {
+                                continue;
+                                //blocks[x2, y2, z] = CollisionMapType.Free;
+                                //rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
+                            }
+
+                            if (!DebugThis(x, y, z))
+                                continue;
+                            if (_map.CityBlocks[x2, y2, z].Left && !_map.CityBlocks[x2, y2, z].Right) //left
+                            {
+                                if ((x2 + 1) < _map.Width)
+                                    stack.Push(new Vector2(x2 + 1, y2));
+                            }
+
+                            if (_map.CityBlocks[x2, y2, z].Right && !_map.CityBlocks[x2, y2, z].Left) //right
+                            {
+                                if ((x2 - 1) < _map.Width)
+                                    stack.Push(new Vector2(x2 - 1, y2));
+                                //{
+                                //    blocks[x, y, z] = CollisionMapType.Free;
+                                //    rawLineObstacles.Add(new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+                                //}
+                            }
+
+                            if (_map.CityBlocks[x2, y2, z].Top && !_map.CityBlocks[x2, y2, z].Bottom) //top
+                            {
+                                if ((y2 + 1) < _map.Length)
+                                    stack.Push(new Vector2(x2, y2 + 1));
+                                //{
+                                //    blocks[x, y, z] = CollisionMapType.Free;
+                                //    rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                                //}
+                            }
+
+                            if (_map.CityBlocks[x2, y2, z].Bottom && !_map.CityBlocks[x2, y2, z].Top) //bottom
+                            {
+                                if ((y2 - 1) < _map.Length)
+                                    stack.Push(new Vector2(x2, y2 - 1));
+                                //{
+                                //    blocks[x, y, z] = CollisionMapType.Free;
+                                //    rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+                                //}
+                            }
+
+                        } while (stack.Count > 0);
+                        
+
+                        //var stack = new Stack<Vector2>();
+
+                        //do
+                        //{
+
+
+                        //} while (stack.Count > 0);
+                    }
+                }
+
+                for (var x = 0; x < _map.Width; x++)
+                {
+                    for (var y = 0; y < _map.Length; y++)
+                    {
+                        DebugThis(x, y, z);
+                        if (blocks[x, y, z] != CollisionMapType.Block)
+                            continue;
+                        if (_map.CityBlocks[x, y, z].Left && !_map.CityBlocks[x, y, z].Right) //left
+                        {
+                            if ((x + 1) < _map.Width && blocks[x + 1, y, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Right && !_map.CityBlocks[x, y, z].Left) //right
+                        {
+                            if ((x - 1) < _map.Width && blocks[x - 1, y, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom) //top
+                        {
+                            if ((y + 1) < _map.Length && blocks[x, y + 1, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Bottom && !_map.CityBlocks[x, y, z].Top) //bottom
+                        {
+                            if ((y - 1) < _map.Length && blocks[x, y - 1, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+                            }
+                        }
+                    }
+                }
+                var lineObstacles = OptimizeStraightVertices(rawLineObstacles, z);
+                obstacles.AddRange(lineObstacles);
+            }
+        }
+
+        private void FindLineObstaclesOLD(CollisionMapType[,,] blocks, List<IObstacle> obstacles)
+        {
+            //var lines = new List<LineObstacle>();
+
+            //we check all 'Blocked blocks' which are 1 block wide, maybe they are not all blocked, but only a line is blocked for example a fence.
+            for (var z = _map.Height - 1; z >= 0; z--)
+            {
+                var rawLineObstacles = new List<LineObstacle>();
+                for (var x = 0; x < _map.Width; x++)
+                {
+                    for (var y = 0; y < _map.Length; y++)
+                    {
+                        DebugThis(x, y, z);
+                        if (blocks[x, y, z] != CollisionMapType.Block)
+                            continue;
+                        if (_map.CityBlocks[x, y, z].Left && !_map.CityBlocks[x, y, z].Right) //left
+                        {
+                            if ((x + 1) < _map.Width && blocks[x + 1, y, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Right && !_map.CityBlocks[x, y, z].Left) //right
+                        {
+                            if ((x - 1) < _map.Width && blocks[x - 1, y, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom) //top
+                        {
+                            if ((y + 1) < _map.Length && blocks[x, y + 1, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                            }
+                        }
+
+                        if (_map.CityBlocks[x, y, z].Bottom && !_map.CityBlocks[x, y, z].Top) //bottom
+                        {
+                            if ((y - 1) < _map.Length && blocks[x, y - 1, z] == CollisionMapType.Free)
+                            {
+                                blocks[x, y, z] = CollisionMapType.Free;
+                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+                            }
+                        }
+                    }
+                }
+                var lineObstacles = OptimizeStraightVertices(rawLineObstacles, z);
+                obstacles.AddRange(lineObstacles);
             }
         }
 
@@ -416,75 +683,81 @@ namespace Hiale.GTA2NET.Core.Collision
         //    return obstacles;
         //}
 
-        ///// <summary> 
-        ///// Combines straight obstacles to optimize collision detection.
-        ///// </summary>
-        ///// <param name="straightObstacles"></param>
-        ///// <param name="obstacles"></param>
-        //private void OptimizeStraightVertices(List<Obstacle>[] straightObstacles, List<Obstacle>[] obstacles)
-        //{
-        //    //var optimizedObstacles = new List<Obstacle>[straightObstacles.Length];
-        //    for (var z = 0; z < straightObstacles.Length; z++)
-        //    {
-        //        var obstaclesHorizontal = new bool[256, 256 + 1];
-        //        var obstaclesVertical = new bool[256 + 1, 256];
-        //        foreach (var straightObstacle in straightObstacles[z])
-        //        {
-        //            if (straightObstacle.Type == ObstacleType.Horizontal)
-        //                obstaclesHorizontal[(int) straightObstacle.Start.X, (int) straightObstacle.Start.Y] = true;
-        //            else if (straightObstacle.Type == ObstacleType.Vertical)
-        //                obstaclesVertical[(int)straightObstacle.Start.X, (int)straightObstacle.Start.Y] = true;
-        //        }
+        /// <summary> 
+        /// Combines straight obstacles to optimize collision detection.
+        /// </summary>
+        private List<IObstacle> OptimizeStraightVertices(IEnumerable<LineObstacle> straightObstacles, int z)
+        {
+            var lineObstacles = new List<IObstacle>();
+            //var optimizedObstacles = new List<Obstacle>[straightObstacles.Length];
+            //for (var z = 0; z < straightObstacles.Length; z++)
+            //{
+                var obstaclesHorizontal = new bool[256, 256 + 1];
+                var obstaclesVertical = new bool[256 + 1, 256];
+                foreach (var straightObstacle in straightObstacles)
+                {
+                    //if (straightObstacle is LineObstacle)
+                    //{
+                        var lineObstacle = (LineObstacle) straightObstacle;
+                        if (lineObstacle.Type == LineObstacleType.Horizontal)
+                            obstaclesHorizontal[(int)lineObstacle.Start.X, (int)lineObstacle.Start.Y] = true;
+                        else if (lineObstacle.Type == LineObstacleType.Vertical)
+                            obstaclesVertical[(int)lineObstacle.Start.X, (int)lineObstacle.Start.Y] = true;
+                    //}
+                }
 
-        //        //Horizontal
-        //        for (var y = 0; y < obstaclesHorizontal.GetLength(1); y++)
-        //        {
-        //            var start = new Vector2();
-        //            var open = false;
-        //            for (var x = 0; x < obstaclesHorizontal.GetLength(0); x++)
-        //            {
-        //                if (!obstaclesHorizontal[x, y])
-        //                {
-        //                    if (open)
-        //                    {
-        //                        var end = new Vector2(x, y);
-        //                        obstacles[z] .Add(new Obstacle(start, end, ObstacleType.Horizontal));
-        //                        open = false;
-        //                    }
-        //                    continue;
-        //                }
-        //                if (open)
-        //                    continue;
-        //                open = true;
-        //                start = new Vector2(x, y);
-        //            }
-        //        }
+                //Horizontal
+                for (var y = 0; y < obstaclesHorizontal.GetLength(1); y++)
+                {
+                    var start = new Vector2();
+                    var open = false;
+                    for (var x = 0; x < obstaclesHorizontal.GetLength(0); x++)
+                    {
+                        if (!obstaclesHorizontal[x, y])
+                        {
+                            if (open)
+                            {
+                                var end = new Vector2(x, y);
+                                lineObstacles.Add(new LineObstacle(z, start, end, LineObstacleType.Horizontal));
+                                //obstacles[z].Add(new Obstacle(start, end, ObstacleType.Horizontal));
+                                open = false;
+                            }
+                            continue;
+                        }
+                        if (open)
+                            continue;
+                        open = true;
+                        start = new Vector2(x, y);
+                    }
+                }
 
-        //        //Vertical
-        //        for (var x = 0; x < obstaclesVertical.GetLength(0); x++)
-        //        {
-        //            var start = new Vector2();
-        //            var open = false;
-        //            for (var y = 0; y < obstaclesVertical.GetLength(1); y++)
-        //            {
-        //                if (!obstaclesVertical[x, y])
-        //                {
-        //                    if (open)
-        //                    {
-        //                        var end = new Vector2(x, y);
-        //                        obstacles[z].Add(new Obstacle(start, end, ObstacleType.Vertical));
-        //                        open = false;
-        //                    }
-        //                    continue;
-        //                }
-        //                if (open)
-        //                    continue;
-        //                open = true;
-        //                start = new Vector2(x, y);
-        //            }
-        //        }
+                //Vertical
+                for (var x = 0; x < obstaclesVertical.GetLength(0); x++)
+                {
+                    var start = new Vector2();
+                    var open = false;
+                    for (var y = 0; y < obstaclesVertical.GetLength(1); y++)
+                    {
+                        if (!obstaclesVertical[x, y])
+                        {
+                            if (open)
+                            {
+                                var end = new Vector2(x, y);
+                                //obstacles[z].Add(new Obstacle(start, end, ObstacleType.Vertical));
+                                lineObstacles.Add(new LineObstacle(z, start, end, LineObstacleType.Vertical));
+                                open = false;
+                            }
+                            continue;
+                        }
+                        if (open)
+                            continue;
+                        open = true;
+                        start = new Vector2(x, y);
+                    }
+                }
 
-        //    }
-        //}
+            //}
+            return lineObstacles;
+        }
     }
 }

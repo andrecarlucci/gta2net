@@ -1,6 +1,7 @@
 ﻿//Created: 25.01.2010
 
 using System;
+using System.IO;
 using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Map
@@ -114,6 +115,20 @@ namespace Hiale.GTA2NET.Core.Map
             return TileNumber + rotation;
         }
 
+        protected static void BaseLoad(BlockFace blockFace, BinaryReader reader)
+        {
+            blockFace.TileNumber = reader.ReadInt32();
+            blockFace.Flat = reader.ReadBoolean();
+            blockFace.Flip = reader.ReadBoolean();
+            blockFace.Rotation = (RotationType) reader.ReadByte();
+        }
 
+        public virtual void Save(BinaryWriter writer)
+        {
+            writer.Write(TileNumber);
+            writer.Write(Flat);
+            writer.Write(Flip);
+            writer.Write((byte)Rotation);
+        }
     }
 }
