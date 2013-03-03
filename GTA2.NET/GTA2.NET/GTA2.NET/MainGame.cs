@@ -176,16 +176,16 @@ namespace Hiale.GTA2NET
 
             Map = new Map();
             //Map.ReadFromFile("data\\MP1-comp.gmp");
-            //Map.ReadFromFile("data\\bil.gmp");
-            Map.Load("G:\\GTA2 Test\\TinyTown.gta2map");
+            Map.ReadFromFile("data\\bil.gmp");
+            //Map.Load("G:\\GTA2 Test\\TinyTown.gta2map");
 
             Style = new Style();
             Style.ReadFromFile("data\\bil.sty");
 
             var collision = new MapCollision(Map);
-            //var vertices = collision.CreateMapVertices();
 
-            collision.FloodFill(new Vector2(73,192));
+            //collision.FloodFill(new Vector2(73,192));
+            collision.CollisionMap(new Vector2(239, 192));
             //collision.FloodFill(new Vector2(239, 192)); //BIL.gmp
 
             //foreach (var obstacle in vertices[1])
