@@ -26,7 +26,7 @@ namespace Hiale.GTA2NET.Core.Collision
         public List<IObstacle> CollisionMap(Vector2 start)
         {
             //Pass 1
-            var blocks = FloodFill(start);
+            var blocks = FloodFill(start, false);
 
             //Pass 2
             RemoveUnknownBlocks(blocks);
@@ -45,11 +45,249 @@ namespace Hiale.GTA2NET.Core.Collision
                         {
                             obstacles.Add(new RectangleObstacle(z, new Vector2(x,y), 1,1));
                         }
+                        else if (blocks[x, y, z] == CollisionMapType.Special)
+                        {
+                            if (!ProcessSlope(x, y, z, blocks, obstacles))
+                                obstacles.Add(new SlopeObstacle(z, new Vector2(x, y), _map.CityBlocks[x, y, z].SlopeType));
+                        }
                     }
                 }
             }
 
             return obstacles;
+        }
+
+        private bool ProcessSlope(int x, int y, int z, CollisionMapType[,,] blocks, List<IObstacle> obstacles)
+        {
+            var block = _map.CityBlocks[x, y, z];
+
+            CollisionMapType blockLeft =  x -1 > 0 ? blocks[x - 1, y, z] : CollisionMapType.Unknwon;
+            CollisionMapType blockTop = y - 1 > 0 ? blocks[x, y - 1, z] : CollisionMapType.Unknwon;
+            CollisionMapType blockRight = x + 1 > 0 ? blocks[x + 1, y, z] : CollisionMapType.Unknwon;
+            CollisionMapType blockBottom = y + 1 > 0 ? blocks[x, y + 1, z] : CollisionMapType.Unknwon;
+
+            switch (block.SlopeType)
+            {
+                case SlopeType.DiagonalFacingUpLeft: //45
+                    if ((blockBottom == CollisionMapType.Block && blockRight == CollisionMapType.Block) ||
+                        (block.Right && block.Bottom))
+                    {
+                        var obstacle = new PolygonObstacle(z);
+                        obstacle.Vertices.Add(new Vector2(x, y + 1));
+                        obstacle.Vertices.Add(new Vector2(x + 1, y));
+                        obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
+                        obstacles.Add(obstacle);
+                    }
+                    else
+                    {
+                        if (block.Left && block.Left.Wall)
+                            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y),
+                                                           LineObstacleType.Other));
+                        if (block.Top && block.Top.Wall)
+                            obstacles.Add(LineObstacle.DefaultTop(x, y, z));
+                        if (block.Right && block.Right.Wall)
+                            obstacles.Add(LineObstacle.DefaultRight(x, y, z));
+                        if (block.Bottom && block.Bottom.Wall)
+                            obstacles.Add(LineObstacle.DefaultBottom(x, y, z));
+                    }
+                    return true;
+                case SlopeType.DiagonalFacingUpRight: //46
+                    if ((blockBottom == CollisionMapType.Block && blockLeft == CollisionMapType.Block) ||
+                        (block.Left && block.Bottom))
+                    {
+                        var obstacle = new PolygonObstacle(z);
+                        obstacle.Vertices.Add(new Vector2(x, y));
+                        obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
+                        obstacle.Vertices.Add(new Vector2(x, y + 1));
+                        obstacles.Add(obstacle);
+                    }
+                    else
+                    {
+                        if (block.Left && block.Left.Wall)
+                            obstacles.Add(LineObstacle.DefaultLeft(x, y, z));
+                        if (block.Top && block.Top.Wall)
+                            obstacles.Add(LineObstacle.DefaultTop(x, y, z));
+                        if (block.Right && block.Right.Wall)
+                            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y + 1),
+                                                           LineObstacleType.Other));
+                        if (block.Bottom && block.Bottom.Wall)
+                            obstacles.Add(LineObstacle.DefaultBottom(x, y, z));
+                    }
+                    return true;
+                case SlopeType.DiagonalFacingDownLeft: //47
+                    if ((blockTop == CollisionMapType.Block && blockRight == CollisionMapType.Block) ||
+                        (block.Top && block.Right))
+                    {
+                        var obstacle = new PolygonObstacle(z);
+                        obstacle.Vertices.Add(new Vector2(x, y));
+                        obstacle.Vertices.Add(new Vector2(x + 1, y));
+                        obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
+                        obstacles.Add(obstacle);
+                    }
+                    else
+                    {
+                        if (block.Left && block.Left.Wall)
+                            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y + 1),
+                                                           LineObstacleType.Other));
+                        if (block.Top && block.Top.Wall)
+                            obstacles.Add(LineObstacle.DefaultTop(x, y, z));
+                        if (block.Right && block.Right.Wall)
+                            obstacles.Add(LineObstacle.DefaultRight(x, y, z));
+                        if (block.Bottom && block.Bottom.Wall)
+                            obstacles.Add(LineObstacle.DefaultBottom(x, y, z));
+                    }
+                    return true;
+                case SlopeType.DiagonalFacingDownRight: //48
+                    if ((blockTop == CollisionMapType.Block && blockLeft == CollisionMapType.Block) ||
+                        (block.Left && block.Top))
+                    {
+                        var obstacle = new PolygonObstacle(z);
+                        obstacle.Vertices.Add(new Vector2(x, y));
+                        obstacle.Vertices.Add(new Vector2(x + 1, y));
+                        obstacle.Vertices.Add(new Vector2(x, y + 1));
+                        obstacles.Add(obstacle);
+                    }
+                    else
+                    {
+                        if (block.Left && block.Left.Wall)
+                            obstacles.Add(LineObstacle.DefaultLeft(x, y, z));
+                        if (block.Top && block.Top.Wall)
+                            obstacles.Add(LineObstacle.DefaultTop(x, y, z));
+                        if (block.Right && block.Right.Wall)
+                            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y),
+                                                           LineObstacleType.Other));
+                        if (block.Bottom && block.Bottom.Wall)
+                            obstacles.Add(LineObstacle.DefaultBottom(x, y, z));
+                    }
+                    return true;
+            }
+            //if (block.Left && block.Left.Wall)
+            //{
+            //    processedCount++;
+            //    switch (block.SlopeType)
+            //    {
+            //        case SlopeType.DiagonalFacingUpLeft:
+            //        case SlopeType.DiagonalSlopeFacingUpLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y), LineObstacleType.Other));
+            //            break;
+            //        case SlopeType.DiagonalFacingDownLeft:
+            //        case SlopeType.DiagonalSlopeFacingDownLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y + 1), LineObstacleType.Other));
+            //            break;
+            //        case SlopeType.PartialBlockRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y), new Vector2(x + 1, y), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockTop:
+            //        case SlopeType.PartialBlockTopLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + BlockInfo.PartialBlockScalar), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockBottom:
+            //        case SlopeType.PartialBlockBottomLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x, y + 1), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockTopRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y), new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockBottomRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1), LineObstacleType.Vertical));
+            //            break;
+            //        default:
+            //            processedCount--;
+            //            break;
+            //    }
+            //}
+            //if (block.Top && block.Top.Wall)
+            //{
+            //    processedCount++;
+            //    switch (block.SlopeType)
+            //    {
+            //        case SlopeType.PartialBlockLeft:
+            //        case SlopeType.PartialBlockTopLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + BlockInfo.PartialBlockScalar, y), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockRight:
+            //        case SlopeType.PartialBlockTopRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockBottom:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + 1 - BlockInfo.PartialBlockScalar), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockBottomRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + 1 - BlockInfo.PartialBlockScalar), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockBottomLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), LineObstacleType.Horizontal));
+            //            break;
+            //        default:
+            //            processedCount--;
+            //            break;
+            //    }
+            //}
+            //if (block.Right && block.Right.Wall)
+            //{
+            //    processedCount++;
+            //    switch (block.SlopeType)
+            //    {
+            //        case SlopeType.DiagonalFacingUpRight:
+            //        case SlopeType.DiagonalSlopeFacingUpRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y + 1), LineObstacleType.Other));
+            //            break;
+            //        case SlopeType.DiagonalFacingDownRight:
+            //        case SlopeType.DiagonalSlopeFacingDownRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y), LineObstacleType.Other));
+            //            break;
+            //        case SlopeType.PartialBlockLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + BlockInfo.PartialBlockScalar, y), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockTop:
+            //        case SlopeType.PartialBlockTopRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + BlockInfo.PartialBlockScalar), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockBottom:
+            //        case SlopeType.PartialBlockBottomRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockTopLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + BlockInfo.PartialBlockScalar, y), new Vector2(x + BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), LineObstacleType.Vertical));
+            //            break;
+            //        case SlopeType.PartialBlockBottomLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + BlockInfo.PartialBlockScalar, y + 1 - BlockInfo.PartialBlockScalar), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1), LineObstacleType.Vertical));
+            //            break;
+            //        default:
+            //            processedCount--;
+            //            break;
+            //    }
+            //}
+            //if (block.Bottom && block.Bottom.Wall)
+            //{
+            //    processedCount++;
+            //    switch (block.SlopeType)
+            //    {
+            //        case SlopeType.PartialBlockLeft:
+            //        case SlopeType.PartialBlockBottomLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + BlockInfo.PartialBlockScalar, y + 1), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockRight:
+            //        case SlopeType.PartialBlockBottomRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockTop:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + BlockInfo.PartialBlockScalar), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockTopLeft:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x, y + BlockInfo.PartialBlockScalar), new Vector2(x + BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), LineObstacleType.Horizontal));
+            //            break;
+            //        case SlopeType.PartialBlockTopRight:
+            //            obstacles.Add(new LineObstacle(z, new Vector2(x + 1 - BlockInfo.PartialBlockScalar, y + BlockInfo.PartialBlockScalar), new Vector2(x + 1, y + BlockInfo.PartialBlockScalar), LineObstacleType.Horizontal));
+            //            break;
+            //        default:
+            //            processedCount--;
+            //            break;
+            //    }
+            //}
+            //if (processedCount > 0)
+            //    return true;
+            return false;
         }
 
         public CollisionMapType[,,] FloodFill(Vector2 start)
@@ -117,6 +355,20 @@ namespace Hiale.GTA2NET.Core.Collision
 
         private void RemoveUnknownBlocks(CollisionMapType[,,] blocks)
         {
+            //Find slopes
+            for (var z = _map.Height - 1; z >= 0; z--)
+            {
+                for (var x = 0; x < _map.Width; x++)
+                {
+                    for (var y = 0; y < _map.Length; y++)
+                    {
+                        if (_map.CityBlocks[x,y,z].SlopeType != SlopeType.None && _map.CityBlocks[x,y,z].SlopeType != SlopeType.SlopeAbove)
+                            blocks[x,y,z] = CollisionMapType.Special;
+                    }
+                }
+
+            }
+
             for (var z = _map.Height - 1; z >= 0; z--)
             {
                 for (var x = 0; x < _map.Width; x++)
@@ -129,6 +381,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         //ToDo, well, Unchecked (None) blocks could actually be possible, if you fall from a block above, but I don't think that happens in the original maps...
                         //So let's mark them 'Block'
                         if (blocks[x, y, z] == CollisionMapType.None)
+                            //blocks = FloodFill(new Vector2(x, y), true);
                             blocks[x, y, z] = CollisionMapType.Block;
                     }
                 }
