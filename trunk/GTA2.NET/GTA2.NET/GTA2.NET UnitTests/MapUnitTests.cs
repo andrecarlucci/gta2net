@@ -30,8 +30,8 @@ namespace Hiale.GTA2NET.Test
             var map = new Map();
             map.ReadFromFile("C:\\Users\\Alexander\\Documents\\Visual Studio 2012\\Projects\\GTA2.NET\\GTA2.NET\\bin\\Debug\\data\\bil.gmp");
             var collision = new MapCollision(map);
-            var blocks = collision.FloodFill(new Vector2(239, 192));
-            DisplayCollision2(blocks);
+            var obstacles = collision.CollisionMap(new Vector2(239, 192));
+            DisplayCollision(obstacles);
             Assert.AreEqual(true, true);
         }
 
