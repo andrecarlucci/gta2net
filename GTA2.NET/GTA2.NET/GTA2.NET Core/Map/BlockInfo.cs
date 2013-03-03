@@ -1,6 +1,7 @@
 ﻿//Created: 17.01.2010
 
 using System;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core.Helper;
 
@@ -9,6 +10,8 @@ namespace Hiale.GTA2NET.Core.Map
     public class BlockInfo
     {
         public static float PartialBlockScalar = 0.375f;
+
+        public static BlockInfo Empty = new BlockInfo();
 
         /// <summary>
         /// Position of this block in a map.
@@ -31,10 +34,10 @@ namespace Hiale.GTA2NET.Core.Map
         public RoadTrafficType Arrows { get; set; }
 
 
-        /// <summary>
-        /// ToDo - enum
-        /// </summary>
-        public byte BaseSlopeType { get; private set; }
+        ///// <summary>
+        ///// ToDo - enum
+        ///// </summary>
+        //public byte BaseSlopeType { get; private set; }
 
         public GroundType GroundType { get; private set; }
 
@@ -51,7 +54,7 @@ namespace Hiale.GTA2NET.Core.Map
 
         public void ParseSlope(byte type)
         {
-            BaseSlopeType = type;
+            //BaseSlopeType = type;
 
             if (type == 0)
                 return;
@@ -87,7 +90,30 @@ namespace Hiale.GTA2NET.Core.Map
                     break;
             }
         }
-        
+
+        public void Save(BinaryWriter writer)
+        {
+            Left.Save(writer);
+            Right.Save(writer);
+            Top.Save(writer);
+            Bottom.Save(writer);
+            Lid.Save(writer);
+            writer.Write((byte)Arrows);
+            writer.Write((byte)GroundType);
+            writer.Write((byte)SlopeType);
+        }
+
+        public void Load(BinaryReader reader)
+        {
+            Left = BlockFaceEdge.Load(reader);
+            Right = BlockFaceEdge.Load(reader);
+            Top = BlockFaceEdge.Load(reader);
+            Bottom = BlockFaceEdge.Load(reader);
+            Lid = BlockFaceLid.Load(reader);
+            Arrows = (RoadTrafficType) reader.ReadByte();
+            GroundType = (GroundType) reader.ReadByte();
+            SlopeType = (SlopeType) reader.ReadByte();
+        }
 
         public bool IsEmpty
         {

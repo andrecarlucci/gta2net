@@ -175,8 +175,9 @@ namespace Hiale.GTA2NET
                 _world.Clear();
 
             Map = new Map();
-            Map.ReadFromFile("data\\MP1-comp.gmp");
+            //Map.ReadFromFile("data\\MP1-comp.gmp");
             //Map.ReadFromFile("data\\bil.gmp");
+            Map.Load("G:\\GTA2 Test\\TinyTown.gta2map");
 
             Style = new Style();
             Style.ReadFromFile("data\\bil.sty");

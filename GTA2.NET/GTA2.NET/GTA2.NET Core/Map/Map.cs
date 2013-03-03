@@ -13,7 +13,7 @@ namespace Hiale.GTA2NET.Core.Map
         public const int MaxHeight = 8;
 
         private bool _loaded;
-        private readonly BlockInfo[, ,] cityBlocks;
+        private BlockInfo[, ,] cityBlocks;
 
         private readonly List<Zone> Zones;
         private List<MapObject> Objects;
@@ -227,27 +227,74 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
+        public void Load(string filename)
+        {
+            var stream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+            var reader = new BinaryReader(stream);
+            reader.ReadString(); //GTA2.NET
+            reader.ReadString(); //Version
+            var count = reader.ReadInt32();
+            var i = 0;
+            var blocks = new BlockInfo[MaxWidth,MaxLength,MaxHeight];
+            while (i < count)
+            {
+                var x = reader.ReadInt32();
+                var y = reader.ReadInt32();
+                var z = reader.ReadInt32();
+                blocks[x, y, z] = new BlockInfo();
+                blocks[x, y, z].Load(reader);
+                i++;
+            }
+
+            for (var z = 0; z < blocks.GetLength(2); z++)
+            {
+                for (var x = 0; x < blocks.GetLength(0); x++)
+                {
+                    for (var y = 0; y < blocks.GetLength(1); y++)
+                    {
+                        if (blocks[x,y,z] == null)
+                            blocks[x, y, z] = BlockInfo.Empty;
+                    }
+                }
+            }
+            cityBlocks = blocks;
+            _loaded = true;
+        }
+
         public void Save(string filename)
         {
-            var stream = new FileStream(filename, FileMode.CreateNew);
+            var stream = new FileStream(filename, FileMode.Create);
             var writer = new BinaryWriter(stream);
             writer.Write("GTA2.NET");
             writer.Write("0.1"); //we only save blocks at the moment
+            var count = 0;
             for (var z = 0; z < CityBlocks.GetLength(2); z++)
             {
                 for (var x = 0; x < cityBlocks.GetLength(0); x++)
                 {
                     for (var y = 0; y < cityBlocks.GetLength(1); y++)
                     {
-                        BlockInfo block = cityBlocks[x, y, z];
-                        if (!block.IsEmpty)
-                        {
-                            writer.Write(x);
-                            writer.Write(y);
-                            writer.Write(z);
-                            writer.Write(block.Left.TileNumber);
-                            writer.Write(block.Left.TileNumber);
-                        }
+                        var block = cityBlocks[x, y, z];
+                        if (block.IsEmpty)
+                            continue;
+                        count++;
+                    }
+                }
+            }
+            writer.Write(count); //BlocksCount
+            for (var z = 0; z < CityBlocks.GetLength(2); z++)
+            {
+                for (var x = 0; x < cityBlocks.GetLength(0); x++)
+                {
+                    for (var y = 0; y < cityBlocks.GetLength(1); y++)
+                    {
+                        var block = cityBlocks[x, y, z];
+                        if (block.IsEmpty)
+                            continue;
+                        writer.Write(x);
+                        writer.Write(y);
+                        writer.Write(z);
+                        block.Save(writer);
                     }
                 }
             }
