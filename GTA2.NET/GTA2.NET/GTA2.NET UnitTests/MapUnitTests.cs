@@ -77,12 +77,25 @@ namespace Hiale.GTA2NET.Test
                      if (obstacle is RectangleObstacle)
                      {
                          var rectObstacle = (RectangleObstacle)obstacle;
-                         g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), rectObstacle.Position.X *10, rectObstacle.Position.Y *10, 10, 10);
+                         g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), rectObstacle.Position.X * 10, rectObstacle.Position.Y * 10, 10, 10);
                      }
                      else if (obstacle is LineObstacle)
                      {
-                         var lineObstacle = (LineObstacle) obstacle;
-                         g.DrawLine(new Pen(System.Drawing.Color.Magenta), new System.Drawing.Point((int) lineObstacle.Start.X * 10, (int) lineObstacle.Start.Y * 10), new System.Drawing.Point((int) lineObstacle.End.X * 10, (int) lineObstacle.End.Y * 10));
+                         var lineObstacle = (LineObstacle)obstacle;
+                         g.DrawLine(new Pen(System.Drawing.Color.Magenta), new System.Drawing.Point((int)lineObstacle.Start.X * 10, (int)lineObstacle.Start.Y * 10), new System.Drawing.Point((int)lineObstacle.End.X * 10, (int)lineObstacle.End.Y * 10));
+                     }
+                     else if (obstacle is SlopeObstacle)
+                     {
+                         var slopeObstacle = (SlopeObstacle)obstacle;
+                         g.FillRectangle(new SolidBrush(System.Drawing.Color.Blue), slopeObstacle.Position.X * 10, slopeObstacle.Position.Y * 10, 10, 10);
+                     }
+                     else if (obstacle is PolygonObstacle)
+                     {
+                         var polygonObstacle = (PolygonObstacle)obstacle;
+                         var points = new System.Drawing.Point[polygonObstacle.Vertices.Count];
+                         for (var i = 0; i < polygonObstacle.Vertices.Count; i++)
+                             points[i] = new System.Drawing.Point((int) polygonObstacle.Vertices[i].X * 10, (int) polygonObstacle.Vertices[i].Y * 10);
+                         g.FillPolygon(new SolidBrush(System.Drawing.Color.OrangeRed), points);
                      }
 
                  }

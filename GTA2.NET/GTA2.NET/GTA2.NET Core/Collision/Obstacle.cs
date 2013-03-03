@@ -1,5 +1,7 @@
 ﻿//Created 24.02.2013
 
+using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -7,10 +9,25 @@ namespace Hiale.GTA2NET.Core.Collision
     public interface IObstacle
     {
         int Z { get; set; }
-
     }
 
-    public class RectangleObstacle : IObstacle
+    public struct SlopeObstacle : IObstacle
+    {
+        public int Z { get; set; }
+
+        public Vector2 Position;
+
+        public SlopeType SlopeType;
+
+        public SlopeObstacle(int z, Vector2 position, SlopeType slopeType) : this()
+        {
+            Z = z;
+            Position = position;
+            SlopeType = slopeType;
+        }
+    }
+
+    public struct RectangleObstacle : IObstacle
     {
         public int Z { get; set; }
 
@@ -20,7 +37,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public int Length;
 
-        public RectangleObstacle(int z, Vector2 position, int width, int length)
+        public RectangleObstacle(int z, Vector2 position, int width, int length) : this()
         {
             Z = z;
             Position = position;
@@ -29,14 +46,18 @@ namespace Hiale.GTA2NET.Core.Collision
         }
     }
 
-    public class PolygonObstacle : IObstacle
+    public struct PolygonObstacle : IObstacle
     {
         public int Z { get; set; }
-    }
 
-    public class TriangleObstacle : IObstacle
-    {
-        public int Z { get; set; }
+        public List<Vector2> Vertices { get; set; }
+ 
+        public PolygonObstacle(int z) : this()
+        {
+            Z = z;
+            Vertices = new List<Vector2>();
+        }
+
     }
 
     public enum LineObstacleType
@@ -59,6 +80,26 @@ namespace Hiale.GTA2NET.Core.Collision
             Start = start;
             End = end;
             Type = type;
+        }
+
+        public static LineObstacle DefaultLeft(int x, int y, int z)
+        {
+            return new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical);
+        }
+
+        public static LineObstacle DefaultTop(int x, int y, int z)
+        {
+            return new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal);
+        }
+
+        public static LineObstacle DefaultRight(int x, int y, int z)
+        {
+            return new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical);
+        }
+
+        public static LineObstacle DefaultBottom(int x, int y, int z)
+        {
+            return new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal);
         }
 
         public override string ToString()
