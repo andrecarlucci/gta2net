@@ -30,6 +30,46 @@ namespace Hiale.GTA2NET.Core.Collision
 
             //Pass 2
             RemoveUnknownBlocks(blocks);
+            for (var z = _map.Height - 1; z >= 0; z--)
+            {
+                var TwoDBlocks = new CollisionMapType[Map.Map.MaxWidth,Map.Map.MaxLength];
+                for (var x = 0; x < _map.Width; x++)
+                {
+                    for (var y = 0; y < _map.Length; y++)
+                    {
+                        TwoDBlocks[x, y] = blocks[x, y, z];
+                    }
+                }
+
+                using (var bmp = new Bitmap(2560, 2560))
+                {
+                    using (var g = Graphics.FromImage(bmp))
+                    {
+
+                        for (var x = 0; x < _map.Width; x++)
+                        {
+                            for (var y = 0; y < _map.Length; y++)
+                            {
+                                if (TwoDBlocks[x, y] == CollisionMapType.Block)
+                                    g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), x * 10, y * 10, 10, 10);
+                                if (TwoDBlocks[x, y] == CollisionMapType.Free)
+                                    g.FillRectangle(new SolidBrush(System.Drawing.Color.Green), x * 10, y * 10, 10, 10);
+                                if (TwoDBlocks[x, y] == CollisionMapType.Special)
+                                    g.FillRectangle(new SolidBrush(System.Drawing.Color.Blue), x * 10, y * 10, 10, 10);
+                                if (TwoDBlocks[x, y] == CollisionMapType.None)
+                                    g.FillRectangle(new SolidBrush(System.Drawing.Color.Yellow), x * 10, y * 10, 10, 10);
+                                if (TwoDBlocks[x, y] == CollisionMapType.Unknwon)
+                                    g.FillRectangle(new SolidBrush(System.Drawing.Color.Violet), x * 10, y * 10, 10, 10);
+                            }
+                        }
+                    }
+                    bmp.Save("G:\\GTA2 Test\\" + z + "_2d.png", ImageFormat.Png);
+                }
+
+
+                var rect = SubMatrix.MaxSubmatrix(TwoDBlocks, CollisionMapType.Block);
+            }
+
 
             //Pass 3
             var obstacles = new List<IObstacle>();
@@ -63,8 +103,8 @@ namespace Hiale.GTA2NET.Core.Collision
 
             CollisionMapType blockLeft =  x -1 > 0 ? blocks[x - 1, y, z] : CollisionMapType.Unknwon;
             CollisionMapType blockTop = y - 1 > 0 ? blocks[x, y - 1, z] : CollisionMapType.Unknwon;
-            CollisionMapType blockRight = x + 1 > 0 ? blocks[x + 1, y, z] : CollisionMapType.Unknwon;
-            CollisionMapType blockBottom = y + 1 > 0 ? blocks[x, y + 1, z] : CollisionMapType.Unknwon;
+            CollisionMapType blockRight = x + 1 < _map.Width ? blocks[x + 1, y, z] : CollisionMapType.Unknwon;
+            CollisionMapType blockBottom = y + 1 < _map.Length ? blocks[x, y + 1, z] : CollisionMapType.Unknwon;
 
             switch (block.SlopeType)
             {
@@ -530,12 +570,12 @@ namespace Hiale.GTA2NET.Core.Collision
             }
             else if (blocks[x, y,z] == CollisionMapType.Unknwon)
             {
-                blocks[x, y,z] = UnknwonBlocks(x, y, z, invert);
+                blocks[x, y,z] = UnknownBlocks(x, y, z, invert);
             }
             return false;
         }
 
-        private CollisionMapType UnknwonBlocks(int x, int y, int z, bool invert)
+        private CollisionMapType UnknownBlocks(int x, int y, int z, bool invert)
         {
             var newBlock = _map.CityBlocks[x, y, z];
             if (newBlock.Left)

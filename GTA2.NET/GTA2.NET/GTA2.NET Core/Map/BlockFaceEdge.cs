@@ -30,22 +30,5 @@ namespace Hiale.GTA2NET.Core.Map
             Wall = BitHelper.CheckBit(value, 10);
             BulletWall = BitHelper.CheckBit(value, 11);
         }
-
-        public static BlockFaceEdge Load(BinaryReader reader)
-        {
-            var blockFace = new BlockFaceEdge();
-            BaseLoad(blockFace, reader);
-            blockFace.Wall = reader.ReadBoolean();
-            blockFace.BulletWall = reader.ReadBoolean();
-            return blockFace;
-        }
-
-        public override void Save(BinaryWriter writer)
-        {
-            base.Save(writer);
-            writer.Write(Wall);
-            writer.Write(BulletWall);
-        }
-
     }
 }

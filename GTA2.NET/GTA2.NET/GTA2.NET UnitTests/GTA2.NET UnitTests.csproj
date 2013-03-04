@@ -59,6 +59,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="MapUnitTests.cs" />
+    <Compile Include="MiscUnitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
