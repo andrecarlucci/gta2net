@@ -25,26 +25,12 @@ namespace Hiale.GTA2NET.Core.Map
             var bit11 = BitHelper.CheckBit(value, 11);
             if (!bit10 && !bit11)
                 LightningLevel = 0;
-            if (bit10 && !bit11)
+            if (bit10 && !bit11) //ToDo: Which bits have to be set to a certain lightning level?
                 LightningLevel = 1;
             if (bit10 && bit11)
                 LightningLevel = 2;
             if (bit10 && bit11)
                 LightningLevel = 3;
-        }
-
-        public static BlockFaceLid Load(BinaryReader reader)
-        {
-            var blockFace = new BlockFaceLid();
-            BaseLoad(blockFace, reader);
-            blockFace.LightningLevel = reader.ReadByte();
-            return blockFace;
-        }
-
-        public override void Save(BinaryWriter writer)
-        {
-            base.Save(writer);
-            writer.Write(LightningLevel);
         }
     }
 }

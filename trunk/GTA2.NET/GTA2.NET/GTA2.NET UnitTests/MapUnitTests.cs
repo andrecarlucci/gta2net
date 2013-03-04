@@ -13,11 +13,17 @@ namespace Hiale.GTA2NET.Test
     [TestClass]
     public class MapUnitTests
     {
+        [TestInitialize]
+        public void InitializeTests()
+        {
+            System.Environment.CurrentDirectory = "..\\..\\..\\GTA2.NET\\bin\\Debug\\";
+        }
+
         [TestMethod]
         public void LoadMapTinyTown()
         {
             var map = new Map();
-            map.ReadFromFile("C:\\Users\\Alexander\\Documents\\Visual Studio 2012\\Projects\\GTA2.NET\\GTA2.NET\\bin\\Debug\\data\\MP1-comp.gmp");
+            map.ReadFromFile("data\\MP1-comp.gmp");
             var collision = new MapCollision(map);
             var obstacles = collision.CollisionMap(new Vector2(73,192));
             DisplayCollision(obstacles);
@@ -28,7 +34,7 @@ namespace Hiale.GTA2NET.Test
         public void LoadMapBil()
         {
             var map = new Map();
-            map.ReadFromFile("C:\\Users\\Alexander\\Documents\\Visual Studio 2012\\Projects\\GTA2.NET\\GTA2.NET\\bin\\Debug\\data\\bil.gmp");
+            map.ReadFromFile("data\\bil.gmp");
             var collision = new MapCollision(map);
             var obstacles = collision.CollisionMap(new Vector2(239, 192));
             DisplayCollision(obstacles);
@@ -36,20 +42,20 @@ namespace Hiale.GTA2NET.Test
         }
 
         [TestMethod]
-        public void SaveMap()
+        public void SaveMapTinyTown()
         {
             var map = new Map();
-            map.ReadFromFile("C:\\Users\\Alexander\\Documents\\Visual Studio 2012\\Projects\\GTA2.NET\\GTA2.NET\\bin\\Debug\\data\\MP1-comp.gmp");
-            map.Save("G:\\GTA2 Test\\TinyTown.gta2map");
+            map.ReadFromFile("data\\MP1-comp.gmp");
+            map.Save("data\\TinyTown.gta2map");
             Assert.AreEqual(true, true);
         }
 
         [TestMethod]
-        public void LoadMap()
+        public void LoadMapTinyTownInternalFormat()
         {
-            SaveMap();
+            SaveMapTinyTown();
             var map = new Map();
-            map.Load("G:\\GTA2 Test\\TinyTown.gta2map");
+            map.Load("data\\TinyTown.gta2map");
             Assert.AreEqual(true, true);
         }
 
