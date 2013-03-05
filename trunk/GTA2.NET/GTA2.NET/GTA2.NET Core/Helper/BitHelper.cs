@@ -15,15 +15,13 @@ namespace Hiale.GTA2NET.Core.Helper
             return (value & (1 << bitOffset)) == (1 << bitOffset);
         }
 
-        public static int SetBit(int value, int bitOffset, bool bitValue)
+        public static ushort SetBit(ushort value, byte bitOffset, bool bitValue)
         {
-            if (bitOffset < 0 || bitOffset >= sizeof(int) * 8)
+            if (bitOffset >= sizeof(ushort) * 8)
                 throw new ArgumentOutOfRangeException();
             if (bitValue)
-                //turn Bit on
-                return value | (1 << bitOffset);
-            //turn Bit off
-            return value & ~(1 << bitOffset);
+                return (ushort) (value | (1 << bitOffset)); ////turn Bit on
+            return (ushort)(value & ~(1 << bitOffset)); //turn Bit off
         }
 
     }
