@@ -22,8 +22,7 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void LoadMapTinyTown()
         {
-            var map = new Map();
-            map.ReadFromFile("data\\MP1-comp.gmp");
+            var map = new Map("data\\MP1-comp.gmp");
             var collision = new MapCollision(map);
             var obstacles = collision.CollisionMap(new Vector2(73,192));
             DisplayCollision(obstacles);
@@ -33,8 +32,7 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void LoadMapBil()
         {
-            var map = new Map();
-            map.ReadFromFile("data\\bil.gmp");
+            var map = new Map("data\\bil.gmp");
             var collision = new MapCollision(map);
             var obstacles = collision.CollisionMap(new Vector2(239, 192));
             DisplayCollision(obstacles);
@@ -44,8 +42,7 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void SaveMapTinyTown()
         {
-            var map = new Map();
-            map.ReadFromFile("data\\MP1-comp.gmp");
+            var map = new Map("data\\MP1-comp.gmp");
             map.Save("data\\TinyTown.gta2map");
             Assert.AreEqual(true, true);
         }

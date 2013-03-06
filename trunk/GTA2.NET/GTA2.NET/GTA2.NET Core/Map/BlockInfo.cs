@@ -54,8 +54,6 @@ namespace Hiale.GTA2NET.Core.Map
 
         public void ParseSlope(byte type)
         {
-            //BaseSlopeType = type;
-
             if (type == 0)
                 return;
 
@@ -68,7 +66,7 @@ namespace Hiale.GTA2NET.Core.Map
                 return;
 
             var slopeType = 0;
-            for (int i = 2; i < 8; i++)
+            for (var i = 2; i < 8; i++)
             {
                 if (BitHelper.CheckBit(type, i))
                     slopeType += (int)Math.Pow(2, i - 2);

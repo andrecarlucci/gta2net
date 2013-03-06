@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
+using System.IO.Pipes;
 using Hiale.GTA2NET.Core.Collision;
 using Hiale.GTA2NET.Core.Helper;
+using Hiale.GTA2NET.Core.Map;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Hiale.GTA2NET.Test
@@ -17,6 +20,12 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void TestBitHelper()
         {
+            var block = new BlockInfo();
+            block.ParseSlope(31);
+            block.Lid = new BlockFaceLid(16906);
+            var stream = new MemoryStream();
+            block.Save(new BinaryWriter(stream));
+
             //const int testInt = 683795;
             //var r1 = BitHelper.CheckBit(testInt, 0);
             //var r2 = BitHelper.CheckBit(testInt, 30);
