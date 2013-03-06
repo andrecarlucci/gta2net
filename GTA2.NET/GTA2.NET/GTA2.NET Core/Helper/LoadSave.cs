@@ -85,14 +85,44 @@ namespace Hiale.GTA2NET.Core.Helper
         //Block save
         public static void Save(this BlockInfo block, BinaryWriter writer)
         {
-            block.Left.Save(writer);
-            block.Right.Save(writer);
-            block.Top.Save(writer);
-            block.Bottom.Save(writer);
-            block.Lid.Save(writer);
+            block.Left.SaveBlockFaceEdge(writer);
+            block.Right.SaveBlockFaceEdge(writer);
+            block.Top.SaveBlockFaceEdge(writer);
+            block.Bottom.SaveBlockFaceEdge(writer);
+            block.Lid.SaveBlockFaceLid(writer);
             writer.Write((byte)block.Arrows);
-            writer.Write((byte)block.GroundType);
-            writer.Write((byte)block.SlopeType);
+
+            byte value = 0;
+            switch (block.GroundType)
+            {
+                case GroundType.Air:
+                    value = (byte) BitHelper.SetBit(value, 0, false);
+                    value = (byte) BitHelper.SetBit(value, 1, false);
+                    break;
+                case GroundType.Road:
+                    value = (byte) BitHelper.SetBit(value, 0, false);
+                    value = (byte) BitHelper.SetBit(value, 1, false);
+                    break;
+                case GroundType.Pavement:
+                    value = (byte) BitHelper.SetBit(value, 0, false);
+                    value = (byte) BitHelper.SetBit(value, 1, false);
+                    break;
+                case GroundType.Field:
+                    value = (byte) BitHelper.SetBit(value, 0, true);
+                    value = (byte) BitHelper.SetBit(value, 1, true);
+                    break;
+            }
+
+            var slope = (byte) block.SlopeType;
+            for (var i = 2; i < 8; i++)
+            {
+                if ((slope & (1 << i - 2)) != 0)
+                    value = (byte)(value | (1 << i)); //set Bit ON
+                else
+                    value = (byte)(value & ~(1 << i)); //set Bit OFF
+            }
+
+            writer.Write((byte)value);
         }
 
         //Block load
@@ -108,51 +138,17 @@ namespace Hiale.GTA2NET.Core.Helper
             //block.SlopeType = (SlopeType)reader.ReadByte();
         }
 
-        public static void Save(this BlockFaceEdge face, BinaryWriter writer)
-        {
-            var value = face.SaveBase();
-            value = BitHelper.SetBit(value, 10, face.Wall);
-            value = BitHelper.SetBit(value, 11, face.BulletWall);
-            writer.Write(value);
-        }
-
-        public static void Save(this BlockFaceLid face, BinaryWriter writer)
-        {
-            var value = face.SaveBase();
-            switch (face.LightningLevel)
-            {
-                case 0:
-                    value = BitHelper.SetBit(value, 10, false);
-                    value = BitHelper.SetBit(value, 11, false);
-                    break;
-                case 1:
-                    value = BitHelper.SetBit(value, 10, true);
-                    value = BitHelper.SetBit(value, 11, false);
-                    break;
-                case 2:
-                    value = BitHelper.SetBit(value, 10, false);
-                    value = BitHelper.SetBit(value, 11, true);
-                    break;
-                case 3:
-                    value = BitHelper.SetBit(value, 10, true);
-                    value = BitHelper.SetBit(value, 11, true);
-                    break;
-            }
-            writer.Write(value);
-        }
-
-        public static ushort SaveBase(this BlockFace blockFace)
+        public static ushort SaveBlockFace(this BlockFace blockFace)
         {
             ushort value = 0;
 
             //Tile number, Bits 0-9
-            const int bitCount = 10;
-            for (var i = 0; i < bitCount; i++)
+            for (var i = 0; i < 10; i++)
             {
                 if ((blockFace.TileNumber & (1 << i)) != 0)
-                    value = (ushort) (value | (1 << (bitCount - i - 1))); //set Bit ON
+                    value = (ushort)(value | (1 << i)); //set Bit ON
                 else
-                    value = (ushort) (value & ~(1 << (bitCount - i - 1))); //set Bit OFF
+                    value = (ushort)(value & ~(1 << i)); //set Bit OFF
             }
 
             value = BitHelper.SetBit(value, 12, blockFace.Flat);
@@ -180,6 +176,37 @@ namespace Hiale.GTA2NET.Core.Helper
             return value;
         }
 
+        public static void SaveBlockFaceEdge(this BlockFaceEdge face, BinaryWriter writer)
+        {
+            var value = face.SaveBlockFace();
+            value = BitHelper.SetBit(value, 10, face.Wall);
+            value = BitHelper.SetBit(value, 11, face.BulletWall);
+            writer.Write(value);
+        }
 
+        public static void SaveBlockFaceLid(this BlockFaceLid face, BinaryWriter writer)
+        {
+            var value = face.SaveBlockFace();
+            switch (face.LightningLevel)
+            {
+                case 0:
+                    value = BitHelper.SetBit(value, 10, false);
+                    value = BitHelper.SetBit(value, 11, false);
+                    break;
+                case 1:
+                    value = BitHelper.SetBit(value, 10, true);
+                    value = BitHelper.SetBit(value, 11, false);
+                    break;
+                case 2:
+                    value = BitHelper.SetBit(value, 10, false);
+                    value = BitHelper.SetBit(value, 11, true);
+                    break;
+                case 3:
+                    value = BitHelper.SetBit(value, 10, true);
+                    value = BitHelper.SetBit(value, 11, true);
+                    break;
+            }
+            writer.Write(value);
+        }
     }
 }

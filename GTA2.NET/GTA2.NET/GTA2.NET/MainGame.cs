@@ -174,10 +174,7 @@ namespace Hiale.GTA2NET
             else
                 _world.Clear();
 
-            Map = new Map();
-            Map.ReadFromFile("data\\MP1-comp.gmp");
-            //Map.ReadFromFile("data\\bil.gmp");
-            //Map.Load("G:\\GTA2 Test\\TinyTown.gta2map");
+            Map = new Map("data\\MP1-comp.gmp");
 
             Style = new Style();
             Style.ReadFromFile("data\\bil.sty");
@@ -185,16 +182,6 @@ namespace Hiale.GTA2NET
             var collision = new MapCollision(Map);
 
             collision.CollisionMap(new Vector2(73,192));
-            //collision.CollisionMap(new Vector2(239, 192));
-            //collision.FloodFill(new Vector2(239, 192)); //BIL.gmp
-
-            //foreach (var obstacle in vertices[1])
-            //{
-            //    var body = new Body(_world);
-            //    body.BodyType = BodyType.Static;
-            //    body.Friction = 0.2f;
-            //    FixtureFactory.AttachEdge(obstacle.Start, obstacle.End, body);
-            //}
 
             var carPhysics = CarPhysicReader.ReadFromFile();
             CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
