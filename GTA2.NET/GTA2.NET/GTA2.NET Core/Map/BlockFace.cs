@@ -6,7 +6,7 @@ using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Map
 {
-    public enum RotationType
+    public enum RotationType : byte
     {
         RotateNone,
         Rotate90,
@@ -14,7 +14,7 @@ namespace Hiale.GTA2NET.Core.Map
         Rotate270
     }
 
-    public enum BlockFaceDirection
+    public enum BlockFaceDirection : byte
     {
         Left,
         Right,

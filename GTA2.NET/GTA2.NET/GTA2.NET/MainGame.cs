@@ -175,6 +175,7 @@ namespace Hiale.GTA2NET
                 _world.Clear();
 
             Map = new Map("data\\MP1-comp.gmp");
+            //Map = new Map("data\\bil.gmp");
 
             Style = new Style();
             Style.ReadFromFile("data\\bil.sty");

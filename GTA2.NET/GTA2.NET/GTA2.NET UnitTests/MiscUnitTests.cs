@@ -40,15 +40,15 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void TestSubMatrix()
         {
-            int[,] one =
-                    {
-                        {0, 1, 1, 1, 0},
-                        {0, 1, 1, 1, 0},
-                        {0, 1, 0, 0, 0},
-                        {0, 0, 0, 0, -1},
-                        {0, 0, 0, 1, 0}
-                    };
-            SubMatrix.MaxSubmatrix(one, 0);
+            //int[,] one =
+            //        {
+            //            {0, 1, 1, 1, 0},
+            //            {0, 1, 1, 1, 0},
+            //            {0, 1, 0, 0, 0},
+            //            {0, 0, 0, 0, -1},
+            //            {0, 0, 0, 1, 0}
+            //        };
+            //SubMatrix.MaxSubmatrix(one, 0);
         }
 
     }
