@@ -56,7 +56,7 @@ namespace Hiale.GTA2NET.Core.Map
             }          
         }
 
-        public Map(string fileName) :this()
+        public Map(string fileName) : this()
         {
             ReadFromFile(fileName);
         }

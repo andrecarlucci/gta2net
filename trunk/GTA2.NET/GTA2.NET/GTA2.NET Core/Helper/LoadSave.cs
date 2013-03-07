@@ -121,8 +121,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 else
                     value = (byte)(value & ~(1 << i)); //set Bit OFF
             }
-
-            writer.Write((byte)value);
+            writer.Write(value);
         }
 
         //Block load
@@ -134,8 +133,7 @@ namespace Hiale.GTA2NET.Core.Helper
             block.Bottom = new BlockFaceEdge(reader.ReadUInt16());
             block.Lid = new BlockFaceLid(reader.ReadUInt16());
             block.Arrows = (RoadTrafficType)reader.ReadByte();
-            //block.GroundType = (GroundType)reader.ReadByte();
-            //block.SlopeType = (SlopeType)reader.ReadByte();
+            block.ParseSlope(reader.ReadByte());
         }
 
         public static ushort SaveBlockFace(this BlockFace blockFace)

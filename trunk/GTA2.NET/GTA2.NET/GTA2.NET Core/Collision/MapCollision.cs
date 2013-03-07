@@ -2,13 +2,8 @@
 //23.02.2013 - Old version was crap
 
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
-using Color = System.Drawing.Color;
-using Point = System.Drawing.Point;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
@@ -44,27 +39,25 @@ namespace Hiale.GTA2NET.Core.Collision
                     {
                         if (blocks[x, y, z] == CollisionMapType.Block)
                         {
-                            obstacles.Add(new RectangleObstacle(z, new Vector2(x, y), 1, 1));
+                            obstacles.Add(new RectangleObstacle(new Vector2(x, y), z, 1, 1));
                         }
                         else if (blocks[x, y, z] == CollisionMapType.Special)
                         {
                             if (!ProcessSlope(x, y, z, blocks, obstacles))
-                                obstacles.Add(new SlopeObstacle(z, new Vector2(x, y), _map.CityBlocks[x, y, z].SlopeType));
+                                obstacles.Add(new SlopeObstacle(new Vector2(x, y), z, _map.CityBlocks[x, y, z].SlopeType));
                         }
                     }
                 }
-
-
-                var maxRect = new CollisionMapType[_map.Width, _map.Length];
-                for (var x = 0; x < _map.Width; x++)
-                {
-                    for (var y = 0; y < _map.Length; y++)
-                    {
-                        maxRect[y, x] = blocks[x, y, z]; //MaxSubmatrix' Raws/Columns are swapped
-                    }
-                }
-
-                var rect = SubMatrix.MaxSubmatrix(maxRect, CollisionMapType.Block);
+                //var maxRect = new CollisionMapType[_map.Width, _map.Length];
+                //for (var x = 0; x < _map.Width; x++)
+                //{
+                //    for (var y = 0; y < _map.Length; y++)
+                //    {
+                //        maxRect[y, x] = blocks[x, y, z]; //MaxSubmatrix' Raws/Columns are swapped
+                //    }
+                //}
+                SubMatrix.FindAllRectangles(blocks, z, obstacles);
+                //var rect = SubMatrix.MaxSubmatrix(blocks, z, CollisionMapType.Block);
             }
             return obstacles;
         }
@@ -93,8 +86,8 @@ namespace Hiale.GTA2NET.Core.Collision
                     else
                     {
                         if (block.Left && block.Left.Wall)
-                            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y),
-                                                           LineObstacleType.Other));
+                            obstacles.Add(new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y),
+                                                           z, LineObstacleType.Other));
                         if (block.Top && block.Top.Wall)
                             obstacles.Add(LineObstacle.DefaultTop(x, y, z));
                         if (block.Right && block.Right.Wall)
@@ -120,8 +113,8 @@ namespace Hiale.GTA2NET.Core.Collision
                         if (block.Top && block.Top.Wall)
                             obstacles.Add(LineObstacle.DefaultTop(x, y, z));
                         if (block.Right && block.Right.Wall)
-                            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y + 1),
-                                                           LineObstacleType.Other));
+                            obstacles.Add(new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y + 1),
+                                                           z, LineObstacleType.Other));
                         if (block.Bottom && block.Bottom.Wall)
                             obstacles.Add(LineObstacle.DefaultBottom(x, y, z));
                     }
@@ -139,8 +132,8 @@ namespace Hiale.GTA2NET.Core.Collision
                     else
                     {
                         if (block.Left && block.Left.Wall)
-                            obstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y + 1),
-                                                           LineObstacleType.Other));
+                            obstacles.Add(new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y + 1),
+                                                           z, LineObstacleType.Other));
                         if (block.Top && block.Top.Wall)
                             obstacles.Add(LineObstacle.DefaultTop(x, y, z));
                         if (block.Right && block.Right.Wall)
@@ -166,8 +159,8 @@ namespace Hiale.GTA2NET.Core.Collision
                         if (block.Top && block.Top.Wall)
                             obstacles.Add(LineObstacle.DefaultTop(x, y, z));
                         if (block.Right && block.Right.Wall)
-                            obstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y),
-                                                           LineObstacleType.Other));
+                            obstacles.Add(new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y),
+                                                           z, LineObstacleType.Other));
                         if (block.Bottom && block.Bottom.Wall)
                             obstacles.Add(LineObstacle.DefaultBottom(x, y, z));
                     }
@@ -424,7 +417,7 @@ namespace Hiale.GTA2NET.Core.Collision
                             {
                                 if (!_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom)
                                     blocks[x, y, z] = CollisionMapType.Free;
-                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+                                rawLineObstacles.Add(new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z, LineObstacleType.Vertical));
                             }
                         }
 
@@ -438,7 +431,7 @@ namespace Hiale.GTA2NET.Core.Collision
                             if ((y - 1) >= 0  && blocks[x, y - 1, z] == CollisionMapType.Free)
                             {
                                 blocks[x, y, z] = CollisionMapType.Free;
-                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+                                rawLineObstacles.Add(new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), z, LineObstacleType.Horizontal));
                             }
                         }
                     }
@@ -451,7 +444,7 @@ namespace Hiale.GTA2NET.Core.Collision
                             if ((x + 1) < _map.Width && blocks[x + 1, y, z] == CollisionMapType.Free)
                             {
                                 blocks[x, y, z] = CollisionMapType.Free;
-                                rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
+                                rawLineObstacles.Add(new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), z, LineObstacleType.Vertical));
                             }
                         }
                          if (_map.CityBlocks[x, y, z].Top && !_map.CityBlocks[x, y, z].Bottom) //top
@@ -460,7 +453,7 @@ namespace Hiale.GTA2NET.Core.Collision
                              {
                                  if (!_map.CityBlocks[x, y, z].Left && !_map.CityBlocks[x, y, z].Right)
                                      blocks[x, y, z] = CollisionMapType.Free;
-                                 rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                                 rawLineObstacles.Add(new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), z, LineObstacleType.Horizontal));
                              }
                          }
                     }
@@ -481,13 +474,13 @@ namespace Hiale.GTA2NET.Core.Collision
                             if (!_map.CityBlocks[x, y, z].Left || !_map.CityBlocks[x, y, z].Right || !_map.CityBlocks[x, y, z].Top || !_map.CityBlocks[x, y, z].Bottom)
                             {
                                 if (_map.CityBlocks[x, y, z].Left.Wall)
-                                    rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical));
+                                    rawLineObstacles.Add(new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), z, LineObstacleType.Vertical));
                                 if (_map.CityBlocks[x, y, z].Right.Wall)
-                                    rawLineObstacles.Add(new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical));
+                                    rawLineObstacles.Add(new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z, LineObstacleType.Vertical));
                                 if (_map.CityBlocks[x, y, z].Top.Wall)
-                                    rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal));
+                                    rawLineObstacles.Add(new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), z, LineObstacleType.Horizontal));
                                 if (_map.CityBlocks[x, y, z].Bottom.Wall)
-                                    rawLineObstacles.Add(new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal));
+                                    rawLineObstacles.Add(new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), z, LineObstacleType.Horizontal));
                                 blocks[x, y, z] = CollisionMapType.Free;
                             }
                         }
@@ -619,7 +612,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         if (open)
                         {
                             var end = new Vector2(x, y);
-                            lineObstacles.Add(new LineObstacle(z, start, end, LineObstacleType.Horizontal));
+                            lineObstacles.Add(new LineObstacle(start, end, z, LineObstacleType.Horizontal));
                             open = false;
                         }
                         continue;
@@ -643,7 +636,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         {
                             var end = new Vector2(x, y);
                             //obstacles[z].Add(new Obstacle(start, end, ObstacleType.Vertical));
-                            lineObstacles.Add(new LineObstacle(z, start, end, LineObstacleType.Vertical));
+                            lineObstacles.Add(new LineObstacle(start, end, z, LineObstacleType.Vertical));
                             open = false;
                         }
                         continue;

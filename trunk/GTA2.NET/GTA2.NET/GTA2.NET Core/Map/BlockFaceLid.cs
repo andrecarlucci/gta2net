@@ -25,9 +25,9 @@ namespace Hiale.GTA2NET.Core.Map
             var bit11 = BitHelper.CheckBit(value, 11);
             if (!bit10 && !bit11)
                 LightningLevel = 0;
-            if (bit10 && !bit11) //ToDo: Which bits have to be set to a certain lightning level?
+            if (bit10 && !bit11)
                 LightningLevel = 1;
-            if (bit10 && bit11)
+            if (!bit10 && bit11)
                 LightningLevel = 2;
             if (bit10 && bit11)
                 LightningLevel = 3;

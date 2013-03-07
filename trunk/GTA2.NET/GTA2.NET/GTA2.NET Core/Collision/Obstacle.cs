@@ -19,7 +19,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public SlopeType SlopeType;
 
-        public SlopeObstacle(int z, Vector2 position, SlopeType slopeType) : this()
+        public SlopeObstacle(Vector2 position, int z, SlopeType slopeType) : this()
         {
             Z = z;
             Position = position;
@@ -37,7 +37,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public int Length;
 
-        public RectangleObstacle(int z, Vector2 position, int width, int length) : this()
+        public RectangleObstacle(Vector2 position, int z, int width, int length) : this()
         {
             Z = z;
             Position = position;
@@ -74,7 +74,7 @@ namespace Hiale.GTA2NET.Core.Collision
         public Vector2 End;
         public LineObstacleType Type;
 
-        public LineObstacle(int z, Vector2 start, Vector2 end, LineObstacleType type) : this()
+        public LineObstacle(Vector2 start, Vector2 end, int z, LineObstacleType type) : this()
         {
             Z = z;
             Start = start;
@@ -84,22 +84,22 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public static LineObstacle DefaultLeft(int x, int y, int z)
         {
-            return new LineObstacle(z, new Vector2(x, y), new Vector2(x, y + 1), LineObstacleType.Vertical);
+            return new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), z, LineObstacleType.Vertical);
         }
 
         public static LineObstacle DefaultTop(int x, int y, int z)
         {
-            return new LineObstacle(z, new Vector2(x, y), new Vector2(x + 1, y), LineObstacleType.Horizontal);
+            return new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), z, LineObstacleType.Horizontal);
         }
 
         public static LineObstacle DefaultRight(int x, int y, int z)
         {
-            return new LineObstacle(z, new Vector2(x + 1, y), new Vector2(x + 1, y + 1), LineObstacleType.Vertical);
+            return new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z, LineObstacleType.Vertical);
         }
 
         public static LineObstacle DefaultBottom(int x, int y, int z)
         {
-            return new LineObstacle(z, new Vector2(x, y + 1), new Vector2(x + 1, y + 1), LineObstacleType.Horizontal);
+            return new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), z, LineObstacleType.Horizontal);
         }
 
         public override string ToString()

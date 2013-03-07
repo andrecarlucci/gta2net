@@ -13,10 +13,10 @@ namespace Hiale.GTA2NET.Core.Map
 
         public static BlockInfo Empty = new BlockInfo();
 
-        /// <summary>
-        /// Position of this block in a map.
-        /// </summary>
-        public Vector3 Position { get; set; } //remove?
+        ///// <summary>
+        ///// Position of this block in a map.
+        ///// </summary>
+        //public Vector3 Position { get; set; } //remove?
 
         public BlockFaceEdge Left { get; set; }
 

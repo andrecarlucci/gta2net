@@ -77,169 +77,169 @@ namespace Hiale.GTA2NET.Renderer
                     var block = MainGame.Map.CityBlocks[x, y, z];
                     if (block.IsEmpty || SkipBlock(ref block))
                         continue;
-                    block.Position = new Vector3(x, y, z);
+                    var pos = new Vector3(x, y, z);
                     switch (block.SlopeType)
                     {
                         case SlopeType.None:
-                            SetUpCube(block, lidLayer);
+                            SetUpCube(block, pos, lidLayer);
                             break;
                         case SlopeType.Up26Low:
-                            SetUpSlope_Low(block, 26, 1);
+                            SetUpSlope_Low(block, pos, 26, 1);
                             break;
                         case SlopeType.Up26High:
-                            SetUpSlope_High(block, 26, 1);
+                            SetUpSlope_High(block, pos, 26, 1);
                             break;
                         case SlopeType.Down26Low:
-                            SetUpSlope_Low(block, 26, 3);
+                            SetUpSlope_Low(block, pos, 26, 3);
                             break;
                         case SlopeType.Down26High:
-                            SetUpSlope_High(block, 26, 3);
+                            SetUpSlope_High(block, pos, 26, 3);
                             break;
                         case SlopeType.Left26Low:
-                            SetUpSlope_Low(block, 26, 2);
+                            SetUpSlope_Low(block, pos, 26, 2);
                             break;
                         case SlopeType.Left26High:
-                            SetUpSlope_High(block, 26, 2);
+                            SetUpSlope_High(block, pos, 26, 2);
                             break;
                         case SlopeType.Right26Low:
-                            SetUpSlope_Low(block, 26, 0);
+                            SetUpSlope_Low(block, pos, 26, 0);
                             break;
                         case SlopeType.Right26High:
-                            SetUpSlope_High(block, 26, 0);
+                            SetUpSlope_High(block, pos, 26, 0);
                             break;
                         case SlopeType.Up7Low:
-                            SetUpSlope_Low(block, 7, 1);
+                            SetUpSlope_Low(block, pos, 7, 1);
                             break;
                         case SlopeType.Up7High0:
-                            SetUpSlope_High(block, 7, 1);
+                            SetUpSlope_High(block, pos, 7, 1);
                             break;
                         case SlopeType.Up7High1:
-                            SetUpSlope_High(block, 8, 1);
+                            SetUpSlope_High(block, pos, 8, 1);
                             break;
                         case SlopeType.Up7High2:
-                            SetUpSlope_High(block, 9, 1);
+                            SetUpSlope_High(block, pos, 9, 1);
                             break;
                         case SlopeType.Up7High3:
-                            SetUpSlope_High(block, 10, 1);
+                            SetUpSlope_High(block, pos, 10, 1);
                             break;
                         case SlopeType.Up7High4:
-                            SetUpSlope_High(block, 11, 1);
+                            SetUpSlope_High(block, pos, 11, 1);
                             break;
                         case SlopeType.Up7High5:
-                            SetUpSlope_High(block, 12, 1);
+                            SetUpSlope_High(block, pos, 12, 1);
                             break;
                         case SlopeType.Up7High6:
-                            SetUpSlope_High(block, 13, 1);
+                            SetUpSlope_High(block, pos, 13, 1);
                             break;
                         case SlopeType.Down7Low:
-                            SetUpSlope_Low(block, 7, 3);
+                            SetUpSlope_Low(block, pos, 7, 3);
                             break;
                         case SlopeType.Down7High0:
-                            SetUpSlope_High(block, 7, 3);
+                            SetUpSlope_High(block, pos, 7, 3);
                             break;
                         case SlopeType.Down7High1:
-                            SetUpSlope_High(block, 8, 3);
+                            SetUpSlope_High(block, pos, 8, 3);
                             break;
                         case SlopeType.Down7High2:
-                            SetUpSlope_High(block, 9, 3);
+                            SetUpSlope_High(block, pos, 9, 3);
                             break;
                         case SlopeType.Down7High3:
-                            SetUpSlope_High(block, 10, 3);
+                            SetUpSlope_High(block, pos, 10, 3);
                             break;
                         case SlopeType.Down7High4:
-                            SetUpSlope_High(block, 11, 3);
+                            SetUpSlope_High(block, pos, 11, 3);
                             break;
                         case SlopeType.Down7High5:
-                            SetUpSlope_High(block, 12, 3);
+                            SetUpSlope_High(block, pos, 12, 3);
                             break;
                         case SlopeType.Down7High6:
-                            SetUpSlope_High(block, 13, 3);
+                            SetUpSlope_High(block, pos, 13, 3);
                             break;
                         case SlopeType.Left7Low:
-                            SetUpSlope_Low(block, 7, 2);
+                            SetUpSlope_Low(block, pos, 7, 2);
                             break;
                         case SlopeType.Left7High0:
-                            SetUpSlope_High(block, 7, 2);
+                            SetUpSlope_High(block, pos, 7, 2);
                             break;
                         case SlopeType.Left7High1:
-                            SetUpSlope_High(block, 8, 2);
+                            SetUpSlope_High(block, pos, 8, 2);
                             break;
                         case SlopeType.Left7High2:
-                            SetUpSlope_High(block, 9, 2);
+                            SetUpSlope_High(block, pos, 9, 2);
                             break;
                         case SlopeType.Left7High3:
-                            SetUpSlope_High(block, 10, 2);
+                            SetUpSlope_High(block, pos, 10, 2);
                             break;
                         case SlopeType.Left7High4:
-                            SetUpSlope_High(block, 11, 2);
+                            SetUpSlope_High(block, pos, 11, 2);
                             break;
                         case SlopeType.Left7High5:
-                            SetUpSlope_High(block, 12, 2);
+                            SetUpSlope_High(block, pos, 12, 2);
                             break;
                         case SlopeType.Left7High6:
-                            SetUpSlope_High(block, 13, 2);
+                            SetUpSlope_High(block, pos, 13, 2);
                             break;
                         case SlopeType.Right7Low:
-                            SetUpSlope_Low(block, 7, 0);
+                            SetUpSlope_Low(block, pos, 7, 0);
                             break;
                         case SlopeType.Right7High0:
-                            SetUpSlope_High(block, 7, 0);
+                            SetUpSlope_High(block, pos, 7, 0);
                             break;
                         case SlopeType.Right7High1:
-                            SetUpSlope_High(block, 8, 0);
+                            SetUpSlope_High(block, pos, 8, 0);
                             break;
                         case SlopeType.Right7High2:
-                            SetUpSlope_High(block, 9, 0);
+                            SetUpSlope_High(block, pos, 9, 0);
                             break;
                         case SlopeType.Right7High3:
-                            SetUpSlope_High(block, 10, 0);
+                            SetUpSlope_High(block, pos, 10, 0);
                             break;
                         case SlopeType.Right7High4:
-                            SetUpSlope_High(block, 11, 0);
+                            SetUpSlope_High(block, pos, 11, 0);
                             break;
                         case SlopeType.Right7High5:
-                            SetUpSlope_High(block, 12, 0);
+                            SetUpSlope_High(block, pos, 12, 0);
                             break;
                         case SlopeType.Right7High6:
-                            SetUpSlope_High(block, 13, 0);
+                            SetUpSlope_High(block, pos, 13, 0);
                             break;
                         case SlopeType.Up45:
-                            SetUpSlope_Low(block, 45, 1);
+                            SetUpSlope_Low(block, pos, 45, 1);
                             break;
                         case SlopeType.Down45:
-                            SetUpSlope_Low(block, 45, 3);
+                            SetUpSlope_Low(block, pos, 45, 3);
                             break;
                         case SlopeType.Left45:
-                            SetUpSlope_Low(block, 45, 2);
+                            SetUpSlope_Low(block, pos, 45, 2);
                             break;
                         case SlopeType.Right45:
-                            SetUpSlope_Low(block, 45, 0);
+                            SetUpSlope_Low(block, pos, 45, 0);
                             break;
                         case SlopeType.DiagonalFacingUpLeft:
-                            SetUpSlopeDiagonal(block, 1);
+                            SetUpSlopeDiagonal(block, pos, 1);
                             break;
                         case SlopeType.DiagonalFacingUpRight:
-                            SetUpSlopeDiagonal(block, 0);
+                            SetUpSlopeDiagonal(block, pos, 0);
                             break;
                         case SlopeType.DiagonalFacingDownLeft:
-                            SetUpSlopeDiagonal(block, 2);
+                            SetUpSlopeDiagonal(block, pos, 2);
                             break;
                         case SlopeType.DiagonalFacingDownRight:
-                            SetUpSlopeDiagonal(block, 3);
+                            SetUpSlopeDiagonal(block, pos, 3);
                             break;
                         default:
-                            SetUpCube(block, lidLayer);
+                            SetUpCube(block, pos, lidLayer);
                             break;
                     }
                 }
             }
         }
 
-        private void SetUpCube(BlockInfo block, bool lidLayer)
+        private void SetUpCube(BlockInfo block, Vector3 pos, bool lidLayer)
         {
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            PrepareCoordinates(block.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(pos, out frontCoordinates, out backCoordinates);
 
             // Front face
             if (lidLayer)
@@ -302,11 +302,11 @@ namespace Hiale.GTA2NET.Renderer
             }
         }
 
-        private void SetUpSlopeDiagonal(BlockInfo block, byte rotation)
+        private void SetUpSlopeDiagonal(BlockInfo block, Vector3 pos, byte rotation)
         {
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            PrepareCoordinates(block.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(pos, out frontCoordinates, out backCoordinates);
 
             if (rotation > 0)
             {
@@ -380,7 +380,7 @@ namespace Hiale.GTA2NET.Renderer
                 indexBufferCollection.Add(startIndex);
             }
 
-            PrepareCoordinates(block.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(pos, out frontCoordinates, out backCoordinates);
             switch (rotation)
             {
                 case 0: //Facing up right
@@ -402,12 +402,12 @@ namespace Hiale.GTA2NET.Renderer
             }
         }
 
-        private void SetUpSlope_Low(BlockInfo block, byte subType, byte rotation)
+        private void SetUpSlope_Low(BlockInfo block, Vector3 pos, byte subType, byte rotation)
         {
             //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            PrepareCoordinates(block.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(pos, out frontCoordinates, out backCoordinates);
 
             var slopeScalar = 1f;
             switch (subType)
@@ -539,12 +539,12 @@ namespace Hiale.GTA2NET.Renderer
             }           
         }
 
-        private void SetUpSlope_High(BlockInfo block, byte subType, byte rotation)
+        private void SetUpSlope_High(BlockInfo block, Vector3 pos, byte subType, byte rotation)
         {
             //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            PrepareCoordinates(block.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(pos, out frontCoordinates, out backCoordinates);
 
             var middleSlopeScalar = 1f;
             var frontSlopeScalar = 0f;
