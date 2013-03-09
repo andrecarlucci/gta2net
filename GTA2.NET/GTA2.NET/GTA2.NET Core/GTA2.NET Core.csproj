@@ -83,7 +83,7 @@
     <Compile Include="Style\Surface.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Third party\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
+    <ProjectReference Include="..\ThirdParty\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
       <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
       <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>

@@ -106,7 +106,7 @@ namespace Hiale.GTA2NET.Test
 
             foreach (var pair in layers)
             {
-                pair.Value.Save("G:\\GTA2 Test\\" + pair.Key + ".png", ImageFormat.Png);
+                pair.Value.Save(pair.Key + ".png", ImageFormat.Png);
                 pair.Value.Dispose();
             }
 
@@ -167,7 +167,7 @@ namespace Hiale.GTA2NET.Test
                                     g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), x*10, y*10, 10, 10);
                                 if (blocks[x, y, z] == CollisionMapType.Free)
                                     g.FillRectangle(new SolidBrush(System.Drawing.Color.Green), x*10, y*10, 10, 10);
-                                if (blocks[x, y, z] == CollisionMapType.Special)
+                                if (blocks[x, y, z] == CollisionMapType.Slope)
                                     g.FillRectangle(new SolidBrush(System.Drawing.Color.Blue), x*10, y*10, 10, 10);
                                 if (blocks[x, y, z] == CollisionMapType.None)
                                     g.FillRectangle(new SolidBrush(System.Drawing.Color.Yellow), x*10, y*10, 10, 10);

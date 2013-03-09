@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GTA2.NET UnitTests", "GTA2.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Third party", "Third party", "{3B56AFB1-65BB-4B4B-AC6F-703F57B4D124}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farseer Physics MonoGame", "Third party\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj", "{EA88836E-6C88-423C-BEA7-3125077CFA5A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Farseer Physics MonoGame", "ThirdParty\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj", "{EA88836E-6C88-423C-BEA7-3125077CFA5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -2,6 +2,6 @@
 {
     public enum CollisionMapType
     {
-        None, Free, Block, Special, Unknwon
+        None, Free, Block, Slope, Unknwon
     }
 }
