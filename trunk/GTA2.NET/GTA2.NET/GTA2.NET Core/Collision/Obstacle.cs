@@ -58,6 +58,16 @@ namespace Hiale.GTA2NET.Core.Collision
             Vertices = new List<Vector2>();
         }
 
+        public bool IsPointInPolygon(Vector2 point)
+        {
+            var isInside = false;
+            for (int i = 0, j = Vertices.Count - 1; i < Vertices.Count; j = i++)
+            {
+                if (((Vertices[i].Y > point.Y) != (Vertices[j].Y > point.Y)) && (point.X < (Vertices[j].X - Vertices[i].X) * (point.Y - Vertices[i].Y) / (Vertices[j].Y - Vertices[i].Y) + Vertices[i].X))
+                    isInside = !isInside;
+            }
+            return isInside;
+        }
     }
 
     public enum LineObstacleType
