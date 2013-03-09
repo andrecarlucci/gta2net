@@ -22,7 +22,7 @@ namespace Hiale.GTA2NET.Core.Collision
         public List<IObstacle> CollisionMap(Vector2 start)
         {
             //Pass 1
-            var blocks = FloodFill(start, false);
+            var blocks = FloodFill(start, CollisionMapType.Free);
 
             //Pass 2
             RemoveUnknownBlocks(blocks);
@@ -41,7 +41,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         {
                             obstacles.Add(new RectangleObstacle(new Vector2(x, y), z, 1, 1));
                         }
-                        else if (blocks[x, y, z] == CollisionMapType.Special)
+                        else if (blocks[x, y, z] == CollisionMapType.Slope)
                         {
                             if (!ProcessSlope(x, y, z, blocks, obstacles))
                                 obstacles.Add(new SlopeObstacle(new Vector2(x, y), z, _map.CityBlocks[x, y, z].SlopeType));
@@ -62,6 +62,21 @@ namespace Hiale.GTA2NET.Core.Collision
             return obstacles;
         }
 
+        private void FindPolygons(CollisionMapType[,,] blocks, int z)
+        {
+            //find a start
+            for (var x = 0; x < _map.Width; x++)
+            {
+                for (var y = 0; y < _map.Length; y++)
+                {
+                    if (blocks[x, y, z] == CollisionMapType.Block)
+                    {
+                        
+                    }
+                }
+            }
+        }
+
         private bool ProcessSlope(int x, int y, int z, CollisionMapType[,,] blocks, List<IObstacle> obstacles)
         {
             var block = _map.CityBlocks[x, y, z];
@@ -70,6 +85,11 @@ namespace Hiale.GTA2NET.Core.Collision
             CollisionMapType blockTop = y - 1 > 0 ? blocks[x, y - 1, z] : CollisionMapType.Unknwon;
             CollisionMapType blockRight = x + 1 < _map.Width ? blocks[x + 1, y, z] : CollisionMapType.Unknwon;
             CollisionMapType blockBottom = y + 1 < _map.Length ? blocks[x, y + 1, z] : CollisionMapType.Unknwon;
+
+            if ((byte) block.SlopeType > 44)
+                blocks[x, y, z] = CollisionMapType.Block;
+            else
+                return false;
 
             switch (block.SlopeType)
             {
@@ -297,10 +317,10 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public CollisionMapType[,,] FloodFill(Vector2 start)
         {
-            return FloodFill(start, false);
+            return FloodFill(start, CollisionMapType.Free);
         }
 
-        public CollisionMapType[,,] FloodFill(Vector2 start, bool invert)
+        public CollisionMapType[,,] FloodFill(Vector2 start, CollisionMapType typeToFill)
         {
             var blocks = new CollisionMapType[_map.Width, _map.Length, _map.Height];
             for (var z = _map.Height - 1; z >= 0; z--)
@@ -320,11 +340,11 @@ namespace Hiale.GTA2NET.Core.Collision
                             case SlopeType.DiagonalFacingDownLeft:
                             case SlopeType.DiagonalFacingDownRight:
                             case SlopeType.PartialCentreBlock:
-                                blocks[(int) currentPos.X, (int) currentPos.Y, z] = CollisionMapType.Special;
+                                blocks[(int) currentPos.X, (int) currentPos.Y, z] = CollisionMapType.Slope;
                                 continue;
                         }
                         if (currentBlock.IsEmpty)
-                            blocks[(int) currentPos.X, (int) currentPos.Y, z] = (invert ? CollisionMapType.Block : CollisionMapType.Free);
+                            blocks[(int) currentPos.X, (int) currentPos.Y, z] = typeToFill;
                         else
                             blocks[(int) currentPos.X, (int) currentPos.Y, z] = CollisionMapType.Unknwon;
                     }
@@ -332,25 +352,25 @@ namespace Hiale.GTA2NET.Core.Collision
                     var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Left, invert))
+                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Left, typeToFill))
                             stack.Push(newPos);
                     }
                     newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Top, invert))
+                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Top, typeToFill))
                             stack.Push(newPos);
                     }
                     newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Right, invert))
+                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Right, typeToFill))
                             stack.Push(newPos);
                     }
                     newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Bottom, invert))
+                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Bottom, typeToFill))
                             stack.Push(newPos);
                     }
                 } while (stack.Count > 0);
@@ -368,7 +388,7 @@ namespace Hiale.GTA2NET.Core.Collision
                     for (var y = 0; y < _map.Length; y++)
                     {
                         if (_map.CityBlocks[x,y,z].SlopeType != SlopeType.None && _map.CityBlocks[x,y,z].SlopeType != SlopeType.SlopeAbove)
-                            blocks[x,y,z] = CollisionMapType.Special;
+                            blocks[x,y,z] = CollisionMapType.Slope;
                     }
                 }
 
@@ -501,16 +521,16 @@ namespace Hiale.GTA2NET.Core.Collision
         //    return false;
         //}
 
-        private bool CheckNeighbor(int x, int y, int z, CollisionMapType[,,] blocks, BlockFaceDirection direction, bool invert)
+        private bool CheckNeighbor(int x, int y, int z, CollisionMapType[,,] blocks, BlockFaceDirection direction, CollisionMapType typeToFill)
         {
             if (blocks[x, y,z] == CollisionMapType.None)
             {
                 var newBlock = _map.CityBlocks[x, y, z];
                 if (newBlock.IsEmpty)
-                    blocks[x, y, z] = (invert ? CollisionMapType.Block : CollisionMapType.Free);
+                    blocks[x, y, z] = typeToFill;
                 if (newBlock.SlopeType != SlopeType.None && newBlock.SlopeType != SlopeType.SlopeAbove)
                 {
-                    blocks[x, y,z] = CollisionMapType.Special;
+                    blocks[x, y,z] = CollisionMapType.Slope;
                     return false;
                 }
                 switch (direction)
@@ -535,12 +555,12 @@ namespace Hiale.GTA2NET.Core.Collision
             }
             else if (blocks[x, y,z] == CollisionMapType.Unknwon)
             {
-                blocks[x, y,z] = UnknownBlocks(x, y, z, invert);
+                blocks[x, y,z] = UnknownBlocks(x, y, z, typeToFill);
             }
             return false;
         }
 
-        private CollisionMapType UnknownBlocks(int x, int y, int z, bool invert)
+        private CollisionMapType UnknownBlocks(int x, int y, int z, CollisionMapType typeToFill)
         {
             var newBlock = _map.CityBlocks[x, y, z];
             if (newBlock.Left)
@@ -548,7 +568,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (CheckBlockBounds(new Vector2(x - 1, y)))
                 {
                     if (_map.CityBlocks[x - 1, y, z].Right)
-                        return (invert ? CollisionMapType.Block : CollisionMapType.Free);
+                        return typeToFill;
                 }
             }
             if (newBlock.Top)
@@ -556,7 +576,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (CheckBlockBounds(new Vector2(x, y - 1)))
                 {
                     if (_map.CityBlocks[x, y - 1, z].Bottom)
-                        return (invert ? CollisionMapType.Block : CollisionMapType.Free);
+                        return typeToFill;
                 }
             }
             if (newBlock.Right)
@@ -564,7 +584,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (CheckBlockBounds(new Vector2(x + 1, y)))
                 {
                     if (_map.CityBlocks[x + 1, y, z].Left)
-                        return (invert ? CollisionMapType.Block : CollisionMapType.Free);
+                        return typeToFill;
                 }
             }
             if (newBlock.Bottom)
@@ -572,10 +592,10 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (CheckBlockBounds(new Vector2(x, y + 1)))
                 {
                     if (_map.CityBlocks[x, y + 1, z].Top)
-                        return (invert ? CollisionMapType.Block : CollisionMapType.Free);
+                        return typeToFill;
                 }
             }
-            return (invert ? CollisionMapType.Free : CollisionMapType.Block);;
+            return typeToFill == CollisionMapType.Free ? CollisionMapType.Block : CollisionMapType.Free; //ToDo
         }
         
         private bool CheckBlockBounds(Vector2 newPos)

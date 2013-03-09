@@ -54,11 +54,11 @@ namespace Hiale.GTA2NET.Core.Map
         Right7High3 = 37,
         Right7High4 = 38,
         Right7High5 = 39,
-        Right7High6 = 40,
+        Right7High6 = 40, //Slope Type 1-40 change the player's z value
         Up45 = 41,
         Down45 = 42,
         Left45 = 43,
-        Right45 = 44,
+        Right45 = 44, //Slope Type 41-44 change the players z value too, however, they are too steep, so only only downwards is possible
         DiagonalFacingUpLeft = 45,
         DiagonalFacingUpRight = 46,
         DiagonalFacingDownLeft = 47,
