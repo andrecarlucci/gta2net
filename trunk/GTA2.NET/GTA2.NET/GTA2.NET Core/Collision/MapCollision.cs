@@ -2,6 +2,7 @@
 //23.02.2013 - Old version was crap
 
 using System.Collections.Generic;
+using System.Drawing;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
@@ -54,8 +55,8 @@ namespace Hiale.GTA2NET.Core.Collision
                 {
                     for (var y = 0; y < _map.Length; y++)
                     {
-                        //if (blocks[x, y, z] == CollisionMapType.Block)
-                        //    FindPolygons(blocks, new Vector2(x, y), z);
+                        if (blocks[x, y, z] == CollisionMapType.Block)
+                            FindPolygons(blocks, new Vector2(x, y), z);
                     }
                 }
 
@@ -75,88 +76,83 @@ namespace Hiale.GTA2NET.Core.Collision
 
         private void FindPolygons(CollisionMapType[,,] blocks, Vector2 start, int z)
         {
+            if (z != 2)
+                return;
+
+            var list = MarchingSquare.DoMatch(blocks, _map.CityBlocks, start, z);
+
+            //var arr = new PointF[list.Count];
+            //for (var i = 0; i < list.Count; i++)
+            //{
+            //    arr[i] = new PointF(list[i].X * 10, list[i].Y * 10);
+            //}
+
+            //using (var bmp = new Bitmap(2560, 2580))
+            //{
+            //    using (var g = Graphics.FromImage(bmp))
+            //    {
+            //        //foreach (var vector2 in blockList)
+            //        //{
+            //        //    g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), vector2.X * 10, vector2.Y * 10, 10, 10);
+            //        //    g.DrawRectangle(new Pen(System.Drawing.Color.Black), vector2.X * 10, vector2.Y * 10, 10, 10);
+            //        //}
+            //        foreach (var vector2 in list)
+            //        {
+            //            g.DrawPolygon(new Pen(System.Drawing.Color.Red), arr);
+            //        }
+            //    }
+            //    bmp.Save("Temp.png", System.Drawing.Imaging.ImageFormat.Png);
+            //}
+
+
+
+            //Mark all blocks of this polygon as marked
             var stack = new Stack<Vector2>();
-            var polygon = new PolygonObstacle(z);
             stack.Push(start);
             do
             {
                 var currentPos = stack.Pop();
                 var currentBlock = _map.CityBlocks[(int)currentPos.X, (int)currentPos.Y, z];
-                //if (currentBlock.SlopeType == SlopeType.None)
                 if (CheckBlockBounds(currentPos))
                 {
-                    var obstacles = new List<IObstacle>();
-                    if (currentBlock.SlopeType == SlopeType.None || currentBlock.SlopeType == SlopeType.SlopeAbove)
-                    {
-                        if (!polygon.IsPointInPolygon(currentPos)) //top Left
-                            polygon.Vertices.Add(currentPos);
-                        var vector = new Vector2(currentPos.X, currentPos.Y);
-                        if (!polygon.IsPointInPolygon(vector))
-                            polygon.Vertices.Add(vector);
-                        vector = new Vector2(currentPos.X + 1, currentPos.Y + 1);
-                        if (!polygon.IsPointInPolygon(vector))
-                            polygon.Vertices.Add(vector);
-                        vector = new Vector2(currentPos.X, currentPos.Y + 1);
-                        if (!polygon.IsPointInPolygon(vector))
-                            polygon.Vertices.Add(vector);
-                    }
-                    else
-                    {
-                        ProcessSlope((int) currentPos.X, (int) currentPos.Y, z, blocks, obstacles);
-                        foreach (var obstacle in obstacles)
-                        {
-                            if (obstacle is PolygonObstacle)
-                            {
-                                var polygonObstacle = (PolygonObstacle) obstacle;
-                                foreach (var vertex in polygonObstacle.Vertices)
-                                {
-                                    if (!polygon.IsPointInPolygon(vertex))
-                                        polygon.Vertices.Add(vertex);
-                                    //Misc.IsPointInPolygon()
-                                }
-                            }
-                        }
-                    }
-                    //if (currentBlock.IsEmpty)
-                    //    blocks[(int)currentPos.X, (int)currentPos.Y, z] = typeToFill;
-                    //else
-                    //    blocks[(int)currentPos.X, (int)currentPos.Y, z] = CollisionMapType.Unknwon;
+                    blocks[(int)currentPos.X, (int)currentPos.Y, z] = CollisionMapType.None;
+                    //if (!blockList.Contains(currentPos))
+                    //    blockList.Add(currentPos);
                 }
 
-                var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
-                if (CheckBlockBounds(newPos))
+                if (currentBlock.SlopeType == SlopeType.None || currentBlock.SlopeType == SlopeType.SlopeAbove)
                 {
-                    if (CheckNeighborBlock((int) newPos.X, (int) newPos.Y, z, blocks))
-                        stack.Push(newPos);
-                }
-                newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
-                if (CheckBlockBounds(newPos))
-                {
-                    if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
-                        stack.Push(newPos);
-                }
-                newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
-                if (CheckBlockBounds(newPos))
-                {
-                    if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
-                        stack.Push(newPos);
-                }
-                newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
-                if (CheckBlockBounds(newPos))
-                {
-                    if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
-                        stack.Push(newPos);
+                    var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
+                    if (CheckBlockBounds(newPos))
+                    {
+                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                            stack.Push(newPos);
+                    }
+                    newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
+                    if (CheckBlockBounds(newPos))
+                    {
+                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                            stack.Push(newPos);
+                    }
+                    newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
+                    if (CheckBlockBounds(newPos))
+                    {
+                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                            stack.Push(newPos);
+                    }
+                    newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
+                    if (CheckBlockBounds(newPos))
+                    {
+                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                            stack.Push(newPos);
+                    }
                 }
             } while (stack.Count > 0);
-            
         }
 
         private bool CheckNeighborBlock(int x, int y, int z, CollisionMapType[, ,] blocks)
         {
-            if (blocks[x, y, z] == CollisionMapType.Block)
-                return true;
-            return false;
-
+            return blocks[x, y, z] == CollisionMapType.Block;
         }
 
         private bool ProcessSlope(int x, int y, int z, CollisionMapType[,,] blocks, List<IObstacle> obstacles)
@@ -168,10 +164,10 @@ namespace Hiale.GTA2NET.Core.Collision
             CollisionMapType blockRight = x + 1 < _map.Width ? blocks[x + 1, y, z] : CollisionMapType.Unknwon;
             CollisionMapType blockBottom = y + 1 < _map.Length ? blocks[x, y + 1, z] : CollisionMapType.Unknwon;
 
-            if ((byte) block.SlopeType > 44)
-                blocks[x, y, z] = CollisionMapType.Block;
-            else
+            if ((byte) block.SlopeType <= 44)
                 return false;
+            //else
+            //    blocks[x, y, z] = CollisionMapType.Block;
 
             switch (block.SlopeType)
             {

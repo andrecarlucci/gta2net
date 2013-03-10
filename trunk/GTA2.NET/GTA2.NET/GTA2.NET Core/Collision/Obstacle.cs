@@ -63,6 +63,8 @@ namespace Hiale.GTA2NET.Core.Collision
             var isInside = false;
             for (int i = 0, j = Vertices.Count - 1; i < Vertices.Count; j = i++)
             {
+                if ((point.X == Vertices[i].X && point.Y == Vertices[i].Y) || (point.X == Vertices[j].X && point.Y == Vertices[j].Y)) //point IS one of the edges
+                    return true;
                 if (((Vertices[i].Y > point.Y) != (Vertices[j].Y > point.Y)) && (point.X < (Vertices[j].X - Vertices[i].X) * (point.Y - Vertices[i].Y) / (Vertices[j].Y - Vertices[i].Y) + Vertices[i].X))
                     isInside = !isInside;
             }
