@@ -55,6 +55,7 @@
     <Compile Include="Helper\BitHelper.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Helper\LoadSave.cs" />
+    <Compile Include="Helper\MarchingSquares.cs" />
     <Compile Include="Helper\ZipStorer.cs" />
     <Compile Include="Map\BlockFace.cs" />
     <Compile Include="Map\BlockFaceEdge.cs" />
