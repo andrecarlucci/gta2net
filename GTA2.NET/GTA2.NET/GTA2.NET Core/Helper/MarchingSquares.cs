@@ -45,6 +45,9 @@ namespace Hiale.GTA2NET.Core.Helper
 
             var oldX = -1;
             var oldY = -1;
+            var end = false;
+
+            rawPolygon.Add(rawPolygon[0]); //add start point to the end
 
             for (var i = 0; i < rawPolygon.Count; i++)
             {
@@ -52,21 +55,33 @@ namespace Hiale.GTA2NET.Core.Helper
                 while ((int) rawPolygon[j].X == oldX && (int) rawPolygon[j].Y != oldY)
                 {
                     if (j + 1 >= rawPolygon.Count)
+                    {
+                        end = true;
                         break;
+                    }
                     j++;
                 }
                 while ((int) rawPolygon[j].Y == oldY && (int) rawPolygon[j].X != oldX)
                 {
                     if (j + 1 >= rawPolygon.Count)
+                    {
+                        end = true;
                         break;
+                    }
                     j++;
                 }
-                if ((j - i) > 2)
+                if (end)
+                    break;
+                if ((j - i) >= 2)
                     i = j - 1;
                 polygon.Add(new Vector2(rawPolygon[i].X, rawPolygon[i].Y));
                 oldX = (int) rawPolygon[i].X;
                 oldY = (int) rawPolygon[i].Y;
             }
+
+            if (polygon[0] == polygon[polygon.Count - 1])
+                polygon.RemoveAt(polygon.Count - 1);
+
             return polygon;
         }
 
