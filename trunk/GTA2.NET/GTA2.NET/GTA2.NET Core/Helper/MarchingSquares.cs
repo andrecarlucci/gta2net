@@ -1,4 +1,7 @@
-﻿// Licensed under the creative commons Atrribution 3.0 license
+﻿//10.03.2013
+//Based on http://devblog.phillipspiess.com/2010/02/23/better-know-an-algorithm-1-marching-squares/
+
+// Licensed under the creative commons Atrribution 3.0 license
 // You are free to share, copy, distribute, and transmit this work
 // You are free to alter this work
 // If you use this work, please attribute it somewhere in the supporting
@@ -14,7 +17,7 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Helper
 {
-    public class MarchingSquare
+    public class MarchingSquares
     {
         // A simple enumeration to represent the direction we
         // just moved, and the direction we will next move.
@@ -27,20 +30,53 @@ namespace Hiale.GTA2NET.Core.Helper
             Right
         }
 
-        public static List<Vector2> DoMatch(CollisionMapType[,,] blockCollisions, BlockInfo[,,] blocks,  Vector2 start, int z)
+        public static List<Vector2> FindPolygonPoints(CollisionMapType[,,] blockCollisions, BlockInfo[,,] blocks,  Vector2 start, int z)
         {
             var specialSlopes = new List<Vector2>();
-            var polygon = WalkPerimeter(blockCollisions, blocks, start, z, specialSlopes);
-            ProcessSlopes(polygon, specialSlopes, blocks, z);
+            var rawPolygon = IdentifyPerimeter(blockCollisions, blocks, start, z, specialSlopes);
+            ProcessSlopes(rawPolygon, specialSlopes, blocks, z);
+            var polygon = OptimizePolygon(rawPolygon, start);
             return polygon;
         }
 
-        private static void ProcessSlopes(List<Vector2> polygon, IEnumerable<Vector2> specialSlopes, BlockInfo[, ,] blocks, int z)
+        private static List<Vector2> OptimizePolygon(IList<Vector2> rawPolygon, Vector2 start)
+        {
+            var polygon = new List<Vector2>();
+
+            var oldX = -1;
+            var oldY = -1;
+
+            for (var i = 0; i < rawPolygon.Count; i++)
+            {
+                var j = i;
+                while ((int) rawPolygon[j].X == oldX && (int) rawPolygon[j].Y != oldY)
+                {
+                    if (j + 1 >= rawPolygon.Count)
+                        break;
+                    j++;
+                }
+                while ((int) rawPolygon[j].Y == oldY && (int) rawPolygon[j].X != oldX)
+                {
+                    if (j + 1 >= rawPolygon.Count)
+                        break;
+                    j++;
+                }
+                if ((j - i) > 2)
+                    i = j - 1;
+                polygon.Add(new Vector2(rawPolygon[i].X, rawPolygon[i].Y));
+                oldX = (int) rawPolygon[i].X;
+                oldY = (int) rawPolygon[i].Y;
+            }
+            return polygon;
+        }
+
+        private static void ProcessSlopes(IList<Vector2> polygon, IEnumerable<Vector2> specialSlopes, BlockInfo[, ,] blocks, int z)
         {
             foreach (var specialSlope in specialSlopes)
             {
                 var x = (int) specialSlope.X;
                 var y = (int) specialSlope.Y;
+                int index;
                 switch (blocks[x, y, z].SlopeType)
                 {
                     case SlopeType.DiagonalFacingUpLeft:
@@ -59,7 +95,7 @@ namespace Hiale.GTA2NET.Core.Helper
             }
         }
 
-        private static void RemovePoint(int x, int y, List<Vector2> polygon)
+        private static void RemovePoint(int x, int y, IList<Vector2> polygon)
         {
             var indexToRemove = -1;
             for (var i = 0; i < polygon.Count; i++)
@@ -75,11 +111,11 @@ namespace Hiale.GTA2NET.Core.Helper
 
 
         // Performs the main while loop of the algorithm
-        private static List<Vector2> WalkPerimeter(CollisionMapType[, ,] blockCollisions, BlockInfo[, ,] blocks, Vector2 start, int z, List<Vector2> specialSlopes)
+        private static IList<Vector2> IdentifyPerimeter(CollisionMapType[, ,] blockCollisions, BlockInfo[, ,] blocks, Vector2 start, int z, List<Vector2> specialSlopes)
         {
             var startX = (int) start.X;
             var startY = (int) start.Y;
-            // Do some sanity checking, so we aren't walking outside the array
+
             if (startX < 0)
                 startX = 0;
             if (startX > blockCollisions.GetLength(0))
@@ -89,14 +125,11 @@ namespace Hiale.GTA2NET.Core.Helper
             if (startY > blockCollisions.GetLength(1))
                 startY = blockCollisions.GetLength(1);
 
-            // Set up our return list
             var pointList = new List<Vector2>();
 
-            // Our current x and y positions, initialized to the init values passed in
             var x = startX;
             var y = startY;
 
-            // Our next step direction:
             var nextStep = StepDirection.None;
 
             // The main while loop, continues stepping until we return to our initial points
@@ -227,7 +260,6 @@ namespace Hiale.GTA2NET.Core.Helper
 
         private static bool IsBlockOccupied(int x, int y, int z, CollisionMapType[, ,] blockCollisions, BlockInfo[, ,] blocks, List<Vector2> specialSlopes)
         {
-            // Make sure we don't pick a point outside our boundary!
             if (x < 0 || y < 0 || x >= blockCollisions.GetLength(0) || y >= blockCollisions.GetLength(1))
                 return false;
 
@@ -240,7 +272,6 @@ namespace Hiale.GTA2NET.Core.Helper
                 if (!specialSlopes.Contains(slopeVector))
                     specialSlopes.Add(slopeVector);
             }
-
 
             return blockCollisions[x, y, z] == CollisionMapType.Block;
         }

@@ -2,7 +2,6 @@
 //23.02.2013 - Old version was crap
 
 using System.Collections.Generic;
-using System.Drawing;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
@@ -56,7 +55,7 @@ namespace Hiale.GTA2NET.Core.Collision
                     for (var y = 0; y < _map.Length; y++)
                     {
                         if (blocks[x, y, z] == CollisionMapType.Block)
-                            FindPolygons(blocks, new Vector2(x, y), z);
+                            obstacles.Add(FindPolygons(blocks, new Vector2(x, y), z));
                     }
                 }
 
@@ -74,37 +73,25 @@ namespace Hiale.GTA2NET.Core.Collision
             return obstacles;
         }
 
-        private void FindPolygons(CollisionMapType[,,] blocks, Vector2 start, int z)
+        private IObstacle FindPolygons(CollisionMapType[,,] blocks, Vector2 start, int z)
         {
-            if (z != 2)
-                return;
+            var list = MarchingSquares.FindPolygonPoints(blocks, _map.CityBlocks, start, z);
 
-            var list = MarchingSquare.DoMatch(blocks, _map.CityBlocks, start, z);
+            IObstacle obstacle = null;
 
-            //var arr = new PointF[list.Count];
-            //for (var i = 0; i < list.Count; i++)
-            //{
-            //    arr[i] = new PointF(list[i].X * 10, list[i].Y * 10);
-            //}
-
-            //using (var bmp = new Bitmap(2560, 2580))
-            //{
-            //    using (var g = Graphics.FromImage(bmp))
-            //    {
-            //        //foreach (var vector2 in blockList)
-            //        //{
-            //        //    g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), vector2.X * 10, vector2.Y * 10, 10, 10);
-            //        //    g.DrawRectangle(new Pen(System.Drawing.Color.Black), vector2.X * 10, vector2.Y * 10, 10, 10);
-            //        //}
-            //        foreach (var vector2 in list)
-            //        {
-            //            g.DrawPolygon(new Pen(System.Drawing.Color.Red), arr);
-            //        }
-            //    }
-            //    bmp.Save("Temp.png", System.Drawing.Imaging.ImageFormat.Png);
-            //}
-
-
+            if (list.Count == 4)
+            {
+                var width = (int) (list[3].X - list[0].X);
+                var height = (int) (list[1].Y - list[0].Y);
+                obstacle = new RectangleObstacle(list[0], z, width, height);
+            }
+            else
+            {
+                obstacle = new PolygonObstacle(z);
+                var polygon = (PolygonObstacle) obstacle;
+                foreach (var vector2 in list)
+                    polygon.Vertices.Add(vector2);
+            }
 
             //Mark all blocks of this polygon as marked
             var stack = new Stack<Vector2>();
@@ -114,40 +101,37 @@ namespace Hiale.GTA2NET.Core.Collision
                 var currentPos = stack.Pop();
                 var currentBlock = _map.CityBlocks[(int)currentPos.X, (int)currentPos.Y, z];
                 if (CheckBlockBounds(currentPos))
-                {
                     blocks[(int)currentPos.X, (int)currentPos.Y, z] = CollisionMapType.None;
-                    //if (!blockList.Contains(currentPos))
-                    //    blockList.Add(currentPos);
-                }
 
-                if (currentBlock.SlopeType == SlopeType.None || currentBlock.SlopeType == SlopeType.SlopeAbove)
+                if (currentBlock.SlopeType != SlopeType.None && currentBlock.SlopeType != SlopeType.SlopeAbove)
+                    continue;
+                var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
+                if (CheckBlockBounds(newPos))
                 {
-                    var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
-                    if (CheckBlockBounds(newPos))
-                    {
-                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
-                            stack.Push(newPos);
-                    }
-                    newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
-                    if (CheckBlockBounds(newPos))
-                    {
-                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
-                            stack.Push(newPos);
-                    }
-                    newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
-                    if (CheckBlockBounds(newPos))
-                    {
-                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
-                            stack.Push(newPos);
-                    }
-                    newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
-                    if (CheckBlockBounds(newPos))
-                    {
-                        if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
-                            stack.Push(newPos);
-                    }
+                    if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                        stack.Push(newPos);
+                }
+                newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
+                if (CheckBlockBounds(newPos))
+                {
+                    if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                        stack.Push(newPos);
+                }
+                newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
+                if (CheckBlockBounds(newPos))
+                {
+                    if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                        stack.Push(newPos);
+                }
+                newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
+                if (CheckBlockBounds(newPos))
+                {
+                    if (CheckNeighborBlock((int)newPos.X, (int)newPos.Y, z, blocks))
+                        stack.Push(newPos);
                 }
             } while (stack.Count > 0);
+
+            return obstacle;
         }
 
         private bool CheckNeighborBlock(int x, int y, int z, CollisionMapType[, ,] blocks)
