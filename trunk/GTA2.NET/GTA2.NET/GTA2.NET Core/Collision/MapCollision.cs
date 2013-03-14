@@ -1,6 +1,28 @@
-﻿//Created 18.09.2010
-//23.02.2013 - Old version was crap
-
+﻿// GTA2.NET
+// 
+// File: MapCollision.cs
+// Created: 09.03.2013
+// 
+// 
+// Copyright (C) 2010-2013 Hiale
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+// and associated documentation files (the "Software"), to deal in the Software without restriction,
+// including without limitation the rights to use, copy, modify, merge, publish, distribute,
+// sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+// is furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all copies
+// or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+// WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// 
+// Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
@@ -22,14 +44,21 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public List<IObstacle> CollisionMap(Vector2 start)
         {
-            //Pass 1
+            var obstacles = new List<IObstacle>();
+
+            //Pass 1 - find whixh blocks are free and occupied and create a collision map
             var blocks = FloodFill(start, CollisionMapType.Free);
 
-            //Pass 2
+            //Pass 2 - some blocks could not be allocated, so try it with another approach
             RemoveUnknownBlocks(blocks);
 
-            //Pass 3
-            var obstacles = new List<IObstacle>();
+            //Pass 3 - find where the player can fall, because he moves oven an edge
+            var fallEdges = FindFallEdges(blocks);
+            foreach (var fallEdge in fallEdges) //Temporary solution
+                obstacles.Add(fallEdge);
+
+
+            //Pass 4 - create Obstacle objects out of the collision map
             FindLineObstacles(blocks, obstacles);
 
             for (var z = _map.Height - 1; z >= 0; z--)
@@ -58,17 +87,6 @@ namespace Hiale.GTA2NET.Core.Collision
                             obstacles.Add(FindPolygons(blocks, new Vector2(x, y), z));
                     }
                 }
-
-                //var maxRect = new CollisionMapType[_map.Width, _map.Length];
-                //for (var x = 0; x < _map.Width; x++)
-                //{
-                //    for (var y = 0; y < _map.Length; y++)
-                //    {
-                //        maxRect[y, x] = blocks[x, y, z]; //MaxSubmatrix' Raws/Columns are swapped
-                //    }
-                //}
-                //SubMatrix.FindAllRectangles(blocks, z, obstacles);
-                //var rect = SubMatrix.MaxSubmatrix(blocks, z, CollisionMapType.Block);
             }
             return obstacles;
         }
@@ -77,7 +95,7 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             var list = MarchingSquares.FindPolygonPoints(blocks, _map.CityBlocks, start, z);
 
-            IObstacle obstacle = null;
+            IObstacle obstacle;
 
             if (list.Count == 4)
             {
@@ -251,7 +269,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return false;
         }
 
-        #region ToDo
+        #region ToDo: Add these blocks
             //if (block.Left && block.Left.Wall)
             //{
             //    processedCount++;
@@ -421,6 +439,62 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
+        private IEnumerable<ILineObstacle> FindFallEdges(CollisionMapType[, ,] blocks)
+        {
+            var fallEdges = new List<ILineObstacle>();
+
+            for (var z = 1; z < _map.Height; z++) //start at layer 1, not 0
+            {
+                var rawEdges = new List<ILineObstacle>();
+                for (var x = 0; x < _map.Width; x++)
+                {
+                    for (var y = 0; y < _map.Length; y++)
+                    {
+                        if (blocks[x, y, z] != CollisionMapType.Free)
+                            continue;
+                        if (!_map.CityBlocks[x, y, z -1].Lid)
+                            continue;
+
+                        var newPos = new Vector2(x + 1, y); //right
+                        if (CheckBlockBounds(newPos))
+                        {
+                            if (CheckNeighborFall((int) newPos.X, (int) newPos.Y, z, blocks))
+                                rawEdges.Add(new FallEdge(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z, LineObstacleType.Vertical));
+                        }
+                        newPos = new Vector2(x, y + 1); //bottom
+                        if (CheckBlockBounds(newPos))
+                        {
+                            if (CheckNeighborFall((int)newPos.X, (int)newPos.Y, z, blocks))
+                                rawEdges.Add(new FallEdge(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), z, LineObstacleType.Horizontal));
+                        }
+                        newPos = new Vector2(x - 1, y); //left
+                        if (CheckBlockBounds(newPos))
+                        {
+                            if (CheckNeighborFall((int)newPos.X, (int)newPos.Y, z, blocks))
+                                rawEdges.Add(new FallEdge(new Vector2(x, y), new Vector2(x, y + 1), z, LineObstacleType.Vertical));
+                        }
+                        newPos = new Vector2(x, y - 1); //top
+                        if (CheckBlockBounds(newPos))
+                        {
+                            if (CheckNeighborFall((int)newPos.X, (int)newPos.Y, z, blocks))
+                                rawEdges.Add(new FallEdge(new Vector2(x, y), new Vector2(x + 1, y), z, LineObstacleType.Horizontal));
+                        }
+                    }
+                }
+                var optimizedLines = OptimizeStraightVertices<FallEdge>(rawEdges, z);
+                fallEdges.AddRange(optimizedLines);
+
+            }
+            return fallEdges;
+        }
+
+        private bool CheckNeighborFall(int x, int y, int z, CollisionMapType[,,] blocks)
+        {
+            if (_map.CityBlocks[x, y, z - 1].IsEmpty && blocks[x, y, z] == CollisionMapType.Free)
+                return true;
+            return false;
+        }
+
         #region Flood Fill (--> Free)
 
         public CollisionMapType[,,] FloodFill(Vector2 start)
@@ -450,26 +524,26 @@ namespace Hiale.GTA2NET.Core.Collision
                     var newPos = new Vector2(currentPos.X + 1, currentPos.Y); //right
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Left, typeToFill))
+                        if (CheckNeighborWalls((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Left, typeToFill))
                             stack.Push(newPos);
                     }
                     newPos = new Vector2(currentPos.X, currentPos.Y + 1); //bottom
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Top, typeToFill))
+                        if (CheckNeighborWalls((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Top, typeToFill))
                             stack.Push(newPos);
                     }
                     newPos = new Vector2(currentPos.X - 1, currentPos.Y); //left
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Right,
+                        if (CheckNeighborWalls((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Right,
                                           typeToFill))
                             stack.Push(newPos);
                     }
                     newPos = new Vector2(currentPos.X, currentPos.Y - 1); //top
                     if (CheckBlockBounds(newPos))
                     {
-                        if (CheckNeighbor((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Bottom,
+                        if (CheckNeighborWalls((int) newPos.X, (int) newPos.Y, z, blocks, BlockFaceDirection.Bottom,
                                           typeToFill))
                             stack.Push(newPos);
                     }
@@ -478,7 +552,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return blocks;
         }
 
-        private bool CheckNeighbor(int x, int y, int z, CollisionMapType[,,] blocks, BlockFaceDirection direction, CollisionMapType typeToFill)
+        private bool CheckNeighborWalls(int x, int y, int z, CollisionMapType[,,] blocks, BlockFaceDirection direction, CollisionMapType typeToFill)
         {
             if (blocks[x, y,z] == CollisionMapType.None)
             {
@@ -566,7 +640,7 @@ namespace Hiale.GTA2NET.Core.Collision
             //we check all 'Blocked blocks' which are 1 block wide, maybe they are not all blocked, but only a line is blocked for example a fence.
             for (var z = _map.Height - 1; z >= 0; z--)
             {
-                var rawLineObstacles = new List<LineObstacle>();
+                var rawLineObstacles = new List<ILineObstacle>();
                 for (var x = 0; x < _map.Width; x++)
                 {
                     for (var y = 0; y < _map.Length; y++)
@@ -652,7 +726,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         }
                     }
                 }
-                var lineObstacles = OptimizeStraightVertices(rawLineObstacles, z);
+                var lineObstacles = OptimizeStraightVertices<LineObstacle>(rawLineObstacles, z);
                 obstacles.AddRange(lineObstacles);
             }
         }
@@ -660,9 +734,9 @@ namespace Hiale.GTA2NET.Core.Collision
         /// <summary> 
         /// Combines straight obstacles to optimize collision detection.
         /// </summary>
-        private IEnumerable<IObstacle> OptimizeStraightVertices(IEnumerable<LineObstacle> straightObstacles, int z)
+        private static IEnumerable<ILineObstacle> OptimizeStraightVertices<T>(IEnumerable<ILineObstacle> straightObstacles, int z) where T : ILineObstacle, new()
         {
-            var lineObstacles = new List<IObstacle>();
+            var lineObstacles = new List<ILineObstacle>();
             var obstaclesHorizontal = new bool[256,256 + 1];
             var obstaclesVertical = new bool[256 + 1,256];
             foreach (var straightObstacle in straightObstacles)
@@ -686,7 +760,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         if (open)
                         {
                             var end = new Vector2(x, y);
-                            lineObstacles.Add(new LineObstacle(start, end, z, LineObstacleType.Horizontal));
+                            lineObstacles.Add(new T {Start = start, End = end, Z = z, Type = LineObstacleType.Horizontal});
                             open = false;
                         }
                         continue;
@@ -709,7 +783,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         if (open)
                         {
                             var end = new Vector2(x, y);
-                            lineObstacles.Add(new LineObstacle(start, end, z, LineObstacleType.Vertical));
+                            lineObstacles.Add(new T { Start = start, End = end, Z = z, Type = LineObstacleType.Vertical});
                             open = false;
                         }
                         continue;

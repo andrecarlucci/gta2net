@@ -87,6 +87,11 @@ namespace Hiale.GTA2NET.Test
                          var lineObstacle = (LineObstacle)obstacle;
                          g.DrawLine(new Pen(System.Drawing.Color.Magenta), new System.Drawing.Point((int)lineObstacle.Start.X * 10, (int)lineObstacle.Start.Y * 10), new System.Drawing.Point((int)lineObstacle.End.X * 10, (int)lineObstacle.End.Y * 10));
                      }
+                     else if (obstacle is FallEdge)
+                     {
+                         var fallEdge = (FallEdge)obstacle;
+                         g.DrawLine(new Pen(System.Drawing.Color.Turquoise), new System.Drawing.Point((int)fallEdge.Start.X * 10, (int)fallEdge.Start.Y * 10), new System.Drawing.Point((int)fallEdge.End.X * 10, (int)fallEdge.End.Y * 10));
+                     }
                      else if (obstacle is SlopeObstacle)
                      {
                          var slopeObstacle = (SlopeObstacle)obstacle;
