@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Delta.cs
-// Created: 21.02.2013
+// File: FallEdge.cs
+// Created: 13.03.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,43 +23,49 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Microsoft.Xna.Framework;
 
-namespace Hiale.GTA2NET.Core.Style
+namespace Hiale.GTA2NET.Core.Collision
 {
-    public class Delta
+    public struct FallEdge : ILineObstacle
     {
-        private int _sprite;
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Sprite
+        public int Z { get; set; }
+
+        public Vector2 Start { get; set; }
+        public Vector2 End { get; set; }
+        public LineObstacleType Type { get; set; }
+
+        public FallEdge(Vector2 start, Vector2 end, int z, LineObstacleType type) : this()
         {
-            get { return _sprite; }
-            set { _sprite = value; }
+            Z = z;
+            Start = start;
+            End = end;
+            Type = type;
         }
 
-        List<int> _deltaSize;
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<int> DeltaSize
+        public static FallEdge DefaultLeft(int x, int y, int z)
         {
-            get { return _deltaSize; }
-            set { _deltaSize = value; }
+            return new FallEdge(new Vector2(x, y), new Vector2(x, y + 1), z, LineObstacleType.Vertical);
         }
 
-        public Delta()
+        public static FallEdge DefaultTop(int x, int y, int z)
         {
-            _deltaSize = new List<int>();
+            return new FallEdge(new Vector2(x, y), new Vector2(x + 1, y), z, LineObstacleType.Horizontal);
+        }
+
+        public static FallEdge DefaultRight(int x, int y, int z)
+        {
+            return new FallEdge(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z, LineObstacleType.Vertical);
+        }
+
+        public static FallEdge DefaultBottom(int x, int y, int z)
+        {
+            return new FallEdge(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), z, LineObstacleType.Horizontal);
         }
 
         public override string ToString()
         {
-            return "Sprite: " + _sprite + " (" + _deltaSize.Count + ")";
+            return Start + " - " + End;
         }
 
     }

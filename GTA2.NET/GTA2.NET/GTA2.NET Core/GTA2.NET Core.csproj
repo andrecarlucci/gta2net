@@ -49,6 +49,7 @@
     <Compile Include="CarInfo.cs" />
     <Compile Include="CarPhysicReader.cs" />
     <Compile Include="CarPhysics.cs" />
+    <Compile Include="Collision\FallEdge.cs" />
     <Compile Include="Collision\Submatrix.cs" />
     <Compile Include="Collision\ObstacleType.cs" />
     <Compile Include="Direction.cs" />
