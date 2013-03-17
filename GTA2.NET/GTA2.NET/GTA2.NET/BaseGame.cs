@@ -24,6 +24,7 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
+using Hiale.GTA2NET.Helper;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
@@ -656,7 +657,7 @@ namespace Hiale.GTA2NET
             // Update width and height
             width = Device.Viewport.Width;
             height = Device.Viewport.Height;
-            aspectRatio = (float)width / (float)height;
+            aspectRatio = width / (float)height;
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(FieldOfView, aspectRatio, NearPlane, FarPlane);
 
             // Re-Set device
@@ -687,8 +688,8 @@ namespace Hiale.GTA2NET
         internal static void ApplyResolutionChange()
         {
             //Disabled by Hiale, use fixed for now
-            int resolutionWidth = 1000;
-            int resolutionHeight = 800;
+            int resolutionWidth = 1600;
+            int resolutionHeight = 900;
             //int resolutionWidth = GameSettings.Default == null ? 0 :
             //    GameSettings.Default.ResolutionWidth;
             //int resolutionHeight = GameSettings.Default == null ? 0 :

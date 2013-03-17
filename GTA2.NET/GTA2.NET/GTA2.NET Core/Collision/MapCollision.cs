@@ -84,7 +84,11 @@ namespace Hiale.GTA2NET.Core.Collision
                     for (var y = 0; y < _map.Length; y++)
                     {
                         if (blocks[x, y, z] == CollisionMapType.Block)
-                            obstacles.Add(FindPolygons(blocks, new Vector2(x, y), z));
+                        {
+                            var obstacle = FindPolygons(blocks, new Vector2(x, y), z);
+                            if (obstacle != null)
+                                obstacles.Add(obstacle);
+                        }
                     }
                 }
             }
@@ -102,6 +106,11 @@ namespace Hiale.GTA2NET.Core.Collision
                 var width = (int) (list[3].X - list[0].X);
                 var height = (int) (list[1].Y - list[0].Y);
                 obstacle = new RectangleObstacle(list[0], z, width, height);
+            }
+            else if (list.Count <= 2)
+            {
+                //ToDo: fix this!
+                obstacle = null;
             }
             else
             {
@@ -174,16 +183,18 @@ namespace Hiale.GTA2NET.Core.Collision
             switch (block.SlopeType)
             {
                 case SlopeType.DiagonalFacingUpLeft: //45
-                    if ((blockBottom == CollisionMapType.Block && blockRight == CollisionMapType.Block) ||
-                        (block.Right && block.Bottom))
-                    {
-                        var obstacle = new PolygonObstacle(z);
-                        obstacle.Vertices.Add(new Vector2(x, y + 1));
-                        obstacle.Vertices.Add(new Vector2(x + 1, y));
-                        obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
-                        obstacles.Add(obstacle);
-                    }
-                    else
+                    //if ((blockBottom == CollisionMapType.Block && blockRight == CollisionMapType.Block) ||
+                    //    (block.Right && block.Bottom))
+                    //{
+                    //    var obstacle = new PolygonObstacle(z);
+                    //    obstacle.Vertices.Add(new Vector2(x, y + 1));
+                    //    obstacle.Vertices.Add(new Vector2(x + 1, y));
+                    //    obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
+                    //    obstacles.Add(obstacle);
+                    //}
+                    //else
+                    //{
+                    if (blockLeft != CollisionMapType.Block && blockTop != CollisionMapType.Block && blockRight != CollisionMapType.Block && blockBottom != CollisionMapType.Block)
                     {
                         if (block.Left && block.Left.Wall)
                             obstacles.Add(new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y),
@@ -197,16 +208,18 @@ namespace Hiale.GTA2NET.Core.Collision
                     }
                     return true;
                 case SlopeType.DiagonalFacingUpRight: //46
-                    if ((blockBottom == CollisionMapType.Block && blockLeft == CollisionMapType.Block) ||
-                        (block.Left && block.Bottom))
-                    {
-                        var obstacle = new PolygonObstacle(z);
-                        obstacle.Vertices.Add(new Vector2(x, y));
-                        obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
-                        obstacle.Vertices.Add(new Vector2(x, y + 1));
-                        obstacles.Add(obstacle);
-                    }
-                    else
+                    //if ((blockBottom == CollisionMapType.Block && blockLeft == CollisionMapType.Block) ||
+                    //    (block.Left && block.Bottom))
+                    //{
+                    //    var obstacle = new PolygonObstacle(z);
+                    //    obstacle.Vertices.Add(new Vector2(x, y));
+                    //    obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
+                    //    obstacle.Vertices.Add(new Vector2(x, y + 1));
+                    //    obstacles.Add(obstacle);
+                    //}
+                    //else
+                    //{
+                    if (blockLeft != CollisionMapType.Block && blockTop != CollisionMapType.Block && blockRight != CollisionMapType.Block && blockBottom != CollisionMapType.Block)
                     {
                         if (block.Left && block.Left.Wall)
                             obstacles.Add(LineObstacle.DefaultLeft(x, y, z));
@@ -220,16 +233,18 @@ namespace Hiale.GTA2NET.Core.Collision
                     }
                     return true;
                 case SlopeType.DiagonalFacingDownLeft: //47
-                    if ((blockTop == CollisionMapType.Block && blockRight == CollisionMapType.Block) ||
-                        (block.Top && block.Right))
-                    {
-                        var obstacle = new PolygonObstacle(z);
-                        obstacle.Vertices.Add(new Vector2(x, y));
-                        obstacle.Vertices.Add(new Vector2(x + 1, y));
-                        obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
-                        obstacles.Add(obstacle);
-                    }
-                    else
+                    //if ((blockTop == CollisionMapType.Block && blockRight == CollisionMapType.Block) ||
+                    //    (block.Top && block.Right))
+                    //{
+                    //    var obstacle = new PolygonObstacle(z);
+                    //    obstacle.Vertices.Add(new Vector2(x, y));
+                    //    obstacle.Vertices.Add(new Vector2(x + 1, y));
+                    //    obstacle.Vertices.Add(new Vector2(x + 1, y + 1));
+                    //    obstacles.Add(obstacle);
+                    //}
+                    //else
+                    //{
+                    if (blockLeft != CollisionMapType.Block && blockTop != CollisionMapType.Block && blockRight != CollisionMapType.Block && blockBottom != CollisionMapType.Block)
                     {
                         if (block.Left && block.Left.Wall)
                             obstacles.Add(new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y + 1),
@@ -243,16 +258,18 @@ namespace Hiale.GTA2NET.Core.Collision
                     }
                     return true;
                 case SlopeType.DiagonalFacingDownRight: //48
-                    if ((blockTop == CollisionMapType.Block && blockLeft == CollisionMapType.Block) ||
-                        (block.Left && block.Top))
-                    {
-                        var obstacle = new PolygonObstacle(z);
-                        obstacle.Vertices.Add(new Vector2(x, y));
-                        obstacle.Vertices.Add(new Vector2(x + 1, y));
-                        obstacle.Vertices.Add(new Vector2(x, y + 1));
-                        obstacles.Add(obstacle);
-                    }
-                    else
+                    //if ((blockTop == CollisionMapType.Block && blockLeft == CollisionMapType.Block) ||
+                    //    (block.Left && block.Top))
+                    //{
+                    //    var obstacle = new PolygonObstacle(z);
+                    //    obstacle.Vertices.Add(new Vector2(x, y));
+                    //    obstacle.Vertices.Add(new Vector2(x + 1, y));
+                    //    obstacle.Vertices.Add(new Vector2(x, y + 1));
+                    //    obstacles.Add(obstacle);
+                    //}
+                    //else
+                    //{
+                    if (blockLeft != CollisionMapType.Block && blockTop != CollisionMapType.Block && blockRight != CollisionMapType.Block && blockBottom != CollisionMapType.Block)
                     {
                         if (block.Left && block.Left.Wall)
                             obstacles.Add(LineObstacle.DefaultLeft(x, y, z));
