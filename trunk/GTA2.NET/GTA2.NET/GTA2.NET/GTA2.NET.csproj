@@ -48,10 +48,9 @@
     <Compile Include="GameScreens\IGameScreen.cs" />
     <Compile Include="GameScreens\InGameScreen.cs" />
     <Compile Include="Helper\FaceCoordinates.cs" />
+    <Compile Include="Helper\NativeWin32.cs" />
     <Compile Include="Helper\PlayerInput.cs" />
-    <Compile Include="Helper\Polygon.cs" />
     <Compile Include="Helper\RandomHelper.cs" />
-    <Compile Include="Helper\SeparatingAxisTheorem.cs" />
     <Compile Include="Helper\SerializableDictionary.cs" />
     <Compile Include="Helper\SpriteItem.cs" />
     <Compile Include="Helper\TextureAtlas.cs" />

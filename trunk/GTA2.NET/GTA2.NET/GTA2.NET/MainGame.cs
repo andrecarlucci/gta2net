@@ -26,8 +26,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common;
+using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Factories;
 using Hiale.GTA2NET.Core.Collision;
@@ -187,27 +189,22 @@ namespace Hiale.GTA2NET
             //GameScreens.Push(new InGameScreen());
 
             uiRenderer = new Renderer.UiRenderer();
-            IsFixedTimeStep = false;
+            //IsFixedTimeStep = false;
 
             LoadMap();
         }
 
         private void LoadMap()
         {
-            if (_world == null)
-                _world = new World(new Vector2(0, 10f));
-            else
-                _world.Clear();
-
             Map = new Map("data\\MP1-comp.gmp");
             //Map = new Map("data\\bil.gmp");
 
             Style = new Style();
             Style.ReadFromFile("data\\bil.sty");
 
-            var collision = new MapCollision(Map);
-
-            collision.CollisionMap(new Vector2(73,192));
+            //var collision = new MapCollision(Map);
+            //collision.CollisionMap(new Vector2(73,192));
+            SetupPhysics();
 
             var carPhysics = CarPhysicReader.ReadFromFile();
             CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
@@ -223,6 +220,51 @@ namespace Hiale.GTA2NET
             GameScreens.Push(new InGameScreen());
         }
 
+        private void SetupPhysics()
+        {
+            if (_world == null)
+                _world = new World(new Vector2(0, 10f));
+            else
+                _world.Clear();
+            
+            var collision = new MapCollision(Map);
+            var obstacles = collision.CollisionMap(new Vector2(73, 192));
+            foreach (var obstacle in obstacles)
+            {
+                Body body = null;
+                if (obstacle is RectangleObstacle)
+                {
+                    var rectObstacle = (RectangleObstacle)obstacle;
+                    body = BodyFactory.CreateRectangle(_world, rectObstacle.Width, rectObstacle.Length, 1,
+                                                       new Vector2(
+                                                           rectObstacle.Position.X + ((float) rectObstacle.Width/2),
+                                                           rectObstacle.Position.Y + (float) rectObstacle.Length/2));
+
+                }
+                else if (obstacle is PolygonObstacle)
+                {
+                    var polygonObstacle = (PolygonObstacle) obstacle;
+                    try
+                    {
+                        var verticesList = BayazitDecomposer.ConvexPartition(new Vertices(polygonObstacle.Vertices));
+                        body = BodyFactory.CreateCompoundPolygon(_world, verticesList, 1f);
+                    }
+                    catch (Exception e)
+                    {
+                        System.Diagnostics.Debug.WriteLine(e.StackTrace);
+                    }
+                }
+                else if (obstacle is LineObstacle)
+                {
+                    var lineObstacle = (LineObstacle) obstacle;
+                    body = BodyFactory.CreateEdge(_world, lineObstacle.Start, lineObstacle.End);
+
+                }
+                if (body != null)
+                    body.BodyType = BodyType.Static;
+            }
+        }
+
 
         private bool leftClicked;
 
@@ -234,13 +276,13 @@ namespace Hiale.GTA2NET
             // Update game engine
             base.Update(gameTime);
 
-            _world.Step(Math.Min((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f, (1f / 30f)));
+            _world.Step((float)(gameTime.ElapsedGameTime.TotalMilliseconds * 0.001));
 
             var mouseState = Mouse.GetState();
 
             float elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            PlayerInput input = new PlayerInput();
+            var input = new PlayerInput();
             HandleInput(ref input);
             ChasingObject.SetPlayerInput(input, elapsedGameTime);
             
@@ -266,7 +308,7 @@ namespace Hiale.GTA2NET
                 leftClicked = false;
 
 
-            Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString() + " fps";
+            Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString(CultureInfo.InvariantCulture) + " fps";
             //System.Threading.Thread.Sleep(50);
         }
 
