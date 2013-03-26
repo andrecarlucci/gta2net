@@ -105,7 +105,6 @@ namespace Hiale.GTA2NET.Core.Helper
             {
                 var x = (int) specialSlope.X;
                 var y = (int) specialSlope.Y;
-                int index;
                 switch (blocks[x, y, z].SlopeType)
                 {
                     case SlopeType.DiagonalFacingUpLeft:
@@ -168,7 +167,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 Step(x, y, z, blockCollisions, blocks, ref nextStep, specialSlopes);
 
                 // If our current point is within our array bounds, add it to the list of points
-                if (x >= 0 && x < blockCollisions.GetLength(0) && y >= 0 && y < blockCollisions.GetLength(1))
+                if (x >= 0 && x < blockCollisions.GetLength(0) + 1 && y >= 0 && y < blockCollisions.GetLength(1) + 1)
                     pointList.Add(new Vector2(x, y));
 
                 switch (nextStep)

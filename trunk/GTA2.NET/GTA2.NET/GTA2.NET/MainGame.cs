@@ -239,7 +239,6 @@ namespace Hiale.GTA2NET
                                                        new Vector2(
                                                            rectObstacle.Position.X + ((float) rectObstacle.Width/2),
                                                            rectObstacle.Position.Y + (float) rectObstacle.Length/2));
-
                 }
                 else if (obstacle is PolygonObstacle)
                 {
