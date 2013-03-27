@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.IO.Pipes;
+using FarseerPhysics.Common;
+using FarseerPhysics.Dynamics;
 using Hiale.GTA2NET.Core.Collision;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
@@ -38,17 +40,10 @@ namespace Hiale.GTA2NET.Test
         }
 
         [TestMethod]
-        public void TestSubMatrix()
+        public void TestFarseerJson()
         {
-            //int[,] one =
-            //        {
-            //            {0, 1, 1, 1, 0},
-            //            {0, 1, 1, 1, 0},
-            //            {0, 1, 0, 0, 0},
-            //            {0, 0, 0, 0, -1},
-            //            {0, 0, 0, 1, 0}
-            //        };
-            //SubMatrix.MaxSubmatrix(one, 0);
+            World world = JsonWorldSerialization.Deserialize("racetrack.json");
+
         }
 
     }
