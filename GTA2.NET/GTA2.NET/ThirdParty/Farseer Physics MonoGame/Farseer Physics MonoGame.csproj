@@ -35,9 +35,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\MonoGame\v3.0\Assemblies\WindowsGL\MonoGame.Framework.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\..\Dependencies\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -94,7 +91,6 @@
     <Compile Include="Common\Decomposition\SeidelDecomposer.cs" />
     <Compile Include="Common\FixedArray.cs" />
     <Compile Include="Common\HashSet.cs" />
-    <Compile Include="Common\JsonSerialization.cs" />
     <Compile Include="Common\LineTools.cs" />
     <Compile Include="Common\Math.cs" />
     <Compile Include="Common\Path.cs" />
