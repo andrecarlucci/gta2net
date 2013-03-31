@@ -42,7 +42,7 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void TestFarseerJson()
         {
-            World world = JsonWorldSerialization.Deserialize("racetrack.json");
+            //World world = JsonWorldSerialization.Deserialize("racetrack.json");
 
         }
 
