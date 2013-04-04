@@ -25,12 +25,15 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Drawing;
+using System.Runtime.Remoting.Messaging;
 using Hiale.GTA2NET.Core.Helper;
+using Hiale.GTA2NET.Core.Helper.Threading;
 
 namespace Hiale.GTA2NET.Core.Style
 {
@@ -58,7 +61,15 @@ namespace Hiale.GTA2NET.Core.Style
 
         public Dictionary<int, CarInfo> CarInfos { get; private set; }
 
-        private Dictionary<int, List<int>> _carSprites; //Helper variable to see which sprites are used by more than one model.
+        private readonly Dictionary<int, List<int>> _carSprites; //Helper variable to see which sprites are used by more than one model.
+
+        public event EventHandler<ProgressMessageChangedEventArgs> ConvertStyleFileProgressChanged;
+        public event AsyncCompletedEventHandler ConvertStyleFileCompleted;
+
+        private delegate void ConvertStyleFileDelegate(string styleFile, bool extractGraphics, CancellableContext context, out bool cancelled);
+        private readonly object _sync = new object();
+        public bool IsBusy { get; private set; }
+        private CancellableContext _convertStyleFileContext;
 
         public Style()
         {
@@ -68,14 +79,38 @@ namespace Hiale.GTA2NET.Core.Style
             _carSprites = new Dictionary<int, List<int>>();
         }
 
-        public void ReadFromFile(string styleFile)
+        public void ReadFromFileAsync(string stylePath)
         {
-            ReadFromFile(styleFile, false);
+            var worker = new ConvertStyleFileDelegate(ReadFromFile);
+            var completedCallback = new AsyncCallback(ConversionCompletedCallback);
+
+            lock (_sync)
+            {
+                if (IsBusy)
+                    throw new InvalidOperationException("The control is currently busy.");
+
+                var async = AsyncOperationManager.CreateOperation(null);
+                var context = new CancellableContext(async);
+                bool cancelled;
+
+                worker.BeginInvoke(stylePath, true, context, out cancelled, completedCallback, async);
+
+                IsBusy = true;
+                _convertStyleFileContext = context;
+            }
         }
 
-        public void ReadFromFile(string stylePath, bool extractGraphics)
+        public void ReadFromFile(string stylePath)
         {
-            //extractGraphics = true;
+            bool cancelled;
+            ReadFromFile(stylePath, false, null, out cancelled);
+        }
+
+        private void ReadFromFile(string stylePath, bool extractGraphics, CancellableContext asyncContext,
+                                  out bool cancelled)
+        {
+            cancelled = false;
+
             BinaryReader reader = null;
             try
             {
@@ -91,9 +126,19 @@ namespace Hiale.GTA2NET.Core.Style
                 System.Diagnostics.Debug.WriteLine("Style version: " + version);
                 while (stream.Position < stream.Length)
                 {
-                    string chunkType = encoder.GetString(reader.ReadBytes(4));
-                    int chunkSize = (int)reader.ReadUInt32();
-                    System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " + chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
+                    var chunkType = encoder.GetString(reader.ReadBytes(4));
+                    var chunkSize = (int) reader.ReadUInt32();
+                    System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " +
+                                                       chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
+
+                    if (asyncContext.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                    //var eArgs = new ProgressMessageChangedEventArgs(0, chunkType, null);
+                    //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs) e), eArgs);
+
                     switch (chunkType)
                     {
                         case "TILE": //Tiles
@@ -135,9 +180,9 @@ namespace Hiale.GTA2NET.Core.Style
                             else
                                 reader.ReadBytes(chunkSize);
                             break;
-                        //case "DELS": //Delta Store
-                        //    ReadDeltaStore(reader, chunkSize);
-                        //    break; 
+                            //case "DELS": //Delta Store
+                            //    ReadDeltaStore(reader, chunkSize);
+                            //    break; 
                         case "CARI": //Car Info
                             ReadCars(reader, chunkSize);
                             break;
@@ -175,18 +220,50 @@ namespace Hiale.GTA2NET.Core.Style
             }
             finally
             {
-                if (reader != null) reader.Close();
+                if (reader != null)
+                    reader.Close();
             }
-            if (extractGraphics)
-            {
-                string styleFile = Path.GetFileNameWithoutExtension(StylePath);
-                //MemoryStream memoryStream = new MemoryStream();
-                //ZipStorer zip = ZipStorer.Create(memoryStream, string.Empty);
-                var zip = ZipStorer.Create("Textures\\" + styleFile + ".zip", string.Empty);
-                SaveTiles(zip);
-                SaveSprites(zip);
-                zip.Close();
+            if (!extractGraphics)
+                return;
 
+            var styleFile = Path.GetFileNameWithoutExtension(StylePath);
+            MemoryStream memoryStream = null;
+            try
+            {
+                memoryStream = new MemoryStream();
+                using (var zip = ZipStorer.Create(memoryStream, string.Empty))
+                {
+                    if (asyncContext.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                    SaveTiles(zip, asyncContext);
+                    if (asyncContext.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+
+                    }
+                    SaveSprites(zip, asyncContext);
+                    if (asyncContext.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                }
+                memoryStream.Position = 0;
+                using (var stream = new FileStream(Globals.GraphicsSubDir + "\\" + styleFile + ".zip", FileMode.Create, FileAccess.Write))
+                {
+                    var bytes = new byte[memoryStream.Length];
+                    memoryStream.Read(bytes, 0, (int) memoryStream.Length);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
+            }
+            finally
+            {
+                if (memoryStream != null)
+                    memoryStream.Dispose();
 
                 //Clean-up
                 Array.Clear(PaletteIndexes, 0, PaletteIndexes.Length);
@@ -198,7 +275,39 @@ namespace Hiale.GTA2NET.Core.Style
                 _carSprites.Clear();
                 deltas.Clear();
                 Surfaces.Clear();
+
                 GC.Collect();
+            }
+        }
+
+        private void ConversionCompletedCallback(IAsyncResult ar)
+        {
+            // get the original worker delegate and the AsyncOperation instance
+            var worker = (ConvertStyleFileDelegate)((AsyncResult)ar).AsyncDelegate;
+            var async = (AsyncOperation)ar.AsyncState;
+            bool cancelled;
+
+            // finish the asynchronous operation
+            worker.EndInvoke(out cancelled, ar);
+
+            // clear the running task flag
+            lock (_sync)
+            {
+                IsBusy = false;
+                _convertStyleFileContext = null;
+            }
+
+            // raise the completed event
+            var completedArgs = new AsyncCompletedEventArgs(null, cancelled, null);
+            async.PostOperationCompleted(e => OnConvertStyleFileCompleted((AsyncCompletedEventArgs)e), completedArgs);
+        }
+
+        public void CancelConvertStyle()
+        {
+            lock (_sync)
+            {
+                if (_convertStyleFileContext != null)
+                    _convertStyleFileContext.Cancel();
             }
         }
 
@@ -272,7 +381,7 @@ namespace Hiale.GTA2NET.Core.Style
             var modelList = new List<int>();
             while (position < chunkSize)
             {
-                CarInfo carInfo = new CarInfo();
+                var carInfo = new CarInfo();
                 carInfo.Model = reader.ReadByte();
                 carInfo.Sprite = currentSprite;
                 modelList.Add(carInfo.Model);
@@ -429,12 +538,17 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        private void SaveTiles(ZipStorer zip)
+        private void SaveTiles(ZipStorer zip, CancellableContext asyncContext)
         {
             var tilesCount = tileData.Length / (64 * 64);
+            //var eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
+            //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
             for (var i = 0; i < tilesCount; i++)
             {
-                //SaveTile("textures\\tiles\\" + i + ".png", i);
+                if (asyncContext.IsCancelling)
+                    return;
+                //eArgs = new ProgressMessageChangedEventArgs(i / tilesCount, string.Empty, null);
+                //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
                 SaveTile(zip, ref i);
             }
         }
@@ -474,18 +588,23 @@ namespace Hiale.GTA2NET.Core.Style
             memoryStream.Position = 0;
             zip.AddStream(ZipStorer.Compression.Deflate, TilesZipDir + id + Png, memoryStream, DateTime.Now, string.Empty);
             memoryStream.Close();
-            //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }
 
-        private void SaveSprites(ZipStorer zip)
+        private void SaveSprites(ZipStorer zip, CancellableContext asyncContext)
         {
             //cars
-            foreach (KeyValuePair<int, List<int>> carSpriteItem in _carSprites)
+            //var eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
+            //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
+            foreach (var carSpriteItem in _carSprites)
             {
-                //SaveCarSprite("textures\\sprites\\cars\\", carSpriteItem.Key, carSpriteItem.Value);
+                if (asyncContext.IsCancelling)
+                    return;
                 SaveCarSprite(zip, carSpriteItem.Key, carSpriteItem.Value);
+                //eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
+                //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
             }
             return;
+
             //Peds
             /*             
             Remaps
@@ -535,7 +654,6 @@ namespace Hiale.GTA2NET.Core.Style
             System.Diagnostics.Debug.WriteLine("Done!");
         }
 
-        //private void SaveCarSprite(string path, int spriteID, IList<int> modelList)
         private void SaveCarSprite(ZipStorer zip, int spriteID, IList<int> modelList)
         {
             UInt32 basePalette = PaletteIndexes[paletteBase.Tile + spriteID];
@@ -600,6 +718,18 @@ namespace Hiale.GTA2NET.Core.Style
             zip.AddStream(ZipStorer.Compression.Deflate, SpritesZipDir + fileName + Png, memoryStream, DateTime.Now, string.Empty);
             memoryStream.Close();
             //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        protected virtual void OnConvertStyleFileProgressChanged(ProgressMessageChangedEventArgs e)
+        {
+            if (ConvertStyleFileProgressChanged != null)
+                ConvertStyleFileProgressChanged(this, e);
+        }
+
+        protected virtual void OnConvertStyleFileCompleted(AsyncCompletedEventArgs e)
+        {
+            if (ConvertStyleFileCompleted != null)
+                ConvertStyleFileCompleted(this, e);
         }
     }
 }

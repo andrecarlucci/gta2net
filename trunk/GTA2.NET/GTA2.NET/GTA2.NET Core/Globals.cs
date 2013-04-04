@@ -1,7 +1,7 @@
-// GTA2.NET
+﻿// GTA2.NET
 // 
-// File: Program.cs
-// Created: 21.02.2013
+// File: Globals.cs
+// Created: 04.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -24,38 +24,28 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using System.Windows.Forms;
-using Hiale.GTA2NET.Forms;
-using Hiale.GTA2NET.Helper;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
-namespace Hiale.GTA2NET
+namespace Hiale.GTA2NET.Core
 {
-    static class Program
+    public static class Globals
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
-        {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            var form = new ConvertForm();
-            Application.Run(form);
-            if (form.DialogResult == DialogResult.Cancel)
-                return;
+        public const string GraphicsSubDir = "gfx";
+        public const string MapsSubDir = "maps";
 
-            //string[] files = System.IO.Directory.GetFiles("textures\\tiles");
-           // Hiale.GTA2NET.NET.Helper.ImageCreator.CreateImageDictionary(files, 64, 64);
 
-            //Hiale.GTA2NET.Core.Style.Style style = new Hiale.GTA2NET.Core.Style.Style();
-            //Hiale.GTA2NET.Core.Map.Map map = new Hiale.GTA2NET.Core.Map.Map();
+        public readonly static string[] StyleFiles = { "bil.sty", "ste.sty", "wil.sty" };
 
-            using (var game = new MainGame())
-            {
-                game.Run();
-            }            
-        }
+
+        public const string GTA2DataSubDir = "data\\";
+
+
+        public const string GTA2RegistryKey = "SOFTWARE\\Rockstar Games\\GTA2"; //probably there is a version with DMA Design
+
+        
+
+
     }
 }
-

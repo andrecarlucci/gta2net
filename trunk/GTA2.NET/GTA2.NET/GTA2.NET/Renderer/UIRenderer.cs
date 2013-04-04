@@ -39,18 +39,23 @@ namespace Hiale.GTA2NET.Renderer
 
         public UiRenderer()
         {
+            const string mouseCursor = "textures\\MouseCursor.png";
+            if (!File.Exists(mouseCursor))
+                return;
             spriteBatch = new SpriteBatch(BaseGame.Device);
-            var fs = new FileStream("textures\\MouseCursor.png", FileMode.Open);
+            var fs = new FileStream(mouseCursor, FileMode.Open);
             mousePointerTex = Texture2D.FromStream(BaseGame.Device, fs);
             fs.Close();
             //mousePointerTex = MainGame.Content.Load<Texture2D>("MouseCursor");
             nullTex = new Texture2D(BaseGame.Device, 1, 1);
-            Int32[] pixel = { 0xFF }; // White. 0xFF is Red, 0xFF0000 is Blue
+            Int32[] pixel = {0xFF}; // White. 0xFF is Red, 0xFF0000 is Blue
             nullTex.SetData(pixel);
         }
 
         public void DrawMouseMounter()
         {
+            if (spriteBatch == null)
+                return;
             spriteBatch.Begin();
 
             //Lines

@@ -1,7 +1,7 @@
-// GTA2.NET
+﻿// GTA2.NET
 // 
-// File: Program.cs
-// Created: 21.02.2013
+// File: ProgressForm.cs
+// Created: 03.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -25,37 +25,34 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Windows.Forms;
-using Hiale.GTA2NET.Forms;
-using Hiale.GTA2NET.Helper;
 
-namespace Hiale.GTA2NET
+namespace Hiale.GTA2NET.Forms
 {
-    static class Program
+    public partial class ProgressForm : Form
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
+        public string Message
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            var form = new ConvertForm();
-            Application.Run(form);
-            if (form.DialogResult == DialogResult.Cancel)
-                return;
+            get { return lblMessage.Text; }
+            set { lblMessage.Text = value; }
+        }
 
-            //string[] files = System.IO.Directory.GetFiles("textures\\tiles");
-           // Hiale.GTA2NET.NET.Helper.ImageCreator.CreateImageDictionary(files, 64, 64);
+        public int ProgressValue
+        {
+            get { return progressBar.Value; }
+            set { progressBar.Value = value; }
+        }
 
-            //Hiale.GTA2NET.Core.Style.Style style = new Hiale.GTA2NET.Core.Style.Style();
-            //Hiale.GTA2NET.Core.Map.Map map = new Hiale.GTA2NET.Core.Map.Map();
+        public event EventHandler<EventArgs> Canceled;
 
-            using (var game = new MainGame())
-            {
-                game.Run();
-            }            
+        public ProgressForm()
+        {
+            InitializeComponent();
+        }
+
+        private void BtnCancelClick(object sender, EventArgs e)
+        {
+            if (Canceled != null)
+                Canceled(this, EventArgs.Empty);
         }
     }
 }
-
