@@ -1,7 +1,7 @@
-// GTA2.NET
+﻿// GTA2.NET
 // 
-// File: Program.cs
-// Created: 21.02.2013
+// File: CancellableContext.cs
+// Created: 04.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,39 +23,39 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
-using System.Windows.Forms;
-using Hiale.GTA2NET.Forms;
-using Hiale.GTA2NET.Helper;
 
-namespace Hiale.GTA2NET
+using System.ComponentModel;
+
+namespace Hiale.GTA2NET.Core.Helper.Threading
 {
-    static class Program
+    internal class CancellableContext
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
-        {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            var form = new ConvertForm();
-            Application.Run(form);
-            if (form.DialogResult == DialogResult.Cancel)
-                return;
+        private readonly object _sync = new object();
+            private bool _isCancelling;
+            public AsyncOperation Async { get; private set; }
 
-            //string[] files = System.IO.Directory.GetFiles("textures\\tiles");
-           // Hiale.GTA2NET.NET.Helper.ImageCreator.CreateImageDictionary(files, 64, 64);
-
-            //Hiale.GTA2NET.Core.Style.Style style = new Hiale.GTA2NET.Core.Style.Style();
-            //Hiale.GTA2NET.Core.Map.Map map = new Hiale.GTA2NET.Core.Map.Map();
-
-            using (var game = new MainGame())
+            public bool IsCancelling
             {
-                game.Run();
-            }            
-        }
+                get
+                {
+                    lock (_sync)
+                    {
+                        return _isCancelling;
+                    }
+                }
+            }
+
+            public void Cancel()
+            {
+                lock (_sync)
+                {
+                    _isCancelling = true;
+                }
+            }
+
+            public CancellableContext(AsyncOperation async)
+            {
+                Async = async;
+            }
     }
 }
-

@@ -25,6 +25,8 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -51,5 +53,16 @@ namespace Hiale.GTA2NET.Core.Helper
                 throw new ArgumentNullException("source");
             return list.Contains(source);
         }
+
+        /// <summary>
+        /// Checks whether a path contains a separator "\" at the end. If not, it got added.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string CheckDirectorySeparator(string path)
+        {
+            return !path.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) ? path.Insert(path.Length, Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) : path;
+        }
+
     }
 }

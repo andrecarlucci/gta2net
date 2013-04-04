@@ -53,11 +53,15 @@
     <Compile Include="Collision\Submatrix.cs" />
     <Compile Include="Collision\ObstacleType.cs" />
     <Compile Include="Direction.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="Helper\Threading\AutoResetEventValueExchange.cs" />
+    <Compile Include="Helper\Threading\CancellableContext.cs" />
+    <Compile Include="Helper\FileConverter.cs" />
     <Compile Include="Helper\BitHelper.cs" />
     <Compile Include="Helper\Extensions.cs" />
-    <Compile Include="Helper\IntVector2.cs" />
     <Compile Include="Helper\LoadSave.cs" />
     <Compile Include="Helper\MarchingSquares.cs" />
+    <Compile Include="Helper\Threading\ProgressMessageChangedEventArgs.cs" />
     <Compile Include="Helper\ZipStorer.cs" />
     <Compile Include="Map\BlockFace.cs" />
     <Compile Include="Map\BlockFaceEdge.cs" />

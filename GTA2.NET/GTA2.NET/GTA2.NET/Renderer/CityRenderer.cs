@@ -1013,6 +1013,8 @@ namespace Hiale.GTA2NET.Renderer
 
         private void LoadTexture()
         {
+            ContentManager.LoadTexture("Textures\\tiles.xml");
+
             const string tilesDictPath = "Textures\\tiles.xml";
             TextureAtlasTiles dict;
             if (!File.Exists(tilesDictPath))

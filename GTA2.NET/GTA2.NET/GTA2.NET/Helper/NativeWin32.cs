@@ -30,7 +30,9 @@ namespace Hiale.GTA2NET.Helper
 {
     public class NativeWin32
     {
-        [DllImport("user32.dll")]
+        private const string User32 = "user32.dll";
+
+        [DllImport(User32)]
         public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int y, int cx, int cy, int wFlags);
     }
 }
