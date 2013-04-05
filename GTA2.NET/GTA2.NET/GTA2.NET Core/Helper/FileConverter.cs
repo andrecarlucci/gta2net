@@ -44,8 +44,8 @@ namespace Hiale.GTA2NET.Core.Helper
         private delegate void ConvertFilesDelegate(string sourcePath, string destinationPath, CancellableContext context, out bool cancelled);
         private CancellableContext _convertFilesContext;
         private bool _isBusy;
-        private readonly object _sync = new object();
-        private readonly object _sync2 = new object();
+        private readonly object _syncCancel = new object();
+        private readonly object _syncWaitHandle = new object();
         private readonly List<Style.Style> _runningStyles = new List<Style.Style>();
         private static readonly AutoResetEventValueExchange<bool> WaitHandle = new AutoResetEventValueExchange<bool>(false);
 
@@ -143,10 +143,13 @@ namespace Hiale.GTA2NET.Core.Helper
             }
 
 
-            if (_runningStyles.Count > 0)
+            lock (_syncWaitHandle)
             {
-                WaitHandle.WaitOne();
-                cancelled = WaitHandle.Value;
+                if (_runningStyles.Count > 0)
+                {
+                    WaitHandle.WaitOne();
+                    cancelled = WaitHandle.Value;
+                }
             }
 
             eArgs = new ProgressMessageChangedEventArgs(100, string.Empty, null);
@@ -161,7 +164,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         private void StyleOnConvertStyleFileCompleted(object sender, AsyncCompletedEventArgs asyncCompletedEventArgs)
         {
-            lock (_sync2)
+            lock (_syncWaitHandle)
             {
                 _runningStyles.Remove((Style.Style) sender);
                 if (_runningStyles.Count > 0)
@@ -176,7 +179,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var worker = new ConvertFilesDelegate(ConvertFiles);
             var completedCallback = new AsyncCallback(ConversionCompletedCallback);
 
-            lock (_sync)
+            lock (_syncCancel)
             {
                 if (_isBusy)
                     throw new InvalidOperationException("The control is currently busy.");
@@ -205,7 +208,7 @@ namespace Hiale.GTA2NET.Core.Helper
             worker.EndInvoke(out cancelled, ar);
 
             // clear the running task flag
-            lock (_sync)
+            lock (_syncCancel)
             {
                 _isBusy = false;
                 _convertFilesContext = null;
@@ -231,7 +234,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public void CancelConversion()
         {
-            lock (_sync)
+            lock (_syncCancel)
             {
                 if (_convertFilesContext != null)
                     _convertFilesContext.Cancel();
