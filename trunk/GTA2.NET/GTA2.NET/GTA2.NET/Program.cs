@@ -25,8 +25,7 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Windows.Forms;
-using Hiale.GTA2NET.Forms;
-using Hiale.GTA2NET.Helper;
+using Hiale.GTA2NET.WinUI;
 
 namespace Hiale.GTA2NET
 {

@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: ProgressForm.cs
-// Created: 03.04.2013
+// File: AssemblyInfo.cs
+// Created: 05.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,36 +23,6 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
-using System.Windows.Forms;
+using System.Reflection;
 
-namespace Hiale.GTA2NET.Forms
-{
-    public partial class ProgressForm : Form
-    {
-        public string Message
-        {
-            get { return lblMessage.Text; }
-            set { lblMessage.Text = value; }
-        }
-
-        public int ProgressValue
-        {
-            get { return progressBar.Value; }
-            set { progressBar.Value = value; }
-        }
-
-        public event EventHandler<EventArgs> Canceled;
-
-        public ProgressForm()
-        {
-            InitializeComponent();
-        }
-
-        private void BtnCancelClick(object sender, EventArgs e)
-        {
-            if (Canceled != null)
-                Canceled(this, EventArgs.Empty);
-        }
-    }
-}
+[assembly: AssemblyTitle("GTA2.NET WinUI")]

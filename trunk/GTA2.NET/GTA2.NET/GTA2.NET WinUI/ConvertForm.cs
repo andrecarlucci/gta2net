@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: ConvertForm.cs
-// Created: 03.04.2013
+// Created: 05.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -32,7 +32,7 @@ using System.Windows.Forms;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Helper.Threading;
 
-namespace Hiale.GTA2NET.Forms
+namespace Hiale.GTA2NET.WinUI
 {
     public partial class ConvertForm : Form
     {

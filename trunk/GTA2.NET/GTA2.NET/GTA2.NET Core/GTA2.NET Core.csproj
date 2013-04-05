@@ -78,6 +78,7 @@
     <Compile Include="Map\TileAnimation.cs" />
     <Compile Include="Map\Zone.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Style\CarInfoFlags.cs" />
     <Compile Include="Style\Delta.cs" />
     <Compile Include="Style\DoorInfo.cs" />

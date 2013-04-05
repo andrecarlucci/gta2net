@@ -1,4 +1,4 @@
-﻿namespace Hiale.GTA2NET.Forms
+﻿namespace Hiale.GTA2NET.WinUI
 {
     partial class ConvertForm
     {

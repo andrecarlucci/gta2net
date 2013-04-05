@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Hiale.GTA2NET</RootNamespace>
-    <AssemblyName>Windows Game</AssemblyName>
+    <AssemblyName>GTA2.NET</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -46,20 +46,11 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\GTA2.NET Core\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="BaseGame.cs" />
     <Compile Include="ContentManager.cs" />
-    <Compile Include="Forms\ConvertForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\ConvertForm.Designer.cs">
-      <DependentUpon>ConvertForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\ProgressForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\ProgressForm.Designer.cs">
-      <DependentUpon>ProgressForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="GameScreens\IGameScreen.cs" />
     <Compile Include="GameScreens\InGameScreen.cs" />
     <Compile Include="Helper\FaceCoordinates.cs" />
@@ -93,18 +84,14 @@
       <Project>{52279f3e-ae51-467e-954d-614724cff34d}</Project>
       <Name>GTA2.NET Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\GTA2.NET WinUI\GTA2.NET WinUI.csproj">
+      <Project>{4c44529b-f131-4372-94db-540a6fcbd08d}</Project>
+      <Name>GTA2.NET WinUI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ThirdParty\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
       <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
       <Name>Farseer Physics MonoGame</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Forms\ConvertForm.resx">
-      <DependentUpon>ConvertForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\ProgressForm.resx">
-      <DependentUpon>ProgressForm.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

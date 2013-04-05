@@ -58,6 +58,9 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="..\GTA2.NET Core\Properties\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="MapUnitTests.cs" />
     <Compile Include="MiscUnitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
