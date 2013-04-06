@@ -52,7 +52,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public static string GetGTA2Directory()
         {
-            var registryPath = Globals.GTA2RegistryKey;
+            var registryPath = Globals.RegistryKey;
             if (Environment.Is64BitProcess)
                 registryPath = registryPath.Insert(9, "Wow6432Node\\");
             var registryKey = Registry.LocalMachine.OpenSubKey(registryPath);
@@ -69,20 +69,36 @@ namespace Hiale.GTA2NET.Core.Helper
             }
         }
 
-        public static bool CheckGTA2Directory(string path)
+
+        public static bool CheckOriginalAssets(string path)
         {
             if (!File.Exists(path + "\\gta2.exe"))
                 return false;
 
-            if (Globals.StyleFiles.Any(styleFile => !File.Exists(path + "\\data\\" + styleFile)))
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension)))
                 return false;
-
-            //if (!File.Exists(dir + "\\gta2.exe"))
-            //    return false;
-
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
+                return false;
+            if (Globals.MapFilesMultiplayer.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
+                return false;
+            if (Globals.MiscFiles.Any(miscFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + miscFile)))
+                return false;
+            //check more...
             return true;
         }
 
+        public static bool CheckConvertedAssets(string path)
+        {
+            //if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension)))
+            //    return false;
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
+                return false;
+            if (Globals.MapFilesMultiplayer.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
+                return false;
+            if (Globals.MiscFiles.Any(miscFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + miscFile)))
+                return false;
+            return true;
+        }
 
         private static bool CreateSubDirectories(string path)
         {
@@ -90,6 +106,7 @@ namespace Hiale.GTA2NET.Core.Helper
             {
                 Directory.CreateDirectory(path + Globals.GraphicsSubDir);
                 Directory.CreateDirectory(path + Globals.MapsSubDir);
+                Directory.CreateDirectory(path + Globals.MiscSubDir);
                 return true;
             }
             catch (Exception)
@@ -114,7 +131,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
 
             //conver style files
-            foreach (var styleFile in Globals.StyleFiles)
+            foreach (var styleFile in Globals.StyleMapFiles)
             {
                 if (asyncContext.IsCancelling)
                 {
@@ -124,24 +141,37 @@ namespace Hiale.GTA2NET.Core.Helper
                 var style = new Style.Style();
                 style.ConvertStyleFileProgressChanged += StyleConvertStyleFileProgressChanged;
                 style.ConvertStyleFileCompleted += StyleOnConvertStyleFileCompleted;
-                style.ReadFromFileAsync(sourcePath + Globals.GTA2DataSubDir + styleFile);
+                style.ReadFromFileAsync(sourcePath + Globals.DataSubDir + styleFile);
                 _runningStyles.Add(style);
             }
 
             //copy over maps
-            var mapFiles = Directory.GetFiles(sourcePath + Globals.GTA2DataSubDir, "*.gmp");
-            for (var i = 0; i < mapFiles.Length; i++)
+            //var mapFiles = Directory.GetFiles(sourcePath + Globals.DataSubDir, "*.gmp");
+
+            var mapFiles = Globals.StyleMapFiles.Select(mapFile => sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + mapFile + Globals.MapFileExtension).ToList();
+            mapFiles.AddRange(Globals.MapFilesMultiplayer.Select(multiplayerMapFile => sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + multiplayerMapFile + Globals.MapFileExtension));
+            for (var i = 0; i < mapFiles.Count; i++)
             {
                 if (asyncContext.IsCancelling)
                 {
                     cancelled = true;
                     return;
                 }
-                File.Copy(mapFiles[i], Globals.MapsSubDir + "\\" + Path.GetFileName(mapFiles[i]));
+                File.Copy(mapFiles[i], destinationPath + Globals.MapsSubDir + Path.DirectorySeparatorChar + Path.GetFileName(mapFiles[i]));
                 //eArgs = new ProgressMessageChangedEventArgs((i / mapFiles.Length * 100), "Test ToDo", null);
                 //asyncContext.Async.Post(e => OnConversionProgressChanged((ProgressMessageChangedEventArgs) e), eArgs);
             }
 
+            var miscFiles = Globals.MiscFiles.Select(miscFile => sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + miscFile).ToList();
+            for (var i = 0; i < miscFiles.Count; i++)
+            {
+                if (asyncContext.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+                File.Copy(miscFiles[i], destinationPath + Globals.MiscSubDir + Path.DirectorySeparatorChar + Path.GetFileName(miscFiles[i]));
+            }
 
             lock (_syncWaitHandle)
             {
@@ -176,6 +206,8 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public void ConvertFilesAsync(string sourcePath, string destinationPath)
         {
+            sourcePath = Extensions.CheckDirectorySeparator(sourcePath);
+            destinationPath = Extensions.CheckDirectorySeparator(destinationPath);
             var worker = new ConvertFilesDelegate(ConvertFiles);
             var completedCallback = new AsyncCallback(ConversionCompletedCallback);
 

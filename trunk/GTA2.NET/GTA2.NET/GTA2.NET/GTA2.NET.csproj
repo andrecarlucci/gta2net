@@ -57,9 +57,6 @@
     <Compile Include="Helper\NativeWin32.cs" />
     <Compile Include="Helper\PlayerInput.cs" />
     <Compile Include="Helper\RandomHelper.cs" />
-    <Compile Include="Helper\SerializableDictionary.cs" />
-    <Compile Include="Helper\SpriteItem.cs" />
-    <Compile Include="Helper\TextureAtlas.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="Logic\AI.cs" />
     <Compile Include="Logic\Car.cs" />

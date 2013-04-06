@@ -54,6 +54,9 @@
     <Compile Include="Collision\ObstacleType.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
+    <Compile Include="Helper\SerializableDictionary.cs" />
+    <Compile Include="Helper\SpriteItem.cs" />
+    <Compile Include="Helper\TextureAtlas.cs" />
     <Compile Include="Helper\Threading\AutoResetEventValueExchange.cs" />
     <Compile Include="Helper\Threading\CancellableContext.cs" />
     <Compile Include="Helper\FileConverter.cs" />

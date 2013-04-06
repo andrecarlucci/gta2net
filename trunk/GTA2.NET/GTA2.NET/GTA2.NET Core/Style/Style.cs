@@ -34,6 +34,7 @@ using System.Drawing;
 using System.Runtime.Remoting.Messaging;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Helper.Threading;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Style
 {
@@ -278,6 +279,22 @@ namespace Hiale.GTA2NET.Core.Style
 
                 GC.Collect();
             }
+        }
+
+        private void CreateTextureAtlas(ZipStorer inputZip, string outputFile)
+        {
+            //var zip = ZipStorer.Open("Textures\\bil.zip", FileAccess.Read);
+            dict = new TextureAtlasTiles("Textures\\tiles.png", inputZip);
+            dict.BuildTextureAtlas();
+            dict.Serialize(tilesDictPath);
+            tileAtlas = dict.TileDictionary;
+            var stream = new MemoryStream();
+            dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
+            stream.Position = 0;
+            //cityTexture = Texture2D.FromStream(BaseGame.Device, stream);
+            stream.Close();
+            dict.Dispose();             
+            
         }
 
         private void ConversionCompletedCallback(IAsyncResult ar)

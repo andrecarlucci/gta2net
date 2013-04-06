@@ -34,18 +34,15 @@ namespace Hiale.GTA2NET.Core
     {
         public const string GraphicsSubDir = "gfx";
         public const string MapsSubDir = "maps";
+        public const string MiscSubDir = "misc";
 
-
-        public readonly static string[] StyleFiles = { "bil.sty", "ste.sty", "wil.sty" };
-
-
-        public const string GTA2DataSubDir = "data\\";
-
-
-        public const string GTA2RegistryKey = "SOFTWARE\\Rockstar Games\\GTA2"; //probably there is a version with DMA Design
-
-        
-
-
+        //Original game files
+        public static readonly string[] StyleMapFiles = { "bil", "ste", "wil" };
+        public static readonly string[] MapFilesMultiplayer = { "MP1-comp", "MP2-comp", "MP5-comp", "bil-multi", "wil-multi" };
+        public static readonly string[] MiscFiles = {"nyc.gci"};
+        public const string StyleFileExtension = ".sty";
+        public const string MapFileExtension = ".gmp";
+        public const string DataSubDir = "data";
+        public const string RegistryKey = "SOFTWARE\\Rockstar Games\\GTA2"; //probably there is a version with DMA Design
     }
 }

@@ -23,6 +23,7 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -30,12 +31,9 @@ using System.Drawing.Imaging;
 using System.Linq;
 using System.Xml.Serialization;
 using System.IO;
-using Hiale.GTA2NET.Core.Helper;
-using Hiale.GTA2NET.Core.Style;
-using Rectangle=Microsoft.Xna.Framework.Rectangle;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
-
-namespace Hiale.GTA2NET.Helper
+namespace Hiale.GTA2NET.Core.Helper
 {
     /// <summary>
     /// Holds information where certail tiles or sprites are put on the image.
@@ -262,7 +260,7 @@ namespace Hiale.GTA2NET.Helper
         private static string ParsePath(string path)
         {
             var pos = path.LastIndexOf('/');
-            return path.Substring(pos + 1, path.Length - pos - Style.Png.Length - 1);
+            return path.Substring(pos + 1, path.Length - pos - Style.Style.Png.Length - 1);
         }
 
         public void Serialize(string path)
@@ -310,7 +308,7 @@ namespace Hiale.GTA2NET.Helper
 
         public TextureAtlasTiles(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
         {
-            ImageDirName = Style.TilesZipDir;
+            ImageDirName = Style.Style.TilesZipDir;
         }
 
         public override void BuildTextureAtlas()
@@ -351,7 +349,7 @@ namespace Hiale.GTA2NET.Helper
 
         public TextureAtlasSprites(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
         {
-            ImageDirName = Style.SpritesZipDir;
+            ImageDirName = Style.Style.SpritesZipDir;
             _duplicateDictionary = new Dictionary<int, SpriteItem>();
         }
 
