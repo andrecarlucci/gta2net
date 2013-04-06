@@ -196,11 +196,11 @@ namespace Hiale.GTA2NET
 
         private void LoadMap()
         {
-            Map = new Map("data\\MP1-comp.gmp");
+            Map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
             //Map = new Map("data\\bil.gmp");
 
-            Style = new Style();
-            Style.ReadFromFile("data\\bil.sty");
+            //Style = new Style();
+            //Style.ReadFromFile("data\\bil.sty");
 
             //var collision = new MapCollision(Map);
             //collision.CollisionMap(new Vector2(73,192));

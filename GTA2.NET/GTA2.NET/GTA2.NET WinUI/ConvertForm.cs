@@ -77,7 +77,7 @@ namespace Hiale.GTA2NET.WinUI
             _progressForm.Canceled += ProgressFormCanceled;
 
             var path = FileConverter.GetGTA2Directory();
-            if (FileConverter.CheckGTA2Directory(path))
+            if (FileConverter.CheckOriginalAssets(path))
                 txtPath.Text = path;
         }
 
@@ -129,13 +129,11 @@ namespace Hiale.GTA2NET.WinUI
         private void BtnOKClick(object sender, EventArgs e)
         {
             var sourcePath = txtPath.Text;
-            if (FileConverter.CheckGTA2Directory(sourcePath))
+            if (FileConverter.CheckOriginalAssets(sourcePath))
             {
-                sourcePath = Extensions.CheckDirectorySeparator(sourcePath);
                 var assembly = Assembly.GetExecutingAssembly();
                 var currentDir = Path.GetDirectoryName(assembly.Location);
-                currentDir = Extensions.CheckDirectorySeparator(currentDir);
-
+               
                 _progressForm.ProgressValue = 0;
                 _converter.ConvertFilesAsync(sourcePath, currentDir);
                 _progressForm.ShowDialog();
@@ -206,7 +204,7 @@ namespace Hiale.GTA2NET.WinUI
 
         private void TxtPathTextChanged(object sender, EventArgs e)
         {
-            if (FileConverter.CheckGTA2Directory(txtPath.Text))
+            if (FileConverter.CheckOriginalAssets(txtPath.Text))
                 txtPath.BackColor = Color.LightGreen;
             else
             {
