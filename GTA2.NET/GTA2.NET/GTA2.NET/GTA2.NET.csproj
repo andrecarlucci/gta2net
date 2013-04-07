@@ -50,7 +50,6 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="BaseGame.cs" />
-    <Compile Include="ContentManager.cs" />
     <Compile Include="GameScreens\IGameScreen.cs" />
     <Compile Include="GameScreens\InGameScreen.cs" />
     <Compile Include="Helper\FaceCoordinates.cs" />

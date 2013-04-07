@@ -40,10 +40,6 @@ namespace Hiale.GTA2NET.Core.Style
 {
     public class Style
     {
-        public const string Png = ".png";
-        public const string TilesZipDir = "Tiles/";
-        public const string SpritesZipDir = "Sprites/";
-
         private ushort[] PaletteIndexes;
         private uint[] PhysicalPalettes;
         private PaletteBase paletteBase;
@@ -132,7 +128,7 @@ namespace Hiale.GTA2NET.Core.Style
                     System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " +
                                                        chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
 
-                    if (asyncContext.IsCancelling)
+                    if (asyncContext != null && asyncContext.IsCancelling)
                     {
                         cancelled = true;
                         return;
@@ -234,24 +230,19 @@ namespace Hiale.GTA2NET.Core.Style
                 memoryStream = new MemoryStream();
                 using (var zip = ZipStorer.Create(memoryStream, string.Empty))
                 {
-                    if (asyncContext.IsCancelling)
+                    if (asyncContext != null && asyncContext.IsCancelling)
                     {
                         cancelled = true;
                         return;
                     }
                     SaveTiles(zip, asyncContext);
-                    if (asyncContext.IsCancelling)
+                    if (asyncContext != null && asyncContext.IsCancelling)
                     {
                         cancelled = true;
                         return;
 
                     }
                     SaveSprites(zip, asyncContext);
-                    if (asyncContext.IsCancelling)
-                    {
-                        cancelled = true;
-                        return;
-                    }
                 }
                 memoryStream.Position = 0;
                 using (var stream = new FileStream(Globals.GraphicsSubDir + "\\" + styleFile + ".zip", FileMode.Create, FileAccess.Write))
@@ -260,6 +251,21 @@ namespace Hiale.GTA2NET.Core.Style
                     memoryStream.Read(bytes, 0, (int) memoryStream.Length);
                     stream.Write(bytes, 0, bytes.Length);
                 }
+                if (asyncContext != null && asyncContext.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+
+                var zip1 = ZipStorer.Open(Globals.GraphicsSubDir + "\\" + styleFile + ".zip", FileAccess.Read);
+                CreateTextureAtlas<TextureAtlasTiles>(zip1, styleFile + "_" + Globals.TilesSuffix.ToLower());
+
+                if (asyncContext != null && asyncContext.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+                CreateTextureAtlas<TextureAtlasSprites>(zip1, styleFile + "_" + Globals.SpritesSuffix.ToLower());
             }
             finally
             {
@@ -281,20 +287,15 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        private void CreateTextureAtlas(ZipStorer inputZip, string outputFile)
+        public T CreateTextureAtlas<T>(ZipStorer inputZip, string outputFile) where T : TextureAtlas, new()
         {
-            //var zip = ZipStorer.Open("Textures\\bil.zip", FileAccess.Read);
-            dict = new TextureAtlasTiles("Textures\\tiles.png", inputZip);
-            dict.BuildTextureAtlas();
-            dict.Serialize(tilesDictPath);
-            tileAtlas = dict.TileDictionary;
-            var stream = new MemoryStream();
-            dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
-            stream.Position = 0;
-            //cityTexture = Texture2D.FromStream(BaseGame.Device, stream);
-            stream.Close();
-            dict.Dispose();             
-            
+            var args = new object[2];
+            args[0] = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + outputFile + Globals.TextureImageFormat;
+            args[1] = inputZip;
+            var atlas = (T) Activator.CreateInstance(typeof (T), args);
+            atlas.BuildTextureAtlas();
+            atlas.Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + outputFile + ".xml");
+            return atlas;
         }
 
         private void ConversionCompletedCallback(IAsyncResult ar)
@@ -603,7 +604,7 @@ namespace Hiale.GTA2NET.Core.Style
             var memoryStream = new MemoryStream();
             bmp.Save(memoryStream, ImageFormat.Png);
             memoryStream.Position = 0;
-            zip.AddStream(ZipStorer.Compression.Deflate, TilesZipDir + id + Png, memoryStream, DateTime.Now, string.Empty);
+            zip.AddStream(ZipStorer.Compression.Deflate, Globals.TilesSuffix + "/" + id + Globals.TextureImageFormat, memoryStream, DateTime.Now, string.Empty);
             memoryStream.Close();
         }
 
@@ -732,7 +733,7 @@ namespace Hiale.GTA2NET.Core.Style
             var memoryStream = new MemoryStream();
             bmp.Save(memoryStream, ImageFormat.Png);
             memoryStream.Position = 0;
-            zip.AddStream(ZipStorer.Compression.Deflate, SpritesZipDir + fileName + Png, memoryStream, DateTime.Now, string.Empty);
+            zip.AddStream(ZipStorer.Compression.Deflate, Globals.SpritesSuffix + "/" + fileName + Globals.TextureImageFormat, memoryStream, DateTime.Now, string.Empty);
             memoryStream.Close();
             //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }

@@ -32,7 +32,7 @@ namespace Hiale.GTA2NET.Core
 {
     public class CarPhysicReader
     {
-        private const string FileName = "data\\nyc.gci";
+        private const string FileName = "misc\\nyc.gci";
 
         public static Dictionary<int,CarPhysics> ReadFromFile()
         {
