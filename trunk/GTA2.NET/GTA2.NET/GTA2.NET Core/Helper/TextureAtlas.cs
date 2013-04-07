@@ -39,7 +39,7 @@ namespace Hiale.GTA2NET.Core.Helper
     /// Holds information where certail tiles or sprites are put on the image.
     /// </summary>
     [Serializable]
-    public class TextureAtlas : IDisposable
+    public abstract class TextureAtlas : IDisposable
     {
         public class ImageEntry
         {
@@ -61,8 +61,8 @@ namespace Hiale.GTA2NET.Core.Helper
             {
                 if (CompareSize)
                 {
-                    int xSize = x.Height * 1024 + x.Width;
-                    int ySize = y.Height * 1024 + y.Width;
+                    var xSize = x.Height * 1024 + x.Width;
+                    var ySize = y.Height * 1024 + y.Width;
                     return ySize.CompareTo(xSize);
                 }
                 return x.Index.CompareTo(y.Index);
@@ -80,9 +80,10 @@ namespace Hiale.GTA2NET.Core.Helper
         /// </summary>
         public string ImagePath { get; set; }
 
-        protected string ImageDirName;
+        [XmlIgnore]
+        public ZipStorer ZipStore { get; protected set; }
 
-        protected ZipStorer ZipStore;
+        protected string ImageDirName;
 
         protected List<ZipStorer.ZipFileEntry> ZipEntries;
 
@@ -93,11 +94,11 @@ namespace Hiale.GTA2NET.Core.Helper
         protected TextureAtlas()
         {
             //needed by xml serializer
+            CrcDictionary = new Dictionary<UInt32, int>();
         }
 
-        protected TextureAtlas(string imagePath, ZipStorer zipStore)
+        protected TextureAtlas(string imagePath, ZipStorer zipStore) : this()
         {
-            CrcDictionary = new Dictionary<UInt32, int>();
             ImagePath = imagePath;
             ZipStore = zipStore;
         }
@@ -107,7 +108,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var entries = new List<ImageEntry>();
             CrcDictionary.Clear();
             ZipEntries = ZipStore.ReadCentralDir();
-            for (int i = 0; i < ZipEntries.Count; i++)
+            for (var i = 0; i < ZipEntries.Count; i++)
             {
                 if (!ZipEntries[i].FilenameInZip.StartsWith(ImageDirName))
                     continue;
@@ -167,10 +168,7 @@ namespace Hiale.GTA2NET.Core.Helper
             return new Rectangle(entry.X + 1, entry.Y + 1, entry.Width - 2, entry.Height - 2);
         }
 
-        public virtual void BuildTextureAtlas()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract void BuildTextureAtlas();
 
         /// <summary>
         /// Heuristic guesses what might be a good output width for a list of sprites.
@@ -237,7 +235,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var w = entries[index].Width;
             var h = entries[index].Height;
 
-            for (int i = 0; i < index; i++)
+            for (var i = 0; i < index; i++)
             {
                 if (entries[i].X >= x + w)
                     continue;
@@ -260,7 +258,7 @@ namespace Hiale.GTA2NET.Core.Helper
         private static string ParsePath(string path)
         {
             var pos = path.LastIndexOf('/');
-            return path.Substring(pos + 1, path.Length - pos - Style.Style.Png.Length - 1);
+            return path.Substring(pos + 1, path.Length - pos - Globals.TextureImageFormat.Length - 1);
         }
 
         public void Serialize(string path)
@@ -301,14 +299,14 @@ namespace Hiale.GTA2NET.Core.Helper
     {
         public SerializableDictionary<int, Rectangle> TileDictionary { get; set; }
 
-        private TextureAtlasTiles()
+        public TextureAtlasTiles()
         {
             //this constructor is needed by xml serializer
         }
 
         public TextureAtlasTiles(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
         {
-            ImageDirName = Style.Style.TilesZipDir;
+            ImageDirName = Globals.TilesSuffix + "/";
         }
 
         public override void BuildTextureAtlas()
@@ -342,14 +340,14 @@ namespace Hiale.GTA2NET.Core.Helper
 
         private readonly Dictionary<int, SpriteItem> _duplicateDictionary; //Helper list to find duplicate images.
 
-        private TextureAtlasSprites()
+        public TextureAtlasSprites()
         {
             //this constructor is needed by xml serializer
         }
 
         public TextureAtlasSprites(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
         {
-            ImageDirName = Style.Style.SpritesZipDir;
+            ImageDirName = Globals.SpritesSuffix + "/";
             _duplicateDictionary = new Dictionary<int, SpriteItem>();
         }
 
@@ -393,7 +391,7 @@ namespace Hiale.GTA2NET.Core.Helper
         private static SpriteItem ParseFileName(string fileName)
         {
             var item = new SpriteItem();
-            string[] parts = fileName.Split('_');
+            var parts = fileName.Split('_');
             item.Sprite = int.Parse(parts[0]);
             item.Remap = -1;
             if (parts.Length == 3)

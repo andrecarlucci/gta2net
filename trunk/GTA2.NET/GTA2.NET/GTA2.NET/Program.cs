@@ -24,7 +24,10 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
+using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
+using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.WinUI;
 
 namespace Hiale.GTA2NET
@@ -37,18 +40,17 @@ namespace Hiale.GTA2NET
         [STAThread]
         static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            var form = new ConvertForm();
-            Application.Run(form);
-            if (form.DialogResult == DialogResult.Cancel)
-                return;
-
-            //string[] files = System.IO.Directory.GetFiles("textures\\tiles");
-           // Hiale.GTA2NET.NET.Helper.ImageCreator.CreateImageDictionary(files, 64, 64);
-
-            //Hiale.GTA2NET.Core.Style.Style style = new Hiale.GTA2NET.Core.Style.Style();
-            //Hiale.GTA2NET.Core.Map.Map map = new Hiale.GTA2NET.Core.Map.Map();
+            var assembly = Assembly.GetExecutingAssembly();
+            var currentDir = Path.GetDirectoryName(assembly.Location);
+            if (!FileConverter.CheckConvertedAssets(currentDir))
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                var form = new ConvertForm();
+                Application.Run(form);
+                if (form.DialogResult == DialogResult.Cancel)
+                    return;
+            }
 
             using (var game = new MainGame())
             {

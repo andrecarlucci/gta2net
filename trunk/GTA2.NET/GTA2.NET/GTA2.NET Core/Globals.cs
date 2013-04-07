@@ -23,10 +23,6 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Hiale.GTA2NET.Core
 {
@@ -35,9 +31,13 @@ namespace Hiale.GTA2NET.Core
         public const string GraphicsSubDir = "gfx";
         public const string MapsSubDir = "maps";
         public const string MiscSubDir = "misc";
+        public const string TilesSuffix = "Tiles";
+        public const string SpritesSuffix = "Sprites";
+        public const string TextureImageFormat = ".png";
 
         //Original game files
         public static readonly string[] StyleMapFiles = { "bil", "ste", "wil" };
+        //public static readonly string[] StyleMapFiles = { "bil" }; //Debug
         public static readonly string[] MapFilesMultiplayer = { "MP1-comp", "MP2-comp", "MP5-comp", "bil-multi", "wil-multi" };
         public static readonly string[] MiscFiles = {"nyc.gci"};
         public const string StyleFileExtension = ".sty";

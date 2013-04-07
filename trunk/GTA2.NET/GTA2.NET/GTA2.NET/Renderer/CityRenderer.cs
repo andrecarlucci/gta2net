@@ -24,6 +24,7 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework.Graphics;
 using Hiale.GTA2NET.Core.Map;
@@ -36,29 +37,29 @@ namespace Hiale.GTA2NET.Renderer
 {
     public class CityRenderer
     {
-        BasicEffect effect;
+        readonly BasicEffect _effect;
 
         //City textures
-        Texture2D cityTexture;
-        Dictionary<int, Rectangle> tileAtlas;
-        Vector2[] texturePosition;
+        Texture2D _cityTexture;
+        Dictionary<int, Rectangle> _tileAtlas;
+        readonly Vector2[] _texturePosition;
 
         //Triangle stuff
-        VertexBuffer vertexBuffer;
+        VertexBuffer _vertexBuffer;
         //VertexDeclaration vertexDeclaration;
-        IndexBuffer indexBuffer;
-        List<int> indexBufferCollection;
-        List<VertexPositionNormalTexture> cityVerticesCollection;
+        IndexBuffer _indexBuffer;
+        readonly List<int> _indexBufferCollection;
+        readonly List<VertexPositionNormalTexture> _cityVerticesCollection;
 
         //Options
         private const float UnitSize = 1f;
 
         public CityRenderer()
         {
-            effect = new BasicEffect(BaseGame.Device);
-            cityVerticesCollection = new List<VertexPositionNormalTexture>();
-            indexBufferCollection = new List<int>();
-            texturePosition = new Vector2[4];
+            _effect = new BasicEffect(BaseGame.Device);
+            _cityVerticesCollection = new List<VertexPositionNormalTexture>();
+            _indexBufferCollection = new List<int>();
+            _texturePosition = new Vector2[4];
 
             MainGame.GlobalScalar = new Vector3(1, 1, 0.5f);
         }
@@ -356,15 +357,15 @@ namespace Hiale.GTA2NET.Renderer
                     }
                 }                
 
-                var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                var texPos = GetTexturePositions(_tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
 
-                var startIndex = cityVerticesCollection.Count - 3;
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
+                var startIndex = _cityVerticesCollection.Count - 3;
+                _indexBufferCollection.Add(startIndex);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 2);
             }
 
             //int TileNumber = 0;
@@ -388,19 +389,19 @@ namespace Hiale.GTA2NET.Renderer
             //Diagonal face
             if (diagonalFace)
             {
-                var texPos = GetTexturePositions(tileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[0]));
+                var texPos = GetTexturePositions(_tileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[2]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[0]));
 
-                var startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 3);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex);
+                var startIndex = _cityVerticesCollection.Count - 4;
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex);
+                _indexBufferCollection.Add(startIndex + 3);
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex);
             }
 
             PrepareCoordinates(pos, out frontCoordinates, out backCoordinates);
@@ -469,19 +470,19 @@ namespace Hiale.GTA2NET.Renderer
             {
                 RotationType lidRotation = block.Lid.Rotation;
                 RotateEnum(ref lidRotation, rotation);
-                var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+                var texPos = GetTexturePositions(_tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, texPos[2]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[3]));
 
-                var startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 3);
+                var startIndex = _cityVerticesCollection.Count - 4;
+                _indexBufferCollection.Add(startIndex);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex);
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 3);
             }
 
             BlockFace topFace = null;
@@ -515,50 +516,50 @@ namespace Hiale.GTA2NET.Renderer
             //Top face
             if (topFace)
             {
-                var texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                var texPos = GetTexturePositions(_tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
                 var center = GetCenterPosition(ref texPos[3], ref texPos[0], slopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
  
-                int startIndex = cityVerticesCollection.Count - 3;
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 0);
+                int startIndex = _cityVerticesCollection.Count - 3;
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 0);
             }
             //Bottom face
             if (bottomFace)
             {
-                var texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                var texPos = GetTexturePositions(_tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
                 var center = GetCenterPosition(ref texPos[2], ref texPos[1], slopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
 
-                int startIndex = cityVerticesCollection.Count - 3;
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
+                int startIndex = _cityVerticesCollection.Count - 3;
+                _indexBufferCollection.Add(startIndex);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 2);
             }
 
             //Right face
             if (rightFace) //this face is not supported by GTA2, the editor removes this face.
             {
-                var texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
+                var texPos = GetTexturePositions(_tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
                 var center = GetCenterPosition(ref texPos[1], ref texPos[2], slopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
                 center = GetCenterPosition(ref texPos[0], ref texPos[3], slopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[3]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[2]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[3]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[2]));
 
-                var startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 0);
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 3);
-                indexBufferCollection.Add(startIndex + 2);
+                var startIndex = _cityVerticesCollection.Count - 4;
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 0);
+                _indexBufferCollection.Add(startIndex);
+                _indexBufferCollection.Add(startIndex + 3);
+                _indexBufferCollection.Add(startIndex + 2);
             }           
         }
 
@@ -635,19 +636,19 @@ namespace Hiale.GTA2NET.Renderer
             {
                 var lidRotation = block.Lid.Rotation;
                 RotateEnum(ref lidRotation, rotation);
-                var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, texPos[2]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+                var texPos = GetTexturePositions(_tileAtlas[block.Lid.TileNumber], lidRotation, block.Lid.Flip);
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, texPos[2]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopLeft, Vector3.Zero, texPos[3]));
 
-                var startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex + 0);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 0);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 3);
+                var startIndex = _cityVerticesCollection.Count - 4;
+                _indexBufferCollection.Add(startIndex + 0);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 0);
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 3);
             }
 
             BlockFace topFace = null;
@@ -685,42 +686,42 @@ namespace Hiale.GTA2NET.Renderer
             //Top face
             if (topFace)
             {
-                var texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                var texPos = GetTexturePositions(_tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
                 var center = GetCenterPosition(ref texPos[0], ref texPos[3], frontSlopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, center)); //was 3
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, center)); //was 3
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
                 center = GetCenterPosition(ref texPos[1], ref texPos[2], middleSlopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopLeft, Vector3.Zero, center));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.TopLeft, Vector3.Zero, center));
 
-                int startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 0);
+                int startIndex = _cityVerticesCollection.Count - 4;
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 0);
 
-                indexBufferCollection.Add(startIndex + 3);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 0);
+                _indexBufferCollection.Add(startIndex + 3);
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 0);
             }
             //Bottom face
             if (bottomFace)
             {
-                var texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                var texPos = GetTexturePositions(_tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
                 var center = GetCenterPosition(ref texPos[2], ref texPos[1], frontSlopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, center)); //was texPos[2]
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));                
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, center)); //was texPos[2]
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));                
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
                 center = GetCenterPosition(ref texPos[3], ref texPos[0], middleSlopeScalar);
-                cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, center));
+                _cityVerticesCollection.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, center));
 
-                var startIndex = cityVerticesCollection.Count - 4;
-                indexBufferCollection.Add(startIndex);
-                indexBufferCollection.Add(startIndex + 1);
-                indexBufferCollection.Add(startIndex + 2);
+                var startIndex = _cityVerticesCollection.Count - 4;
+                _indexBufferCollection.Add(startIndex);
+                _indexBufferCollection.Add(startIndex + 1);
+                _indexBufferCollection.Add(startIndex + 2);
 
-                indexBufferCollection.Add(startIndex + 0);
-                indexBufferCollection.Add(startIndex + 2);
-                indexBufferCollection.Add(startIndex + 3);
+                _indexBufferCollection.Add(startIndex + 0);
+                _indexBufferCollection.Add(startIndex + 2);
+                _indexBufferCollection.Add(startIndex + 3);
             }
 
             //ToDo Left face (but probably not supported in GTA2 anyway)
@@ -766,58 +767,58 @@ namespace Hiale.GTA2NET.Renderer
         {
             if (!block.Lid)
                 return;
-            var texPos = GetTexturePositions(tileAtlas[block.Lid.TileNumber], block.Lid.Rotation, block.Lid.Flip);
+            var texPos = GetTexturePositions(_tileAtlas[block.Lid.TileNumber], block.Lid.Rotation, block.Lid.Flip);
             //Vector2[] TexPos = GetTexturePositions(tileAtlas[991], block.Lid.Rotation, block.Lid.Flip);
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[1]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[3]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[0]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[1]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[3]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[0]));
 
-            var startIndex = cityVerticesCollection.Count - 4;
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex + 1);
-            indexBufferCollection.Add(startIndex + 2);
-            indexBufferCollection.Add(startIndex + 1);
-            indexBufferCollection.Add(startIndex + 3);
-            indexBufferCollection.Add(startIndex + 2);
+            var startIndex = _cityVerticesCollection.Count - 4;
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex + 1);
+            _indexBufferCollection.Add(startIndex + 2);
+            _indexBufferCollection.Add(startIndex + 1);
+            _indexBufferCollection.Add(startIndex + 3);
+            _indexBufferCollection.Add(startIndex + 2);
         }
 
         private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
             if (!block.Top)
                 return;
-            var texPos = GetTexturePositions(tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[0]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[2]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[3]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[1]));
+            var texPos = GetTexturePositions(_tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[0]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[2]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[3]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[1]));
 
-            var startIndex = cityVerticesCollection.Count - 4;
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex + 1);
-            indexBufferCollection.Add(startIndex + 2);
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex + 3);
-            indexBufferCollection.Add(startIndex + 1);
+            var startIndex = _cityVerticesCollection.Count - 4;
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex + 1);
+            _indexBufferCollection.Add(startIndex + 2);
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex + 3);
+            _indexBufferCollection.Add(startIndex + 1);
         }
 
         private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
         {
             if (!block.Bottom)
                 return;
-            var texPos = GetTexturePositions(tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
+            var texPos = GetTexturePositions(_tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
 
-            var startIndex = cityVerticesCollection.Count - 4;
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex + 1);
-            indexBufferCollection.Add(startIndex + 2);
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex + 2);
-            indexBufferCollection.Add(startIndex + 3);
+            var startIndex = _cityVerticesCollection.Count - 4;
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex + 1);
+            _indexBufferCollection.Add(startIndex + 2);
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex + 2);
+            _indexBufferCollection.Add(startIndex + 3);
         }
 
         private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
@@ -842,20 +843,20 @@ namespace Hiale.GTA2NET.Renderer
                     newBack = CorrectLeftRightVertices(backCoords, false);
                     break;
             }
-            var texPos = GetTexturePositions(tileAtlas[leftFace.TileNumber], leftFace.Rotation, leftFace.Flip);
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
+            var texPos = GetTexturePositions(_tileAtlas[leftFace.TileNumber], leftFace.Rotation, leftFace.Flip);
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
 
             //Left also has a strange index buffer order...
-            var startIndex = cityVerticesCollection.Count - 4;
-            indexBufferCollection.Add(startIndex + 2);
-            indexBufferCollection.Add(startIndex + 1);
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex + 1);
-            indexBufferCollection.Add(startIndex + 3);
-            indexBufferCollection.Add(startIndex);
+            var startIndex = _cityVerticesCollection.Count - 4;
+            _indexBufferCollection.Add(startIndex + 2);
+            _indexBufferCollection.Add(startIndex + 1);
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex + 1);
+            _indexBufferCollection.Add(startIndex + 3);
+            _indexBufferCollection.Add(startIndex);
         }
 
         private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
@@ -881,20 +882,20 @@ namespace Hiale.GTA2NET.Renderer
                     break;
             }
             //ToDo: Add more rotation codes...
-            var texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
-            cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+            var texPos = GetTexturePositions(_tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
+            _cityVerticesCollection.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
 
             //...
-            var startIndex = cityVerticesCollection.Count - 4;
-            indexBufferCollection.Add(startIndex + 2);
-            indexBufferCollection.Add(startIndex + 1);
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex);
-            indexBufferCollection.Add(startIndex + 3);
-            indexBufferCollection.Add(startIndex + 2);
+            var startIndex = _cityVerticesCollection.Count - 4;
+            _indexBufferCollection.Add(startIndex + 2);
+            _indexBufferCollection.Add(startIndex + 1);
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex);
+            _indexBufferCollection.Add(startIndex + 3);
+            _indexBufferCollection.Add(startIndex + 2);
         }
 
         private static FaceCoordinates CorrectLeftRightVertices(FaceCoordinates coordinates, bool left)
@@ -927,8 +928,8 @@ namespace Hiale.GTA2NET.Renderer
 
         private Vector2[] GetTexturePositions(Rectangle sourceRectangle, RotationType rotation, bool flip)
         {
-            double pixelPerWidth = 1f/cityTexture.Width;
-            double pixelPerHeight = 1f/cityTexture.Height;
+            double pixelPerWidth = 1f/_cityTexture.Width;
+            double pixelPerHeight = 1f/_cityTexture.Height;
 
             var texTopLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
             var texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
@@ -957,31 +958,31 @@ namespace Hiale.GTA2NET.Renderer
             switch (rotation)
             {
                 case RotationType.RotateNone:
-                    texturePosition[0] = texBottomLeft;
-                    texturePosition[1] = texBottomRight;
-                    texturePosition[2] = texTopRight;
-                    texturePosition[3] = texTopLeft;
+                    _texturePosition[0] = texBottomLeft;
+                    _texturePosition[1] = texBottomRight;
+                    _texturePosition[2] = texTopRight;
+                    _texturePosition[3] = texTopLeft;
                      break;
                 case RotationType.Rotate90:
-                    texturePosition[3] = texBottomLeft;
-                    texturePosition[0] = texBottomRight;
-                    texturePosition[1] = texTopRight;
-                    texturePosition[2] = texTopLeft;
+                    _texturePosition[3] = texBottomLeft;
+                    _texturePosition[0] = texBottomRight;
+                    _texturePosition[1] = texTopRight;
+                    _texturePosition[2] = texTopLeft;
                     break;
                 case RotationType.Rotate180:
-                    texturePosition[2] = texBottomLeft;
-                    texturePosition[3] = texBottomRight;
-                    texturePosition[0] = texTopRight;
-                    texturePosition[1] = texTopLeft;
+                    _texturePosition[2] = texBottomLeft;
+                    _texturePosition[3] = texBottomRight;
+                    _texturePosition[0] = texTopRight;
+                    _texturePosition[1] = texTopLeft;
                     break;
                 case RotationType.Rotate270:
-                    texturePosition[1] = texBottomLeft;
-                    texturePosition[2] = texBottomRight;
-                    texturePosition[3] = texTopRight;
-                    texturePosition[0] = texTopLeft;
+                    _texturePosition[1] = texBottomLeft;
+                    _texturePosition[2] = texBottomRight;
+                    _texturePosition[3] = texTopRight;
+                    _texturePosition[0] = texTopLeft;
                     break;
             }
-            return texturePosition;
+            return _texturePosition;
         }
 
         private static Vector2 GetCenterPosition(ref Vector2 lowerEnd, ref Vector2 higherEnd, float amount) //ToDo: method name
@@ -994,58 +995,38 @@ namespace Hiale.GTA2NET.Renderer
 
         private void SetUpEffect()
         {
-            effect.Texture = cityTexture;
-            effect.TextureEnabled = true;
-            effect.LightingEnabled = false;
+            _effect.Texture = _cityTexture;
+            _effect.TextureEnabled = true;
+            _effect.LightingEnabled = false;
         }
 
         private void CopyToGraphicsDevice()
         {
-            var cubeVertices = cityVerticesCollection.ToArray();
+            var cubeVertices = _cityVerticesCollection.ToArray();
 
-            vertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), cubeVertices.Length, BufferUsage.None);
-            vertexBuffer.SetData(cubeVertices);
+            _vertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), cubeVertices.Length, BufferUsage.None);
+            _vertexBuffer.SetData(cubeVertices);
 
-            var indexBufferData = indexBufferCollection.ToArray();
-            indexBuffer = new IndexBuffer(BaseGame.Device, typeof(int), indexBufferData.Length, BufferUsage.None);
-            indexBuffer.SetData(indexBufferData);
+            var indexBufferData = _indexBufferCollection.ToArray();
+            _indexBuffer = new IndexBuffer(BaseGame.Device, typeof(int), indexBufferData.Length, BufferUsage.None);
+            _indexBuffer.SetData(indexBufferData);
         }
 
         private void LoadTexture()
         {
-            //ContentManager.LoadTexture("Textures\\tiles.xml");
-
-            const string tilesDictPath = "Textures\\tiles.xml";
-            TextureAtlasTiles dict;
-            if (!File.Exists(tilesDictPath))
-            {
-                var zip = ZipStorer.Open("Textures\\bil.zip", FileAccess.Read);
-                dict = new TextureAtlasTiles( "Textures\\tiles.png", zip);
-                dict.BuildTextureAtlas();
-                dict.Serialize(tilesDictPath);
-                tileAtlas = dict.TileDictionary;
-                var stream = new MemoryStream();
-                dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
-                stream.Position = 0;
-                cityTexture = Texture2D.FromStream(BaseGame.Device, stream);
-                stream.Close();
-                dict.Dispose();                
-            }
-            else
-            {
-                dict = (TextureAtlasTiles)TextureAtlas.Deserialize(tilesDictPath, typeof(TextureAtlasTiles));
-                tileAtlas = dict.TileDictionary;
-                var fs = new FileStream(dict.ImagePath, FileMode.Open);
-                cityTexture = Texture2D.FromStream(BaseGame.Device, fs);
-                fs.Close();
-            }
+            var atlasPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(MainGame.Style.StylePath) + "_" + Globals.TilesSuffix.ToLower() + ".xml";
+            var dict = (TextureAtlasTiles) TextureAtlas.Deserialize(atlasPath, typeof (TextureAtlasTiles));
+            _tileAtlas = dict.TileDictionary;
+            var fs = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + dict.ImagePath, FileMode.Open);
+            _cityTexture = Texture2D.FromStream(BaseGame.Device, fs);
+            fs.Close();
         }
 
         public void DrawCity()
         {   
-            effect.View = BaseGame.ViewMatrix;
-            effect.Projection = BaseGame.ProjectionMatrix;
-            effect.World = BaseGame.WorldMatrix;
+            _effect.View = BaseGame.ViewMatrix;
+            _effect.Projection = BaseGame.ProjectionMatrix;
+            _effect.World = BaseGame.WorldMatrix;
 
             //effect.GraphicsDevice.RenderState.CullMode = CullMode.CullClockwiseFace;
             //effect.GraphicsDevice.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
@@ -1053,15 +1034,15 @@ namespace Hiale.GTA2NET.Renderer
             //effect.GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
 
 
-            effect.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            effect.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
+            _effect.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+            _effect.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
 
-            effect.GraphicsDevice.BlendState = BaseGame.AlphaBlendingState;
+            _effect.GraphicsDevice.BlendState = BaseGame.AlphaBlendingState;
 
-            BaseGame.Device.SetVertexBuffer(vertexBuffer);
-            BaseGame.Device.Indices = indexBuffer;
+            BaseGame.Device.SetVertexBuffer(_vertexBuffer);
+            BaseGame.Device.Indices = _indexBuffer;
 
-            foreach (var pass in effect.CurrentTechnique.Passes)
+            foreach (var pass in _effect.CurrentTechnique.Passes)
             {
                 //pass.Begin(); //XNA 3.1
 
@@ -1075,7 +1056,7 @@ namespace Hiale.GTA2NET.Renderer
                 //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
                 //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
                 pass.Apply();
-                effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, cityVerticesCollection.Count, 0, indexBufferCollection.Count / 3);
+                _effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cityVerticesCollection.Count, 0, _indexBufferCollection.Count / 3);
             }
         }      
     }

@@ -25,6 +25,7 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Hiale.GTA2NET.Core.Helper;
@@ -114,35 +115,16 @@ namespace Hiale.GTA2NET.Renderer
             indicesCollection.Add(startIndex + 1);
             indicesCollection.Add(startIndex + 3);
             indicesCollection.Add(startIndex + 2);
-        } 
+        }
 
         private void LoadTexture()
         {
-            const string spriteDictPath = "Textures\\sprites.xml";
-            TextureAtlasSprites dict;
-            if (!File.Exists(spriteDictPath))
-            {
-                var zip = ZipStorer.Open("Textures\\bil.zip", FileAccess.Read);
-                dict = new TextureAtlasSprites("Textures\\sprites.png", zip);
-                dict.BuildTextureAtlas();
-                dict.Serialize(spriteDictPath);
-                spriteAtlas = dict.SpriteDictionary;
-                var stream = new MemoryStream();
-                dict.Image.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
-                stream.Position = 0;
-                spriteTexture = Texture2D.FromStream(BaseGame.Device, stream);
-                stream.Close();
-                dict.Dispose();
-            }
-            else
-            {
-                dict = (TextureAtlasSprites)TextureAtlas.Deserialize(spriteDictPath, typeof(TextureAtlasSprites));
-                spriteAtlas = dict.SpriteDictionary;
-                FileStream fs = new FileStream(dict.ImagePath, FileMode.Open);
-                spriteTexture = Texture2D.FromStream(BaseGame.Device, fs);
-                fs.Close();
-                //spriteTexture = MainGame.Content.Load<Texture2D>("sprites");
-            }            
+            var atlasPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(MainGame.Style.StylePath) + "_" + Globals.SpritesSuffix .ToLower() + ".xml";
+            var dict = (TextureAtlasSprites) TextureAtlas.Deserialize(atlasPath, typeof (TextureAtlasSprites));
+            spriteAtlas = dict.SpriteDictionary;
+            var fs = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar +dict.ImagePath, FileMode.Open);
+            spriteTexture = Texture2D.FromStream(BaseGame.Device, fs);
+            fs.Close();
         }
 
         private void SetUpEffect()

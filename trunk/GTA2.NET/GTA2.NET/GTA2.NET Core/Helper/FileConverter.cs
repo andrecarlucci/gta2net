@@ -30,7 +30,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
-using System.Threading;
 using Hiale.GTA2NET.Core.Helper.Threading;
 using Microsoft.Win32;
 
@@ -141,13 +140,11 @@ namespace Hiale.GTA2NET.Core.Helper
                 var style = new Style.Style();
                 style.ConvertStyleFileProgressChanged += StyleConvertStyleFileProgressChanged;
                 style.ConvertStyleFileCompleted += StyleOnConvertStyleFileCompleted;
-                style.ReadFromFileAsync(sourcePath + Globals.DataSubDir + styleFile);
+                style.ReadFromFileAsync(sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension);
                 _runningStyles.Add(style);
             }
 
             //copy over maps
-            //var mapFiles = Directory.GetFiles(sourcePath + Globals.DataSubDir, "*.gmp");
-
             var mapFiles = Globals.StyleMapFiles.Select(mapFile => sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + mapFile + Globals.MapFileExtension).ToList();
             mapFiles.AddRange(Globals.MapFilesMultiplayer.Select(multiplayerMapFile => sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + multiplayerMapFile + Globals.MapFileExtension));
             for (var i = 0; i < mapFiles.Count; i++)
@@ -157,7 +154,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
-                File.Copy(mapFiles[i], destinationPath + Globals.MapsSubDir + Path.DirectorySeparatorChar + Path.GetFileName(mapFiles[i]));
+                File.Copy(mapFiles[i], destinationPath + Globals.MapsSubDir + Path.DirectorySeparatorChar + Path.GetFileName(mapFiles[i]), true);
                 //eArgs = new ProgressMessageChangedEventArgs((i / mapFiles.Length * 100), "Test ToDo", null);
                 //asyncContext.Async.Post(e => OnConversionProgressChanged((ProgressMessageChangedEventArgs) e), eArgs);
             }
@@ -170,7 +167,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
-                File.Copy(miscFiles[i], destinationPath + Globals.MiscSubDir + Path.DirectorySeparatorChar + Path.GetFileName(miscFiles[i]));
+                File.Copy(miscFiles[i], destinationPath + Globals.MiscSubDir + Path.DirectorySeparatorChar + Path.GetFileName(miscFiles[i]), true);
             }
 
             lock (_syncWaitHandle)
