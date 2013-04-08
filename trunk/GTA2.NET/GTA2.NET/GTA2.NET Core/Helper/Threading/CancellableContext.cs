@@ -28,7 +28,7 @@ using System.ComponentModel;
 
 namespace Hiale.GTA2NET.Core.Helper.Threading
 {
-    internal class CancellableContext
+    public class CancellableContext
     {
         private readonly object _sync = new object();
             private bool _isCancelling;

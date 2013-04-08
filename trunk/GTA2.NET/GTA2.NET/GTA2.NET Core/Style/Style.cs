@@ -34,7 +34,6 @@ using System.Drawing;
 using System.Runtime.Remoting.Messaging;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Helper.Threading;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Style
 {
@@ -76,7 +75,7 @@ namespace Hiale.GTA2NET.Core.Style
             _carSprites = new Dictionary<int, List<int>>();
         }
 
-        public void ReadFromFileAsync(string stylePath)
+        public IAsyncResult ReadFromFileAsync(string stylePath)
         {
             var worker = new ConvertStyleFileDelegate(ReadFromFile);
             var completedCallback = new AsyncCallback(ConversionCompletedCallback);
@@ -90,21 +89,22 @@ namespace Hiale.GTA2NET.Core.Style
                 var context = new CancellableContext(async);
                 bool cancelled;
 
-                worker.BeginInvoke(stylePath, true, context, out cancelled, completedCallback, async);
+                var result = worker.BeginInvoke(stylePath, true, context, out cancelled, completedCallback, async);
 
                 IsBusy = true;
                 _convertStyleFileContext = context;
+                return result;
             }
         }
 
         public void ReadFromFile(string stylePath)
         {
+            var context = new CancellableContext(null);
             bool cancelled;
-            ReadFromFile(stylePath, false, null, out cancelled);
+            ReadFromFile(stylePath, false, context, out cancelled);
         }
 
-        private void ReadFromFile(string stylePath, bool extractGraphics, CancellableContext asyncContext,
-                                  out bool cancelled)
+        private void ReadFromFile(string stylePath, bool extractGraphics, CancellableContext asyncContext, out bool cancelled)
         {
             cancelled = false;
 
@@ -115,7 +115,7 @@ namespace Hiale.GTA2NET.Core.Style
                     throw new FileNotFoundException("Style File not found!", stylePath);
                 StylePath = stylePath;
                 System.Diagnostics.Debug.WriteLine("Reading style file " + stylePath);
-                var stream = new FileStream(stylePath, FileMode.Open);
+                var stream = new FileStream(stylePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 reader = new BinaryReader(stream);
                 System.Text.Encoding encoder = System.Text.Encoding.ASCII;
                 reader.ReadBytes(4); //GBMP
@@ -128,7 +128,7 @@ namespace Hiale.GTA2NET.Core.Style
                     System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " +
                                                        chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
 
-                    if (asyncContext != null && asyncContext.IsCancelling)
+                    if (asyncContext.IsCancelling)
                     {
                         cancelled = true;
                         return;
@@ -230,13 +230,13 @@ namespace Hiale.GTA2NET.Core.Style
                 memoryStream = new MemoryStream();
                 using (var zip = ZipStorer.Create(memoryStream, string.Empty))
                 {
-                    if (asyncContext != null && asyncContext.IsCancelling)
+                    if (asyncContext.IsCancelling)
                     {
                         cancelled = true;
                         return;
                     }
                     SaveTiles(zip, asyncContext);
-                    if (asyncContext != null && asyncContext.IsCancelling)
+                    if (asyncContext.IsCancelling)
                     {
                         cancelled = true;
                         return;
@@ -251,16 +251,16 @@ namespace Hiale.GTA2NET.Core.Style
                     memoryStream.Read(bytes, 0, (int) memoryStream.Length);
                     stream.Write(bytes, 0, bytes.Length);
                 }
-                if (asyncContext != null && asyncContext.IsCancelling)
+                if (asyncContext.IsCancelling)
                 {
                     cancelled = true;
                     return;
                 }
 
-                var zip1 = ZipStorer.Open(Globals.GraphicsSubDir + "\\" + styleFile + ".zip", FileAccess.Read);
+                var zip1 = ZipStorer.Open(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + ".zip", FileAccess.Read);
                 CreateTextureAtlas<TextureAtlasTiles>(zip1, styleFile + "_" + Globals.TilesSuffix.ToLower());
 
-                if (asyncContext != null && asyncContext.IsCancelling)
+                if (asyncContext.IsCancelling)
                 {
                     cancelled = true;
                     return;
@@ -290,7 +290,8 @@ namespace Hiale.GTA2NET.Core.Style
         public T CreateTextureAtlas<T>(ZipStorer inputZip, string outputFile) where T : TextureAtlas, new()
         {
             var args = new object[2];
-            args[0] = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + outputFile + Globals.TextureImageFormat;
+            args[0] = outputFile + Globals.TextureImageFormat;
+            //args[0] = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + outputFile + Globals.TextureImageFormat;
             args[1] = inputZip;
             var atlas = (T) Activator.CreateInstance(typeof (T), args);
             atlas.BuildTextureAtlas();
@@ -559,14 +560,10 @@ namespace Hiale.GTA2NET.Core.Style
         private void SaveTiles(ZipStorer zip, CancellableContext asyncContext)
         {
             var tilesCount = tileData.Length / (64 * 64);
-            //var eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
-            //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
             for (var i = 0; i < tilesCount; i++)
             {
                 if (asyncContext.IsCancelling)
                     return;
-                //eArgs = new ProgressMessageChangedEventArgs(i / tilesCount, string.Empty, null);
-                //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
                 SaveTile(zip, ref i);
             }
         }
@@ -611,15 +608,11 @@ namespace Hiale.GTA2NET.Core.Style
         private void SaveSprites(ZipStorer zip, CancellableContext asyncContext)
         {
             //cars
-            //var eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
-            //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
             foreach (var carSpriteItem in _carSprites)
             {
                 if (asyncContext.IsCancelling)
                     return;
                 SaveCarSprite(zip, carSpriteItem.Key, carSpriteItem.Value);
-                //eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
-                //asyncContext.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs)e), eArgs);
             }
             return;
 
@@ -711,9 +704,9 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var p = (byte*)(void*)scan0;
                 var nOffset = stride - bmp.Width * 4;
-                for (int y = 0; y < bmp.Height; ++y)
+                for (var y = 0; y < bmp.Height; ++y)
                 {
-                    for (int x = 0; x < bmp.Width; ++x)
+                    for (var x = 0; x < bmp.Width; ++x)
                     {
                         UInt32 spriteColor = spriteData[(baseX + x) + (baseY + y) * 256];
                         var palID = (palette / 64) * 256 * 64 + (palette % 64) + spriteColor * 64;

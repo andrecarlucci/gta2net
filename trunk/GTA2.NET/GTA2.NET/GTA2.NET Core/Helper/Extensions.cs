@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Hiale.GTA2NET.Core.Helper
@@ -62,6 +63,22 @@ namespace Hiale.GTA2NET.Core.Helper
         public static string CheckDirectorySeparator(string path)
         {
             return !path.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) ? path.Insert(path.Length, Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) : path;
+        }
+
+        public static bool FilesAreEqual(string path1, string path2)
+        {
+            if (!File.Exists(path1) || !File.Exists(path2))
+                throw new FileNotFoundException();
+            var info1 = new FileInfo(path1);
+            var info2 = new FileInfo(path2);
+            if (info1.Length != info2.Length)
+                return false;
+            var hashAlgorithm = MD5.Create();
+            var hash1 = hashAlgorithm.ComputeHash(info1.OpenRead());
+            var hash2 = hashAlgorithm.ComputeHash(info2.OpenRead());
+            if (hash1.Where((t, i) => t != hash2[i]).Any())
+                return false;
+            return true;
         }
 
     }
