@@ -44,8 +44,9 @@ namespace Hiale.GTA2NET.Core.Helper
         private CancellableContext _convertFilesContext;
         private bool _isBusy;
         private readonly object _syncCancel = new object();
-        private readonly object _syncWaitHandle = new object();
+        private readonly object _syncStyleFinished = new object();
         private readonly List<Style.Style> _runningStyles = new List<Style.Style>();
+        private readonly List<IAsyncResult> _styleAsyncResults = new List<IAsyncResult>();
         private static readonly AutoResetEventValueExchange<bool> WaitHandle = new AutoResetEventValueExchange<bool>(false);
 
 
@@ -73,7 +74,6 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             if (!File.Exists(path + "\\gta2.exe"))
                 return false;
-
             if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension)))
                 return false;
             if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
@@ -88,8 +88,16 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public static bool CheckConvertedAssets(string path)
         {
-            //if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension)))
-            //    return false;
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.TilesSuffix + ".xml")))
+                return false;
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.SpritesSuffix + ".xml")))
+                return false;
+
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.TilesSuffix + Globals.TextureImageFormat)))
+                return false;
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.SpritesSuffix + Globals.TextureImageFormat)))
+                return false;
+
             if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
                 return false;
             if (Globals.MapFilesMultiplayer.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
@@ -116,20 +124,18 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public void ConvertFiles(string sourcePath, string destinationPath)
         {
+            var context = new CancellableContext(null);
             bool cancelled;
-            ConvertFiles(sourcePath, destinationPath, null, out cancelled);
+            ConvertFiles(sourcePath, destinationPath, context, out cancelled);
         }
 
-        private void ConvertFiles(string sourcePath, string destinationPath, CancellableContext asyncContext,
-                                  out bool cancelled)
+        private void ConvertFiles(string sourcePath, string destinationPath, CancellableContext asyncContext, out bool cancelled)
         {
             cancelled = false;
 
             CreateSubDirectories(destinationPath);
 
-            var eArgs = new ProgressMessageChangedEventArgs(0, string.Empty, null);
-
-            //conver style files
+            //convert style files
             foreach (var styleFile in Globals.StyleMapFiles)
             {
                 if (asyncContext.IsCancelling)
@@ -137,12 +143,17 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
+                //copy over style file (because some data in it are still needed)
                 var style = new Style.Style();
-                style.ConvertStyleFileProgressChanged += StyleConvertStyleFileProgressChanged;
+                var sourceFile = sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension;
+                var targetFile = destinationPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension;
+                if (!File.Exists(targetFile) || !Extensions.FilesAreEqual(sourceFile, targetFile))
+                    File.Copy(sourceFile, targetFile, true);
                 style.ConvertStyleFileCompleted += StyleOnConvertStyleFileCompleted;
-                style.ReadFromFileAsync(sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + styleFile + Globals.StyleFileExtension);
+                style.ReadFromFileAsync(targetFile);
                 _runningStyles.Add(style);
             }
+
 
             //copy over maps
             var mapFiles = Globals.StyleMapFiles.Select(mapFile => sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + mapFile + Globals.MapFileExtension).ToList();
@@ -154,9 +165,13 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
-                File.Copy(mapFiles[i], destinationPath + Globals.MapsSubDir + Path.DirectorySeparatorChar + Path.GetFileName(mapFiles[i]), true);
-                //eArgs = new ProgressMessageChangedEventArgs((i / mapFiles.Length * 100), "Test ToDo", null);
-                //asyncContext.Async.Post(e => OnConversionProgressChanged((ProgressMessageChangedEventArgs) e), eArgs);
+                var targetFile = destinationPath + Globals.MapsSubDir + Path.DirectorySeparatorChar + Path.GetFileName(mapFiles[i]);
+                if (File.Exists(targetFile))
+                {
+                    if (Extensions.FilesAreEqual(mapFiles[i], targetFile))
+                        continue;
+                }
+                File.Copy(mapFiles[i], targetFile, true);
             }
 
             var miscFiles = Globals.MiscFiles.Select(miscFile => sourcePath + Globals.DataSubDir + Path.DirectorySeparatorChar + miscFile).ToList();
@@ -167,31 +182,28 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
-                File.Copy(miscFiles[i], destinationPath + Globals.MiscSubDir + Path.DirectorySeparatorChar + Path.GetFileName(miscFiles[i]), true);
-            }
-
-            lock (_syncWaitHandle)
-            {
-                if (_runningStyles.Count > 0)
+                var targetFile = destinationPath + Globals.MiscSubDir + Path.DirectorySeparatorChar + Path.GetFileName(miscFiles[i]);
+                if (File.Exists(targetFile))
                 {
-                    WaitHandle.WaitOne();
-                    cancelled = WaitHandle.Value;
+                    if (Extensions.FilesAreEqual(miscFiles[i], targetFile))
+                        continue;
                 }
+                File.Copy(miscFiles[i], targetFile, true);
             }
 
-            eArgs = new ProgressMessageChangedEventArgs(100, string.Empty, null);
-            asyncContext.Async.Post(e => OnConversionProgressChanged((ProgressMessageChangedEventArgs) e), eArgs);
+            foreach (var styleAsyncResult in _styleAsyncResults)
+            {
+                styleAsyncResult.AsyncWaitHandle.WaitOne();
+            }
 
+            WaitHandle.WaitOne();
+            cancelled = WaitHandle.Value;
         }
 
-        private void StyleConvertStyleFileProgressChanged(object sender, ProgressMessageChangedEventArgs e)
-        {
-            //OnConversionProgressChanged(e); //don't show for now
-        }
 
         private void StyleOnConvertStyleFileCompleted(object sender, AsyncCompletedEventArgs asyncCompletedEventArgs)
         {
-            lock (_syncWaitHandle)
+            lock (_syncStyleFinished)
             {
                 _runningStyles.Remove((Style.Style) sender);
                 if (_runningStyles.Count > 0)
