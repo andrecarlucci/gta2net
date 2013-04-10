@@ -32,6 +32,7 @@ using System.Linq;
 using System.IO;
 using System.Drawing;
 using System.Runtime.Remoting.Messaging;
+using System.Xml.Serialization;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Helper.Threading;
 
@@ -121,7 +122,7 @@ namespace Hiale.GTA2NET.Core.Style
             var spriteBase = new SpriteBase();
             var fontBase = new FontBase();
 
-            var carInfos = new Dictionary<int, CarInfo>();
+            var carInfos = new SerializableDictionary<int, CarInfo>();
             var carSprites = new Dictionary<int, List<int>>(); //Helper variable to see which sprites are used by more than one model.
 
             BinaryReader reader = null;
@@ -148,9 +149,6 @@ namespace Hiale.GTA2NET.Core.Style
                         cancelled = true;
                         return;
                     }
-                    //var eArgs = new ProgressMessageChangedEventArgs(0, chunkType, null);
-                    //context.Async.Post(e => OnConvertStyleFileProgressChanged((ProgressMessageChangedEventArgs) e), eArgs);
-
                     switch (chunkType)
                     {
                         case "TILE": //Tiles
@@ -238,6 +236,8 @@ namespace Hiale.GTA2NET.Core.Style
             MemoryStream memoryStream = null;
             try
             {
+                SaveCarData(carInfos, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + "_car.xml");
+
                 memoryStream = new MemoryStream();
                 using (var zip = ZipStorer.Create(memoryStream, string.Empty))
                 {
@@ -256,7 +256,7 @@ namespace Hiale.GTA2NET.Core.Style
                     SaveSprites(spriteData, physicalPalettes, paletteIndexes, paletteBase, spriteBase, carInfos, carSprites, spriteEntries, zip, context);
                 }
                 memoryStream.Position = 0;
-                using (var stream = new FileStream(Globals.GraphicsSubDir + "\\" + styleFile + ".zip", FileMode.Create, FileAccess.Write))
+                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + ".zip", FileMode.Create, FileAccess.Write))
                 {
                     var bytes = new byte[memoryStream.Length];
                     memoryStream.Read(bytes, 0, (int) memoryStream.Length);
@@ -301,8 +301,7 @@ namespace Hiale.GTA2NET.Core.Style
                 //_carSprites.Clear();
                 //deltas.Clear();
                 //Surfaces.Clear();
-
-                GC.Collect();
+                //GC.Collect();
             }
         }
 
@@ -317,6 +316,14 @@ namespace Hiale.GTA2NET.Core.Style
             atlas.BuildTextureAtlasAsync();
             //atlas.Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + outputFile + ".xml");
             return atlas;
+        }
+
+        private static void SaveCarData(SerializableDictionary<int, CarInfo> carInfos, string fileName)
+        {
+            TextWriter textWriter = new StreamWriter(fileName);
+            var serializer = new XmlSerializer(typeof(SerializableDictionary<int, CarInfo>));
+            serializer.Serialize(textWriter, carInfos);
+            textWriter.Close();
         }
 
         private void AtlasBuildTextureAtlasCompleted(object sender, AsyncCompletedEventArgs e)
@@ -433,10 +440,10 @@ namespace Hiale.GTA2NET.Core.Style
             return spriteBase;
         }
 
-        private Dictionary<int, CarInfo> ReadCars(BinaryReader reader, int chunkSize, Dictionary<int, List<int>> carSprites)
+        private static SerializableDictionary<int, CarInfo> ReadCars(BinaryReader reader, int chunkSize, Dictionary<int, List<int>> carSprites)
         {
             System.Diagnostics.Debug.WriteLine("Reading car infos...");
-            var carInfos = new Dictionary<int, CarInfo>();
+            var carInfos = new SerializableDictionary<int, CarInfo>();
             var position = 0;
             var currentSprite = 0;
             var modelList = new List<int>();

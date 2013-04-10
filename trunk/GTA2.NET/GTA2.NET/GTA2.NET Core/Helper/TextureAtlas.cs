@@ -56,6 +56,65 @@ namespace Hiale.GTA2NET.Core.Helper
             public int SameSpriteIndex;
         }
 
+        //Based on http://www.blackpawn.com/texts/lightmaps/
+        protected class Node
+        {
+            public Rectangle Rectangle;
+            private readonly Node[] _child;
+            private int _imageWidth;
+            private int _imageHeight;
+
+            public Node(int x, int y, int width, int height)
+            {
+                Rectangle = new Rectangle(x, y, width, height);
+                _child = new Node[2];
+                _child[0] = null;
+                _child[1] = null;
+                _imageWidth = -1;
+                _imageHeight = -1;
+            }
+
+            private bool IsLeaf()
+            {
+                return _child[0] == null && _child[1] == null;
+            }
+
+            public Node Insert(int imageWidth, int imageHeight)
+            {
+                if (!IsLeaf())
+                {
+                    var newNode = _child[0].Insert(imageWidth, imageHeight);
+                    return newNode ?? _child[1].Insert(imageWidth, imageHeight);
+                }
+                if (_imageWidth >= 0 && _imageHeight >= 0)
+                    return null;
+                if (imageWidth > Rectangle.Width || imageHeight > Rectangle.Height)
+                    return null;
+
+                if (imageWidth == Rectangle.Width && imageHeight == Rectangle.Height)
+                {
+                    _imageWidth = imageWidth;
+                    _imageHeight = imageHeight;
+                    return this;
+                }
+
+                var dw = Rectangle.Width - imageWidth;
+                var dh = Rectangle.Height - imageHeight;
+
+                if (dw > dh)
+                {
+                    _child[0] = new Node(Rectangle.X, Rectangle.Y, imageWidth, Rectangle.Height);
+                    _child[1] = new Node(Rectangle.X + imageWidth, Rectangle.Y, Rectangle.Width - imageWidth, Rectangle.Height);
+                }
+                else
+                {
+                    _child[0] = new Node(Rectangle.X, Rectangle.Y, Rectangle.Width, imageHeight);
+                    _child[1] = new Node(Rectangle.X, Rectangle.Y + imageHeight, Rectangle.Width, Rectangle.Height - imageHeight);
+                }
+                return _child[0].Insert(imageWidth, imageHeight);
+            }
+        }
+
         protected class ImageEntryComparer : IComparer<ImageEntry>
         {
             public bool CompareSize { get; set; }
@@ -156,28 +215,28 @@ namespace Hiale.GTA2NET.Core.Helper
             return bmp;
         }
 
-        protected static void FindFreeSpace(List<ImageEntry> entries, out int outputWidth, out int outputHeight, CancellableContext context, out bool cancelled)
-        {
-            cancelled = false;
-            outputWidth = GuessOutputWidth(entries);
-            outputHeight = 0;
+        //protected static void FindFreeSpace(List<ImageEntry> entries, out int outputWidth, out int outputHeight, CancellableContext context, out bool cancelled)
+        //{
+        //    cancelled = false;
+        //    outputWidth = GuessOutputWidth(entries);
+        //    outputHeight = 0;
 
-            // Choose positions for each sprite, one at a time.
-            for (var i = 0; i < entries.Count; i++)
-            {
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-                }
-                if (entries[i].SameSpriteIndex > 0)
-                    continue;
-                PositionSprite(entries, i, outputWidth, context, out cancelled);
-                if (cancelled)
-                    return;
-                outputHeight = Math.Max(outputHeight, entries[i].Y + entries[i].Height);
-            }
-        }
+        //    // Choose positions for each sprite, one at a time.
+        //    for (var i = 0; i < entries.Count; i++)
+        //    {
+        //        if (context.IsCancelling)
+        //        {
+        //            cancelled = true;
+        //            return;
+        //        }
+        //        if (entries[i].SameSpriteIndex > 0)
+        //            continue;
+        //        PositionSprite(entries, i, outputWidth, context, out cancelled);
+        //        if (cancelled)
+        //            return;
+        //        outputHeight = Math.Max(outputHeight, entries[i].Y + entries[i].Height);
+        //    }
+        //}
 
         protected void CreateOutputBitmap(int width, int height)
         {
@@ -270,85 +329,85 @@ namespace Hiale.GTA2NET.Core.Helper
             return Math.Max(width, maxWidth);
         }
 
-        /// <summary>
-        /// Works out where to position a single sprite.
-        /// </summary>
-       protected static void PositionSprite(List<ImageEntry> entries, int index, int outputWidth, CancellableContext context, out bool cancelled)
-        {
-            cancelled = false;
+       // /// <summary>
+       // /// Works out where to position a single sprite.
+       // /// </summary>
+       //protected static void PositionSprite(List<ImageEntry> entries, int index, int outputWidth, CancellableContext context, out bool cancelled)
+       // {
+       //     cancelled = false;
 
-            var x = 0;
-            var y = 0;
+       //     var x = 0;
+       //     var y = 0;
 
-            while (true)
-            {
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-                }
+       //     while (true)
+       //     {
+       //         if (context.IsCancelling)
+       //         {
+       //             cancelled = true;
+       //             return;
+       //         }
 
-                // Is this position free for us to use?
-                var intersects = FindIntersectingSprite(entries, index, x, y, context, out cancelled);
-                if (cancelled)
-                    return;
+       //         // Is this position free for us to use?
+       //         var intersects = FindIntersectingSprite(entries, index, x, y, context, out cancelled);
+       //         if (cancelled)
+       //             return;
 
-                if (intersects < 0)
-                {
-                    entries[index].X = x;
-                    entries[index].Y = y;
+       //         if (intersects < 0)
+       //         {
+       //             entries[index].X = x;
+       //             entries[index].Y = y;
 
-                    return;
-                }
+       //             return;
+       //         }
 
-                // Skip past the existing sprite that we collided with.
-                x = entries[intersects].X + entries[intersects].Width;
+       //         // Skip past the existing sprite that we collided with.
+       //         x = entries[intersects].X + entries[intersects].Width;
 
-                // If we ran out of room to move to the right,
-                // try the next line down instead.
-                if (x + entries[index].Width > outputWidth)
-                {
-                    x = 0;
-                    y++;
-                }
-            }
-        }
+       //         // If we ran out of room to move to the right,
+       //         // try the next line down instead.
+       //         if (x + entries[index].Width > outputWidth)
+       //         {
+       //             x = 0;
+       //             y++;
+       //         }
+       //     }
+       // }
 
-        /// <summary>
-        /// Checks if a proposed sprite position collides with anything that we already arranged.
-        /// </summary>
-        protected static int FindIntersectingSprite(List<ImageEntry> entries, int index, int x, int y, CancellableContext context, out bool cancelled)
-        {
-            cancelled = false;
+        ///// <summary>
+        ///// Checks if a proposed sprite position collides with anything that we already arranged.
+        ///// </summary>
+        //protected static int FindIntersectingSprite(List<ImageEntry> entries, int index, int x, int y, CancellableContext context, out bool cancelled)
+        //{
+        //    cancelled = false;
 
-            var width = entries[index].Width;
-            var height = entries[index].Height;
+        //    var width = entries[index].Width;
+        //    var height = entries[index].Height;
 
-            for (var i = 0; i < index; i++)
-            {
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return -1;
-                }
+        //    for (var i = 0; i < index; i++)
+        //    {
+        //        if (context.IsCancelling)
+        //        {
+        //            cancelled = true;
+        //            return -1;
+        //        }
 
-                if (entries[i].X >= x + width)
-                    continue;
+        //        if (entries[i].X >= x + width)
+        //            continue;
 
-                if (entries[i].X + entries[i].Width <= x)
-                    continue;
+        //        if (entries[i].X + entries[i].Width <= x)
+        //            continue;
 
-                if (entries[i].Y >= y + height)
-                    continue;
+        //        if (entries[i].Y >= y + height)
+        //            continue;
 
-                if (entries[i].Y + entries[i].Height <= y)
-                    continue;
+        //        if (entries[i].Y + entries[i].Height <= y)
+        //            continue;
 
-                return i;
-            }
+        //        return i;
+        //    }
 
-            return -1;
-        }
+        //    return -1;
+        //}
 
         private static string ParsePath(string path)
         {
@@ -425,7 +484,12 @@ namespace Hiale.GTA2NET.Core.Helper
                 return;
             var outputWidth = GuessOutputWidth(entries);
             var outputHeight = 0;
-            FindFreeSpace(entries, out outputWidth, out outputHeight, context, out cancelled);
+            outputWidth = 2048;
+            outputHeight = 2048;
+            //FindFreeSpace(entries, out outputWidth, out outputHeight, context, out cancelled);
+
+            var root = new Node(0, 0, outputWidth, outputHeight);
+
             if (cancelled)
                 return;
             CreateOutputBitmap(outputWidth, outputHeight);
@@ -437,6 +501,17 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
+
+                //var source = GetBitmapFromZip(ZipStore, ZipEntries[entry.ZipEntryIndex]);
+                //var rect = new Rectangle(source)
+                var node = root.Insert(entry.Width, entry.Height);
+                if (node == null)
+                    continue;
+
+                entry.X = node.Rectangle.X;
+                entry.Y = node.Rectangle.Y;
+
+
                 var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : TileDictionary[entry.SameSpriteIndex];
                 try
                 {
@@ -490,15 +565,17 @@ namespace Hiale.GTA2NET.Core.Helper
             var comparer = new ImageEntryComparer {CompareSize = true};
             entries.Sort(comparer);
 
-            int outputWidth;
-            int outputHeight;
-            FindFreeSpace(entries, out outputWidth, out outputHeight, context, out cancelled);
+            int outputWidth = 2048;
+            int outputHeight = 2048;
+            //FindFreeSpace(entries, out outputWidth, out outputHeight, context, out cancelled);
             if (cancelled)
                 return;
 
             // Sort the sprites back into index order.
             comparer.CompareSize = false;
             entries.Sort(comparer);
+
+            var root = new Node(0, 0, outputWidth, outputHeight);
 
             CreateOutputBitmap(outputWidth, outputHeight);
             SpriteDictionary = new SerializableDictionary<SpriteItem, Rectangle>();
@@ -509,6 +586,13 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
+
+                var node  = root.Insert(entry.Width, entry.Height);
+                if (node == null)
+                    continue;
+                entry.X = node.Rectangle.X;
+                entry.Y = node.Rectangle.Y;
+
                 var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[_duplicateDictionary[entry.SameSpriteIndex]];
                 var fileName = entry.FileName;
                 SpriteItem item;
