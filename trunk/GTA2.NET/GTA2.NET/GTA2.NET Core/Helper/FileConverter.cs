@@ -46,7 +46,6 @@ namespace Hiale.GTA2NET.Core.Helper
         private readonly object _syncCancel = new object();
         private readonly object _syncStyleFinished = new object();
         private readonly List<Style.Style> _runningStyles = new List<Style.Style>();
-        private readonly List<IAsyncResult> _styleAsyncResults = new List<IAsyncResult>();
         private static readonly AutoResetEventValueExchange<bool> WaitHandle = new AutoResetEventValueExchange<bool>(false);
 
 
@@ -189,11 +188,6 @@ namespace Hiale.GTA2NET.Core.Helper
                         continue;
                 }
                 File.Copy(miscFiles[i], targetFile, true);
-            }
-
-            foreach (var styleAsyncResult in _styleAsyncResults)
-            {
-                styleAsyncResult.AsyncWaitHandle.WaitOne();
             }
 
             WaitHandle.WaitOne();

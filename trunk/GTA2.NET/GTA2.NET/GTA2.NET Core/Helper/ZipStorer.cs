@@ -86,7 +86,7 @@ namespace Hiale.GTA2NET.Core.Helper
         #region Private fields
 
         // List of files to store
-        private static readonly UInt32[] CrcTable;
+        private static readonly uint[] CrcTable;
         // Default filename encoder
         private static readonly Encoding DefaultEncoding = Encoding.GetEncoding(437);
         private readonly List<ZipFileEntry> _files = new List<ZipFileEntry>();
@@ -110,10 +110,10 @@ namespace Hiale.GTA2NET.Core.Helper
         static ZipStorer()
         {
             // Generate CRC32 table
-            CrcTable = new UInt32[256];
+            CrcTable = new uint[256];
             for (var i = 0; i < CrcTable.Length; i++)
             {
-                var c = (UInt32) i;
+                var c = (uint) i;
                 for (var j = 0; j < 8; j++)
                 {
                     if ((c & 1) != 0)

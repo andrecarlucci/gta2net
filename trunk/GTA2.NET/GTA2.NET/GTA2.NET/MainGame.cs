@@ -207,7 +207,7 @@ namespace Hiale.GTA2NET
             SetupPhysics();
 
             var carPhysics = CarPhysicReader.ReadFromFile();
-            CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
+            //CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
 
             Cars = new ObservableCollection<Car>();
             Pedestrians = new ObservableCollection<Car>();
