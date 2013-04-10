@@ -23,7 +23,12 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml.Serialization;
+using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Style;
 
 namespace Hiale.GTA2NET.Core
@@ -31,6 +36,7 @@ namespace Hiale.GTA2NET.Core
     /// <summary>
     /// Various parameters are stored for each car. A car info structure is stored for each distinct type of car. 
     /// </summary>
+    [Serializable]
     public class CarInfo
     {
         public CarInfo()
@@ -39,14 +45,24 @@ namespace Hiale.GTA2NET.Core
             Doors = new List<DoorInfo>();
         }
 
+        public static SerializableDictionary<int, CarInfo> Deserialize(string path)
+        {
+            TextReader textReader = new StreamReader(path);
+            var deserializer = new XmlSerializer(typeof(SerializableDictionary<int, CarInfo>));
+            var dict = (SerializableDictionary<int, CarInfo>)deserializer.Deserialize(textReader);
+            textReader.Close();
+            return dict;
+        }
+
         public static List<CarInfo> CreateCarInfoCollection(Dictionary<int, CarInfo> carInfos, Dictionary<int, CarPhysics> carPhysics)
         {
             var carInfoCollection = new List<CarInfo>();
-            foreach (KeyValuePair<int, CarInfo> carInfoItem in carInfos)
+            foreach (var carInfoItem in carInfos)
             {
-                foreach (KeyValuePair<int, CarPhysics> carPhysicsItem in carPhysics)
+                foreach (var carPhysicsItem in carPhysics)
                 {
-                    if (carInfoItem.Key != carPhysicsItem.Key) continue;
+                    if (carInfoItem.Key != carPhysicsItem.Key)
+                        continue;
                     carInfoItem.Value.Physics = carPhysicsItem.Value;
                     carInfoCollection.Add(carInfoItem.Value);
                 }
@@ -58,6 +74,7 @@ namespace Hiale.GTA2NET.Core
         /// <summary>
         /// Physical behavior of the car.
         /// </summary>
+        [XmlIgnore]
         public CarPhysics Physics { get; private set; }
 
         /// <summary>

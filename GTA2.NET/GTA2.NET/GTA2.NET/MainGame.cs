@@ -59,7 +59,8 @@ namespace Hiale.GTA2NET
         /// <summary>
         /// Current style (Maybe this will be deleted later, when all information are extracted)
         /// </summary>
-        public static Style Style { get; set; }
+        //public static Style Style { get; set; }
+        public static string StyleName { get; set; }
 
         /// <summary>
         /// All available car data.
@@ -198,16 +199,19 @@ namespace Hiale.GTA2NET
         {
             Map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
             //Map = new Map("data\\bil.gmp");
+            StyleName = "bil";
 
-            Style = new Style();
-            Style.ReadFromFile(Globals.GraphicsSubDir + "\\bil.sty");
+            //Style = new Style();
+            //Style.ReadFromFile(Globals.GraphicsSubDir + "\\bil.sty");
+
+            var carInfos = CarInfo.Deserialize(Globals.MiscSubDir + "\\bil_car.xml");
 
             //var collision = new MapCollision(Map);
             //collision.CollisionMap(new Vector2(73,192));
             SetupPhysics();
 
             var carPhysics = CarPhysicReader.ReadFromFile();
-            //CarInfos = CarInfo.CreateCarInfoCollection(Style.CarInfos, carPhysics);
+            CarInfos = CarInfo.CreateCarInfoCollection(carInfos, carPhysics);
 
             Cars = new ObservableCollection<Car>();
             Pedestrians = new ObservableCollection<Car>();

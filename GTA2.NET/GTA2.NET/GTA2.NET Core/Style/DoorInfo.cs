@@ -23,11 +23,15 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
+using System;
+
 namespace Hiale.GTA2NET.Core.Style
 {
     /// <summary>
     /// Represent a door in relative position to the centre of the car.
     /// </summary>
+    [Serializable]
     public struct DoorInfo
     {
         /// <summary>

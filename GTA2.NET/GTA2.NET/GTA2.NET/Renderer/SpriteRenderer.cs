@@ -119,7 +119,7 @@ namespace Hiale.GTA2NET.Renderer
 
         private void LoadTexture()
         {
-            var atlasPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(MainGame.Style.StylePath) + "_" + Globals.SpritesSuffix .ToLower() + ".xml";
+            var atlasPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + MainGame.StyleName + "_" + Globals.SpritesSuffix.ToLower() + ".xml";
             var dict = TextureAtlas.Deserialize<TextureAtlasSprites>(atlasPath);
             spriteAtlas = dict.SpriteDictionary;
             var fs = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar +dict.ImagePath, FileMode.Open);

@@ -23,8 +23,12 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
+using System;
+
 namespace Hiale.GTA2NET.Core
 {
+    [Serializable]
     public class CarPhysics
     {
         /// <summary>
