@@ -133,7 +133,9 @@ namespace Hiale.GTA2NET.WinUI
             {
                 var assembly = Assembly.GetExecutingAssembly();
                 var currentDir = Path.GetDirectoryName(assembly.Location);
-               
+
+                btnOK.Enabled = false;
+
                 _progressForm.ProgressValue = 0;
                 _converter.ConvertFilesAsync(sourcePath, currentDir);
                 _progressForm.ShowDialog();
@@ -155,6 +157,7 @@ namespace Hiale.GTA2NET.WinUI
 
         private void ConverterConversionCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
         {
+            btnOK.Enabled = true;
             if (e.Cancelled)
             {
                 _progressForm.Hide();
