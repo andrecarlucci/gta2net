@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Pedestrian.cs
-// Created: 21.02.2013
+// File: CompactRectangle.cs
+// Created: 11.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -24,29 +24,38 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
-namespace Hiale.GTA2NET.Logic
+namespace Hiale.GTA2NET.Core.Helper
 {
-    public class Pedestrian : GameplayObject
+    /// <summary>
+    /// This struct is used to serialize Rectangles to XML, as in the XNA rectangle the position is saved twice.
+    /// </summary>
+    [Serializable]
+    public struct CompactRectangle
     {
-        private Color _color;
+        public int X;
+        public int Y;
+        public int Width;
+        public int Height;
 
-        private bool _isJumping;
-
-        private int _healthPoint;
-
-        private List<Weapon> _weapons;
-
-        private Weapon _currentWeapon; //selected weapon
-
-        public Pedestrian(Vector3 startUpPosition) : base(startUpPosition, 1, 1)
+        public CompactRectangle(int x, int y, int width, int height)
         {
-            //Velocity = 1f;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
         }
-        
+
+        public static CompactRectangle FromRectlange(Rectangle rect)
+        {
+            return new CompactRectangle {X = rect.X, Y = rect.X, Width = rect.Width, Height = rect.Height};
+        }
+
+        public Rectangle ToRectangle()
+        {
+            return new Rectangle(X, Y, Width, Height);
+        }
+
     }
 }

@@ -150,6 +150,11 @@ namespace Hiale.GTA2NET.Core.Helper
         /// </summary>
         public string ImagePath { get; set; }
 
+        /// <summary>
+        /// Padding to eliminate texture bleeding, it SEEMS that XNA 4.0 fixed it, so it's not needed anymore?
+        /// </summary>
+        public int Padding { get; set; }
+
         [XmlIgnore]
         public ZipStorer ZipStore { get; protected set; }
 
@@ -164,6 +169,7 @@ namespace Hiale.GTA2NET.Core.Helper
         protected TextureAtlas()
         {
             //needed by xml serializer
+            Padding = 0;
             CrcDictionary = new Dictionary<uint, int>();
         }
 
@@ -196,8 +202,8 @@ namespace Hiale.GTA2NET.Core.Helper
                     entry.SameSpriteIndex = CrcDictionary[ZipEntries[i].Crc32];
                 entry.Index = i;
                 entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
-                entry.Width = source.Width + 2;  // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
-                entry.Height = source.Height + 2;
+                entry.Width = source.Width + 2*Padding;  // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
+                entry.Height = source.Height + 2*Padding;
                 entry.ZipEntryIndex = i;
                 entries.Add(entry);
                 source.Dispose();
@@ -215,41 +221,18 @@ namespace Hiale.GTA2NET.Core.Helper
             return bmp;
         }
 
-        //protected static void FindFreeSpace(List<ImageEntry> entries, out int outputWidth, out int outputHeight, CancellableContext context, out bool cancelled)
-        //{
-        //    cancelled = false;
-        //    outputWidth = GuessOutputWidth(entries);
-        //    outputHeight = 0;
-
-        //    // Choose positions for each sprite, one at a time.
-        //    for (var i = 0; i < entries.Count; i++)
-        //    {
-        //        if (context.IsCancelling)
-        //        {
-        //            cancelled = true;
-        //            return;
-        //        }
-        //        if (entries[i].SameSpriteIndex > 0)
-        //            continue;
-        //        PositionSprite(entries, i, outputWidth, context, out cancelled);
-        //        if (cancelled)
-        //            return;
-        //        outputHeight = Math.Max(outputHeight, entries[i].Y + entries[i].Height);
-        //    }
-        //}
-
         protected void CreateOutputBitmap(int width, int height)
         {
             Image = new Bitmap(width, height);
             Graphics = Graphics.FromImage(Image);
         }
 
-        protected Rectangle PaintAndGetRectangle(ImageEntry entry)
+        protected CompactRectangle PaintAndGetRectangle(ImageEntry entry)
         {
             var source = GetBitmapFromZip(ZipStore, ZipEntries[entry.ZipEntryIndex]);
-            Graphics.DrawImageUnscaled(source, entry.X + 1, entry.Y + 1);
+            Graphics.DrawImageUnscaled(source, entry.X + Padding, entry.Y + Padding);
             source.Dispose();
-            return new Rectangle(entry.X + 1, entry.Y + 1, entry.Width - 2, entry.Height - 2);
+            return new CompactRectangle(entry.X + Padding, entry.Y + Padding, entry.Width - 2*Padding, entry.Height - 2*Padding);
         }
 
         public virtual void BuildTextureAtlasAsync()
@@ -316,7 +299,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var widths = entries.Select(entry => entry.Width).ToList();
 
             // Sort the widths into ascending order.
-            widths.Sort();
+            //widths.Sort();
 
             // Extract the maximum and median widths.
             var maxWidth = widths[widths.Count - 1];
@@ -326,88 +309,17 @@ namespace Hiale.GTA2NET.Core.Helper
             var width = medianWidth * (int)Math.Round(Math.Sqrt(entries.Count));
 
             // Make sure we never choose anything smaller than our largest sprite.
-            return Math.Max(width, maxWidth);
+            width = Math.Max(width, maxWidth);
+
+            int widthPower2;
+            var exponent = 0;
+            do
+            {
+                widthPower2 = (int) Extensions.PowerOf2(exponent);
+                exponent++;
+            } while (widthPower2 < width);
+            return widthPower2;
         }
-
-       // /// <summary>
-       // /// Works out where to position a single sprite.
-       // /// </summary>
-       //protected static void PositionSprite(List<ImageEntry> entries, int index, int outputWidth, CancellableContext context, out bool cancelled)
-       // {
-       //     cancelled = false;
-
-       //     var x = 0;
-       //     var y = 0;
-
-       //     while (true)
-       //     {
-       //         if (context.IsCancelling)
-       //         {
-       //             cancelled = true;
-       //             return;
-       //         }
-
-       //         // Is this position free for us to use?
-       //         var intersects = FindIntersectingSprite(entries, index, x, y, context, out cancelled);
-       //         if (cancelled)
-       //             return;
-
-       //         if (intersects < 0)
-       //         {
-       //             entries[index].X = x;
-       //             entries[index].Y = y;
-
-       //             return;
-       //         }
-
-       //         // Skip past the existing sprite that we collided with.
-       //         x = entries[intersects].X + entries[intersects].Width;
-
-       //         // If we ran out of room to move to the right,
-       //         // try the next line down instead.
-       //         if (x + entries[index].Width > outputWidth)
-       //         {
-       //             x = 0;
-       //             y++;
-       //         }
-       //     }
-       // }
-
-        ///// <summary>
-        ///// Checks if a proposed sprite position collides with anything that we already arranged.
-        ///// </summary>
-        //protected static int FindIntersectingSprite(List<ImageEntry> entries, int index, int x, int y, CancellableContext context, out bool cancelled)
-        //{
-        //    cancelled = false;
-
-        //    var width = entries[index].Width;
-        //    var height = entries[index].Height;
-
-        //    for (var i = 0; i < index; i++)
-        //    {
-        //        if (context.IsCancelling)
-        //        {
-        //            cancelled = true;
-        //            return -1;
-        //        }
-
-        //        if (entries[i].X >= x + width)
-        //            continue;
-
-        //        if (entries[i].X + entries[i].Width <= x)
-        //            continue;
-
-        //        if (entries[i].Y >= y + height)
-        //            continue;
-
-        //        if (entries[i].Y + entries[i].Height <= y)
-        //            continue;
-
-        //        return i;
-        //    }
-
-        //    return -1;
-        //}
 
         private static string ParsePath(string path)
         {
@@ -417,7 +329,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public void Serialize(string path)
         {
-            TextWriter textWriter = new StreamWriter(path);
+            var textWriter = new StreamWriter(path);
             var serializer = new XmlSerializer(GetType());
             serializer.Serialize(textWriter, this);
             textWriter.Close();
@@ -425,7 +337,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public static T Deserialize<T>(string path) where T: TextureAtlas
         {
-            TextReader textReader = new StreamReader(path);
+            var textReader = new StreamReader(path);
             var deserializer = new XmlSerializer(typeof (T));
             var atlas = (T)deserializer.Deserialize(textReader);
             textReader.Close();
@@ -457,7 +369,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
     public class TextureAtlasTiles : TextureAtlas
     {
-        public SerializableDictionary<int, Rectangle> TileDictionary { get; set; }
+        public SerializableDictionary<int, CompactRectangle> TileDictionary { get; set; }
 
         public TextureAtlasTiles()
         {
@@ -483,17 +395,17 @@ namespace Hiale.GTA2NET.Core.Helper
             if (cancelled)
                 return;
             var outputWidth = GuessOutputWidth(entries);
-            var outputHeight = 0;
-            outputWidth = 2048;
-            outputHeight = 2048;
-            //FindFreeSpace(entries, out outputWidth, out outputHeight, context, out cancelled);
+            var outputHeight = outputWidth; //ToDo
 
             var root = new Node(0, 0, outputWidth, outputHeight);
 
-            if (cancelled)
+            if (context.IsCancelling)
+            {
+                cancelled = true;
                 return;
+            }
             CreateOutputBitmap(outputWidth, outputHeight);
-            TileDictionary = new SerializableDictionary<int, Rectangle>();
+            TileDictionary = new SerializableDictionary<int, CompactRectangle>();
             foreach (var entry in entries)
             {
                 if (context.IsCancelling)
@@ -502,15 +414,11 @@ namespace Hiale.GTA2NET.Core.Helper
                     return;
                 }
 
-                //var source = GetBitmapFromZip(ZipStore, ZipEntries[entry.ZipEntryIndex]);
-                //var rect = new Rectangle(source)
                 var node = root.Insert(entry.Width, entry.Height);
                 if (node == null)
                     continue;
-
                 entry.X = node.Rectangle.X;
                 entry.Y = node.Rectangle.Y;
-
 
                 var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : TileDictionary[entry.SameSpriteIndex];
                 try
@@ -531,7 +439,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
     public class TextureAtlasSprites : TextureAtlas
     {
-        public SerializableDictionary<SpriteItem, Rectangle> SpriteDictionary { get; set; }
+        public SerializableDictionary<SpriteItem, CompactRectangle> SpriteDictionary { get; set; }
 
         private readonly Dictionary<int, SpriteItem> _duplicateDictionary; //Helper list to find duplicate images.
 
@@ -565,11 +473,14 @@ namespace Hiale.GTA2NET.Core.Helper
             var comparer = new ImageEntryComparer {CompareSize = true};
             entries.Sort(comparer);
 
-            int outputWidth = 2048;
-            int outputHeight = 2048;
-            //FindFreeSpace(entries, out outputWidth, out outputHeight, context, out cancelled);
-            if (cancelled)
+            var outputWidth = GuessOutputWidth(entries);
+            var outputHeight = outputWidth; //ToDo
+
+            if (context.IsCancelling)
+            {
+                cancelled = true;
                 return;
+            }
 
             // Sort the sprites back into index order.
             comparer.CompareSize = false;
@@ -578,7 +489,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var root = new Node(0, 0, outputWidth, outputHeight);
 
             CreateOutputBitmap(outputWidth, outputHeight);
-            SpriteDictionary = new SerializableDictionary<SpriteItem, Rectangle>();
+            SpriteDictionary = new SerializableDictionary<SpriteItem, CompactRectangle>();
             foreach (var entry in entries)
             {
                 if (context.IsCancelling)

@@ -662,26 +662,9 @@ namespace Hiale.GTA2NET
 
             // Re-Set device
             // Restore z buffer state
-            //BaseGame.Device.RenderState.DepthBufferEnable = true; //XNA 3.1
-            //BaseGame.Device.RenderState.DepthBufferWriteEnable = true; //XNA 3.1
             Device.DepthStencilState = DepthStencilState.Default;
             Device.SamplerStates[0] = SamplerState.PointWrap;
-            // Set u/v addressing back to wrap
-            //BaseGame.Device.SamplerStates[0].AddressU = TextureAddressMode.Wrap;  //not needed ???
-            //BaseGame.Device.SamplerStates[0].AddressV = TextureAddressMode.Wrap;
-            // Restore normal alpha blending
-            //BaseGame.Device.RenderState.AlphaBlendEnable = true; //XNA 3.1
-            //BaseGame.Device.RenderState.SourceBlend = Blend.SourceAlpha; //XNA 3.1
-            //BaseGame.Device.RenderState.DestinationBlend = Blend.InverseSourceAlpha; //XNA 3.1
             Device.BlendState = CreateAlphaBlendingState();
-
-            // Set 128 and greate alpha compare for Model.Render
-            //BaseGame.Device.RenderState.ReferenceAlpha = 128;
-            //BaseGame.Device.RenderState.AlphaFunction = CompareFunction.Greater;
-
-            // Recreate all render-targets
-            //foreach (RenderToTexture renderToTexture in remRenderToTextures)
-            //    renderToTexture.HandleDeviceReset();
         }
 
         private static bool mustApplyDeviceChanges = false;

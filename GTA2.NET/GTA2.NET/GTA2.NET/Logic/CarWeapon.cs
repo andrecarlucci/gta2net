@@ -25,7 +25,6 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Hiale.GTA2NET.Logic
