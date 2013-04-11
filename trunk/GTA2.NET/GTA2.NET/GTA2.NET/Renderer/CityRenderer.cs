@@ -41,7 +41,7 @@ namespace Hiale.GTA2NET.Renderer
 
         //City textures
         Texture2D _cityTexture;
-        Dictionary<int, Rectangle> _tileAtlas;
+        Dictionary<int, CompactRectangle> _tileAtlas;
         readonly Vector2[] _texturePosition;
 
         //Triangle stuff
@@ -926,7 +926,7 @@ namespace Hiale.GTA2NET.Renderer
             return newCoords;        
         }
 
-        private Vector2[] GetTexturePositions(Rectangle sourceRectangle, RotationType rotation, bool flip)
+        private Vector2[] GetTexturePositions(CompactRectangle sourceRectangle, RotationType rotation, bool flip)
         {
             double pixelPerWidth = 1f/_cityTexture.Width;
             double pixelPerHeight = 1f/_cityTexture.Height;
@@ -1028,15 +1028,14 @@ namespace Hiale.GTA2NET.Renderer
             _effect.Projection = BaseGame.ProjectionMatrix;
             _effect.World = BaseGame.WorldMatrix;
 
-            //effect.GraphicsDevice.RenderState.CullMode = CullMode.CullClockwiseFace;
-            //effect.GraphicsDevice.RenderState.CullMode = CullMode.CullCounterClockwiseFace;
-            //effect.GraphicsDevice.RenderState.CullMode = CullMode.None;
-            //effect.GraphicsDevice.RenderState.FillMode = FillMode.WireFrame;
+            //_effect.GraphicsDevice.RasterizerState.CullMode = CullMode.CullClockwiseFace;
+            //_effect.GraphicsDevice.RasterizerState.CullMode = CullMode.CullCounterClockwiseFace;
+            //_effect.GraphicsDevice.RasterizerState.CullMode = CullMode.None;
+            //_effect.GraphicsDevice.RasterizerState.FillMode = FillMode.WireFrame;
 
 
             _effect.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             _effect.GraphicsDevice.SamplerStates[0] = SamplerState.PointWrap;
-
             _effect.GraphicsDevice.BlendState = BaseGame.AlphaBlendingState;
 
             BaseGame.Device.SetVertexBuffer(_vertexBuffer);
@@ -1044,17 +1043,6 @@ namespace Hiale.GTA2NET.Renderer
 
             foreach (var pass in _effect.CurrentTechnique.Passes)
             {
-                //pass.Begin(); //XNA 3.1
-
-                //Anisotropic
-                //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Anisotropic;
-                //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Linear;
-                //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Linear;
-                //effect.GraphicsDevice.SamplerStates[0].MaxAnisotropy = 16;
-
-                //effect.GraphicsDevice.SamplerStates[0].MinFilter = TextureFilter.Point;
-                //effect.GraphicsDevice.SamplerStates[0].MagFilter = TextureFilter.Point;
-                //effect.GraphicsDevice.SamplerStates[0].MipFilter = TextureFilter.Point;
                 pass.Apply();
                 _effect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, _cityVerticesCollection.Count, 0, _indexBufferCollection.Count / 3);
             }

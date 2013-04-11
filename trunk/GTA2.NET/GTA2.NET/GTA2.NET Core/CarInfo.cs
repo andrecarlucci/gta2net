@@ -54,10 +54,10 @@ namespace Hiale.GTA2NET.Core
             return dict;
         }
 
-        public static List<CarInfo> CreateCarInfoCollection(Dictionary<int, CarInfo> carInfos, Dictionary<int, CarPhysics> carPhysics)
+        public static List<CarInfo> CreateCarInfoCollection(Dictionary<int, CarInfo> carInfo, Dictionary<int, CarPhysics> carPhysics)
         {
             var carInfoCollection = new List<CarInfo>();
-            foreach (var carInfoItem in carInfos)
+            foreach (var carInfoItem in carInfo)
             {
                 foreach (var carPhysicsItem in carPhysics)
                 {

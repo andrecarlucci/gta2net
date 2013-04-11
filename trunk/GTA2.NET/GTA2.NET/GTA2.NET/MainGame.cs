@@ -65,7 +65,7 @@ namespace Hiale.GTA2NET
         /// <summary>
         /// All available car data.
         /// </summary>
-        public static List<CarInfo> CarInfos { get; private set; }
+        public static List<CarInfo> CarInfoList { get; private set; }
 
         /// <summary>
         /// The cars currently drive on the map.
@@ -204,19 +204,19 @@ namespace Hiale.GTA2NET
             //Style = new Style();
             //Style.ReadFromFile(Globals.GraphicsSubDir + "\\bil.sty");
 
-            var carInfos = CarInfo.Deserialize(Globals.MiscSubDir + "\\bil_car.xml");
+            var carInfo = CarInfo.Deserialize(Globals.MiscSubDir + "\\bil_car.xml");
 
             //var collision = new MapCollision(Map);
             //collision.CollisionMap(new Vector2(73,192));
             SetupPhysics();
 
             var carPhysics = CarPhysicReader.ReadFromFile();
-            CarInfos = CarInfo.CreateCarInfoCollection(carInfos, carPhysics);
+            CarInfoList = CarInfo.CreateCarInfoCollection(carInfo, carPhysics);
 
             Cars = new ObservableCollection<Car>();
             Pedestrians = new ObservableCollection<Car>();
 
-            ChasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), CarInfos[9]);
+            ChasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), CarInfoList[9]);
             ChasingObject.PlayerControlled = true;
             //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
             Cars.Add((Car) ChasingObject);

@@ -142,7 +142,9 @@ namespace Hiale.GTA2NET.WinUI
             }
             else
             {
-                MessageBox.Show(txtPath.Text + " seems to be a wrong path.", Text, MessageBoxButtons.OK,
+                if (sourcePath == string.Empty)
+                    sourcePath = "This";
+                MessageBox.Show(sourcePath + " seems to be a wrong path.", Text, MessageBoxButtons.OK,
                                 MessageBoxIcon.Exclamation);
                 txtPath.Focus();
                 return;

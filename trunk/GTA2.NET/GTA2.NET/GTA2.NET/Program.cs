@@ -26,7 +26,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Windows.Forms;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.WinUI;
 
@@ -44,11 +43,7 @@ namespace Hiale.GTA2NET
             var currentDir = Path.GetDirectoryName(assembly.Location);
             if (!FileConverter.CheckConvertedAssets(currentDir))
             {
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                var form = new ConvertForm();
-                Application.Run(form);
-                if (form.DialogResult == DialogResult.Cancel)
+                if (!WinUI.Program.Main())
                     return;
             }
 

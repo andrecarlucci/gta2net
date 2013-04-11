@@ -81,5 +81,10 @@ namespace Hiale.GTA2NET.Core.Helper
             return true;
         }
 
+        public static uint PowerOf2(int exponent)
+        {
+            return (uint)(1 << exponent);  
+        }
+
     }
 }
