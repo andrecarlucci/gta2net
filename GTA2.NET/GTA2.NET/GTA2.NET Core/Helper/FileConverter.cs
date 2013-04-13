@@ -103,6 +103,8 @@ namespace Hiale.GTA2NET.Core.Helper
                 return false;
             if (Globals.MiscFiles.Any(miscFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + miscFile)))
                 return false;
+            if (Globals.StyleMapFiles.Any(carStyleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + carStyleFile + Globals.CarStyleSuffix)))
+                return false;
             return true;
         }
 

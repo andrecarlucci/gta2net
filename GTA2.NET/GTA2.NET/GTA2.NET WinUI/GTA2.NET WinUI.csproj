@@ -45,6 +45,7 @@
     <Compile Include="ConvertForm.designer.cs">
       <DependentUpon>ConvertForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="NativeWin32.cs" />
     <Compile Include="ProgressForm.cs">
       <SubType>Form</SubType>
     </Compile>

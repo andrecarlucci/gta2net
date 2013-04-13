@@ -34,6 +34,7 @@ namespace Hiale.GTA2NET.Core
         public const string TilesSuffix = "Tiles";
         public const string SpritesSuffix = "Sprites";
         public const string TextureImageFormat = ".png";
+        public const string CarStyleSuffix = "_car.xml";
 
         //Original game files
         public static readonly string[] StyleMapFiles = { "bil", "ste", "wil" };

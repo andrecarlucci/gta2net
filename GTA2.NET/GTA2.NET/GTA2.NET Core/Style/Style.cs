@@ -40,6 +40,26 @@ namespace Hiale.GTA2NET.Core.Style
 {
     public class Style
     {
+        private struct StyleData
+        {
+            public ushort[] PaletteIndexes;
+            public uint[] PhysicalPalettes;
+            public PaletteBase PaletteBase;
+            public byte[] TileData;
+            public byte[] SpriteData;
+            public SpriteEntry[] SpriteEntries;
+            public SpriteBase SpriteBase;
+            public FontBase FontBase;
+
+            public SerializableDictionary<int, CarInfo> CarInfo;
+            public Dictionary<int, List<int>> CarSprites; //Helper variable to see which sprites are used by more than one model.
+
+            public DateTime OriginalDateTime;
+
+        }
+
+        private const bool EXPORT_REMAPS = false; //don't draw remaps for now, we might should do something with Palette as well
+
         public string StylePath { get; private set; }
         public event EventHandler<ProgressMessageChangedEventArgs> ConvertStyleFileProgressChanged;
         public event AsyncCompletedEventHandler ConvertStyleFileCompleted;
@@ -86,17 +106,19 @@ namespace Hiale.GTA2NET.Core.Style
         {
             cancelled = false;
 
-            var paletteIndexes = new ushort[] { };
-            var physicalPalettes = new uint[] { };
-            var paletteBase = new PaletteBase();
-            var tileData = new byte[] { };
-            var spriteData = new byte[] { };
-            var spriteEntries = new SpriteEntry[] { };
-            var spriteBase = new SpriteBase();
-            var fontBase = new FontBase();
-
-            var carInfo = new SerializableDictionary<int, CarInfo>();
-            var carSprites = new Dictionary<int, List<int>>(); //Helper variable to see which sprites are used by more than one model.
+            var styleData = new StyleData
+                {
+                    PaletteIndexes = new ushort[] {},
+                    PhysicalPalettes = new uint[] {},
+                    PaletteBase = new PaletteBase(),
+                    TileData = new byte[] {},
+                    SpriteData = new byte[] {},
+                    SpriteEntries = new SpriteEntry[] {},
+                    SpriteBase = new SpriteBase(),
+                    FontBase = new FontBase(),
+                    CarInfo = new SerializableDictionary<int, CarInfo>(),
+                    CarSprites = new Dictionary<int, List<int>>()
+                };
 
             BinaryReader reader = null;
             try
@@ -106,6 +128,7 @@ namespace Hiale.GTA2NET.Core.Style
                 StylePath = stylePath;
                 System.Diagnostics.Debug.WriteLine("Reading style file " + stylePath);
                 var stream = new FileStream(stylePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                styleData.OriginalDateTime = File.GetLastWriteTime(stylePath);
                 reader = new BinaryReader(stream);
                 System.Text.Encoding encoder = System.Text.Encoding.ASCII;
                 reader.ReadBytes(4); //GBMP
@@ -125,22 +148,22 @@ namespace Hiale.GTA2NET.Core.Style
                     switch (chunkType)
                     {
                         case "TILE": //Tiles
-                            tileData = ReadTiles(reader, chunkSize);
+                            styleData.TileData = ReadTiles(reader, chunkSize);
                             break;
                         case "PPAL": //Physical Palette
-                            physicalPalettes = ReadPhysicalPalette(reader, chunkSize);
+                            styleData.PhysicalPalettes = ReadPhysicalPalette(reader, chunkSize);
                             break;
                         case "SPRB": //Sprite Bases
-                                spriteBase = ReadSpriteBases(reader);
+                            styleData.SpriteBase = ReadSpriteBases(reader);
                             break;
                         case "PALX": //Palette Index
-                            paletteIndexes = ReadPaletteIndexes(reader, chunkSize);
+                            styleData.PaletteIndexes = ReadPaletteIndexes(reader, chunkSize);
                             break;
                         case "OBJI": //Map Objects
                             ReadMapObjects(reader, chunkSize);
                             break;
                         case "FONB": //Font Base
-                            fontBase = ReadFonts(reader, spriteBase.Font);
+                            styleData.FontBase = ReadFonts(reader, styleData.SpriteBase.Font);
                             break;
                         case "DELX": //Delta Index
                             ReadDeltaIndex(reader, chunkSize);
@@ -149,16 +172,16 @@ namespace Hiale.GTA2NET.Core.Style
                             //    ReadDeltaStore(reader, chunkSize);
                             //    break; 
                         case "CARI": //Car Info
-                            carInfo = ReadCars(reader, chunkSize, carSprites);
+                            styleData.CarInfo = ReadCars(reader, chunkSize, styleData.CarSprites);
                             break;
                         case "SPRG": //Sprite Graphics
-                            spriteData = ReadSpritesGraphics(reader, chunkSize);
+                            styleData.SpriteData = ReadSpritesGraphics(reader, chunkSize);
                             break;
                         case "SPRX": //Sprite Index
-                            spriteEntries = ReadSpriteIndex(reader, chunkSize);
+                            styleData.SpriteEntries = ReadSpriteIndex(reader, chunkSize);
                             break;
                         case "PALB": //Palette Base
-                            paletteBase = ReadPaletteBase(reader);
+                            styleData.PaletteBase = ReadPaletteBase(reader);
                             break;
                         case "SPEC": //Undocumented
                             ReadSurfaces(reader, chunkSize);
@@ -176,39 +199,67 @@ namespace Hiale.GTA2NET.Core.Style
                     reader.Close();
             }
             
-            SaveData(paletteIndexes, physicalPalettes, paletteBase, tileData, spriteData, spriteEntries, spriteBase, fontBase, carInfo, carSprites, context, out cancelled);
+            SaveData(styleData, context, out cancelled);
         }
 
-        private void SaveData(ushort[] paletteIndexes, uint[] physicalPalettes, PaletteBase paletteBase, byte[] tileData, byte[] spriteData, SpriteEntry[] spriteEntries, SpriteBase spriteBase, FontBase fontBase, SerializableDictionary<int, CarInfo> carInfo, Dictionary<int, List<int>> carSprites, CancellableContext context, out bool cancelled)
+        private void SaveData(StyleData styleData, CancellableContext context, out bool cancelled)
         {
             var styleFile = Path.GetFileNameWithoutExtension(StylePath);
-            MemoryStream memoryStream = null;
+            MemoryStream memoryStreamTiles = null;
+            MemoryStream memoryStreamSprites = null;
             try
             {
-                SaveCarData(carInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + "_car.xml");
+                SaveCarData(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix);
 
-                memoryStream = new MemoryStream();
-                using (var zip = ZipStorer.Create(memoryStream, string.Empty))
+                memoryStreamTiles = new MemoryStream();
+                using (var zip = ZipStorer.Create(memoryStreamTiles, string.Empty))
                 {
                     if (context.IsCancelling)
                     {
                         cancelled = true;
                         return;
                     }
-                    SaveTiles(tileData, physicalPalettes, paletteIndexes, zip, context);
+                    SaveTiles(styleData, zip, context);
                     if (context.IsCancelling)
                     {
                         cancelled = true;
                         return;
-
                     }
-                    SaveSprites(spriteData, physicalPalettes, paletteIndexes, paletteBase, spriteBase, carInfo, carSprites, spriteEntries, zip, context);
+
                 }
-                memoryStream.Position = 0;
-                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + ".zip", FileMode.Create, FileAccess.Write))
+                memoryStreamTiles.Position = 0;
+                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_tiles.zip", FileMode.Create, FileAccess.Write))
                 {
-                    var bytes = new byte[memoryStream.Length];
-                    memoryStream.Read(bytes, 0, (int)memoryStream.Length);
+                    var bytes = new byte[memoryStreamTiles.Length];
+                    memoryStreamTiles.Read(bytes, 0, (int)memoryStreamTiles.Length);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+                memoryStreamSprites = new MemoryStream();
+                using (var zip = ZipStorer.Create(memoryStreamSprites, string.Empty))
+                {
+                    if (context.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+
+                    }
+                    SaveSprites(styleData, zip, context);
+                    if (context.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                }
+                memoryStreamSprites.Position = 0;
+                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_sprites.zip", FileMode.Create, FileAccess.Write))
+                {
+                    var bytes = new byte[memoryStreamSprites.Length];
+                    memoryStreamSprites.Read(bytes, 0, (int)memoryStreamSprites.Length);
                     stream.Write(bytes, 0, bytes.Length);
                 }
                 if (context.IsCancelling)
@@ -217,11 +268,11 @@ namespace Hiale.GTA2NET.Core.Style
                     return;
                 }
 
-                var zipStream1 = new MemoryStream(memoryStream.ToArray());
-                var zipStream2 = new MemoryStream(memoryStream.ToArray());
+                memoryStreamTiles.Position = 0;
+                memoryStreamSprites.Position = 0;
 
-                TextureAtlas atlas = CreateTextureAtlas<TextureAtlasTiles>(ZipStorer.Open(zipStream1, FileAccess.Read), styleFile + "_" + Globals.TilesSuffix.ToLower());
-                _memoryStreams.Add(atlas, zipStream1);
+                TextureAtlas atlas = CreateTextureAtlas<TextureAtlasTiles>(ZipStorer.Open(memoryStreamTiles, FileAccess.Read), styleFile + "_" + Globals.TilesSuffix.ToLower());
+                _memoryStreams.Add(atlas, memoryStreamTiles);
                 _runningAtlas.Add(atlas);
                 if (context.IsCancelling)
                 {
@@ -229,16 +280,18 @@ namespace Hiale.GTA2NET.Core.Style
                     return;
                 }
 
-                atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(zipStream2, FileAccess.Read), styleFile + "_" + Globals.SpritesSuffix.ToLower());
-                _memoryStreams.Add(atlas, zipStream2);
+                atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), styleFile + "_" + Globals.SpritesSuffix.ToLower());
+                _memoryStreams.Add(atlas, memoryStreamSprites);
                 _runningAtlas.Add(atlas);
                 WaitHandle.WaitOne();
                 cancelled = WaitHandle.Value;
             }
             finally
             {
-                if (memoryStream != null)
-                    memoryStream.Dispose();
+                //if (memoryStreamTiles != null)
+                //    memoryStreamTiles.Dispose();
+                //if (memoryStreamSprites != null)
+                //    memoryStreamSprites.Close();
             }
         }
 
@@ -246,18 +299,16 @@ namespace Hiale.GTA2NET.Core.Style
         {
             var args = new object[2];
             args[0] = outputFile + Globals.TextureImageFormat;
-            //args[0] = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + outputFile + Globals.TextureImageFormat;
             args[1] = inputZip;
             var atlas = (T) Activator.CreateInstance(typeof (T), args);
             atlas.BuildTextureAtlasCompleted += AtlasBuildTextureAtlasCompleted;
             atlas.BuildTextureAtlasAsync();
-            //atlas.Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + outputFile + ".xml");
             return atlas;
         }
 
         private static void SaveCarData(SerializableDictionary<int, CarInfo> carInfo, string fileName)
         {
-            TextWriter textWriter = new StreamWriter(fileName);
+            var textWriter = new StreamWriter(fileName);
             var serializer = new XmlSerializer(typeof(SerializableDictionary<int, CarInfo>));
             serializer.Serialize(textWriter, carInfo);
             textWriter.Close();
@@ -518,7 +569,7 @@ namespace Hiale.GTA2NET.Core.Style
             System.Diagnostics.Debug.WriteLine(i);
         }
 
-        private IList<Surface> ReadSurfaces(BinaryReader reader, int chunkSize)
+        private static IList<Surface> ReadSurfaces(BinaryReader reader, int chunkSize)
         {
             var surfaces = new List<Surface>();
             var currentType = SurfaceType.Grass;
@@ -550,18 +601,18 @@ namespace Hiale.GTA2NET.Core.Style
             return surfaces;
         }
 
-        private static void SaveTiles(byte[] tileData, uint[] physicalPalettes, ushort[] paletteIndexes, ZipStorer zip, CancellableContext asyncContext) //should be ok
+        private static void SaveTiles(StyleData styleData, ZipStorer zip, CancellableContext asyncContext)
         {
-            var tilesCount = tileData.Length / (64 * 64);
+            var tilesCount = styleData.TileData.Length / (64 * 64);
             for (var i = 0; i < tilesCount; i++)
             {
                 if (asyncContext.IsCancelling)
                     return;
-                SaveTile(tileData, physicalPalettes, paletteIndexes[i], zip, ref i);
+                SaveTile(styleData, zip, ref i);
             }
         }
 
-        private static void SaveTile(byte[] tileData, uint[] physicalPalettes, uint vPalette, ZipStorer zip, ref int id) //should be ok
+        private static void SaveTile(StyleData styleData, ZipStorer zip, ref int id) //should be ok
         {
             var bmp = new Bitmap(64, 64);
             var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
@@ -575,9 +626,9 @@ namespace Hiale.GTA2NET.Core.Style
                 {
                     for (var x = 0; x < bmp.Width; ++x)
                     {
-                        uint tileColor = tileData[(y + (id / 4) * 64) * 256 + (x + (id % 4) * 64)];
-                        var palId = (vPalette / 64) * 256 * 64 + (vPalette % 64) + tileColor * 64;
-                        var baseColor = (physicalPalettes[palId]) & 0xFFFFFF;
+                        uint tileColor = styleData.TileData[(y + (id / 4) * 64) * 256 + (x + (id % 4) * 64)];
+                        var palId = (styleData.PaletteIndexes[id] / 64) * 256 * 64 + (styleData.PaletteIndexes[id] % 64) + tileColor * 64;
+                        var baseColor = (styleData.PhysicalPalettes[palId]) & 0xFFFFFF;
                         var color = BitConverter.GetBytes(baseColor);
                         p[0] = color[0];
                         p[1] = color[1];
@@ -593,23 +644,24 @@ namespace Hiale.GTA2NET.Core.Style
             var memoryStream = new MemoryStream();
             bmp.Save(memoryStream, ImageFormat.Png);
             memoryStream.Position = 0;
-            zip.AddStream(ZipStorer.Compression.Deflate, Globals.TilesSuffix + "/" + id + Globals.TextureImageFormat, memoryStream, DateTime.Now, string.Empty);
+            zip.AddStream(ZipStorer.Compression.Deflate, id + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
             memoryStream.Close();
         }
 
-        private void SaveSprites(byte[] spriteData, uint[] physicalPalettes, ushort[] paletteIndexes, PaletteBase paletteBase, SpriteBase spriteBase, Dictionary<int, CarInfo> carInfo, Dictionary<int, List<int>> carSprites, SpriteEntry[] spriteEntries, ZipStorer zip, CancellableContext asyncContext)
+        private static void SaveSprites(StyleData styleData, ZipStorer zip, CancellableContext context)
         {
             //cars
-            foreach (var carSpriteItem in carSprites)
+            foreach (var carSpriteItem in styleData.CarSprites)
             {
-                if (asyncContext.IsCancelling)
+                if (context.IsCancelling)
                     return;
                 //SaveCarSprite(zip, carSpriteItem.Key, carSpriteItem.Value);
-                SaveCarSprite(spriteData, physicalPalettes, paletteIndexes, paletteBase, spriteEntries[carSpriteItem.Key], carInfo, zip, carSpriteItem.Key, carSpriteItem.Value);
+                SaveCarSprite(styleData, zip, carSpriteItem.Key, carSpriteItem.Value);
             }
-            return;
+            //return;
 
             //Peds
+            #region Peds
             /*             
             Remaps
             0 	Cop
@@ -641,59 +693,77 @@ namespace Hiale.GTA2NET.Core.Style
             26 	Naked pedestrian
             27  t/m 52 	Other normal pedestrians 
             */
-            const string PATH = "gfx\\sprites\\peds\\";
-            var remapPalette = paletteIndexes[paletteBase.Tile + paletteBase.Sprite + paletteBase.CarRemap];
-            //int remapPaletteEnd = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + paletteBase.CarRemap + paletteBase.PedRemap];
-            //int remapCount = remapPaletteEnd - remapPalette;
-            for (var i = spriteBase.Ped; i < spriteBase.CodeObj; i++)
+            #endregion Peds
+            var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite + styleData.PaletteBase.CarRemap];
+            for (var i = styleData.SpriteBase.Ped; i < styleData.SpriteBase.CodeObj; i++)
             {
-                var basePalette = paletteIndexes[paletteBase.Tile + i];
-                //SaveSpriteRemap(path + "\\" + i + "_-1.png", i, (basePalette));
-                SaveSpriteRemap(spriteData, physicalPalettes, spriteEntries[i], basePalette, zip, PATH + "\\" + i + "_-1.png");
-                for (var j = 0; j < 53; j++)
+                var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
+                SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Peds/" + i);
+                if (EXPORT_REMAPS)
                 {
-                    Directory.CreateDirectory(PATH + j);
-                    //SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
-                    SaveSpriteRemap(spriteData, physicalPalettes, spriteEntries[i], (UInt32)(remapPalette + j), zip, PATH + j + "\\" + i + "_" + j + ".png");
+                    for (var j = 0; j < 53; j++)
+                    {
+                        //SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
+                        SaveSpriteRemap(styleData, styleData.SpriteEntries[i], (UInt32) (remapPalette + j), zip, j + i + "_" + j + ".png");
+                    }
                 }
             }
-            System.Diagnostics.Debug.WriteLine("Done!");
+
+            //Code Obj
+            for (var i = styleData.SpriteBase.CodeObj; i < styleData.SpriteBase.MapObj; i++)
+            {
+                var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
+                SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "CodeObj/" + i);
+            }
+
+            //Map obj
+            for (var i = styleData.SpriteBase.MapObj; i < styleData.SpriteBase.User; i++)
+            {
+                var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
+                SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "MapObj/" + i);
+            }
+
+            //User
+            for (var i = styleData.SpriteBase.User; i < styleData.SpriteBase.Font; i++)
+            {
+                var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
+                SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "User/" + i);
+            }
+
+            ////Font
+            //for (var i = styleData.SpriteBase.Font; i < styleData.SpriteEntries.Length; i++)
+            //{
+            //    var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
+            //    SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Font/" + i);
+            //}
+
         }
 
-        private void SaveCarSprite(byte[] spriteData, uint[] physicalPalettes, ushort[] paletteIndexes, PaletteBase paletteBase, SpriteEntry spriteEntry, IDictionary<int, CarInfo> carInfo, ZipStorer zip, int spriteId, IEnumerable<int> modelList)
+        private static void SaveCarSprite(StyleData styleData, ZipStorer zip, int spriteId, IEnumerable<int> modelList)
         {
-            var basePalette = paletteIndexes[paletteBase.Tile + spriteId];
-            var remapPalette = paletteIndexes[paletteBase.Tile + paletteBase.Sprite];
+            var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + spriteId];
+            var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite];
+            var spriteEntry = styleData.SpriteEntries[spriteId];
             //UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
             foreach (var model in modelList)
             {
-                //SaveSpriteRemap(zip, + spriteID, spriteID, basePalette); //this way, models which use a shared sprite, only get's saved once. (spriteID.png)
-                SaveSpriteRemap(spriteData, physicalPalettes, spriteEntry, basePalette, zip, spriteId + "_" + model + "_-1"); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
-                var remapList = carInfo[model].RemapList;
-                foreach (var remapId in remapList)
+                SaveSpriteRemap(styleData, spriteEntry, basePalette, zip, "Cars/" + spriteId + "_" + model + "_-1"); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
+                if (EXPORT_REMAPS)
                 {
-                    var remapIDhack = remapId;
-                    if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
-                        remapIDhack--;
-                    SaveSpriteRemap(spriteData, physicalPalettes, spriteEntry, (uint)(remapPalette + remapIDhack), zip, spriteId + "_" + model + "_" + remapId);
+                    var remapList = styleData.CarInfo[model].RemapList;
+                    foreach (var remapId in remapList)
+                    {
+                        var remapIDhack = remapId;
+                        if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
+                            remapIDhack--;
+                        SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Car/" + spriteId + "_" + model + "_" + remapId);
+                    }
                 }
             }
         }
 
-        //private void SaveSpriteRemap(string fileName, int id, UInt32 palette)
-        private static void SaveSpriteRemap(byte[] spriteData, uint[] physicalPalettes, SpriteEntry spriteEntry, uint palette, ZipStorer zip, string fileName) //should be ok
+        private static void SaveSpriteRemap(StyleData styleData, SpriteEntry spriteEntry, uint palette, ZipStorer zip, string fileName)
         {
-            //int width = spriteEntries[id].Width;
-            //int height = spriteEntries[id].Height;
-
-            //var bmp = new Bitmap(width, height);
-
-            //var baseX = (int)(spriteEntries[id].Ptr % 256);
-            //var baseY = (int)(spriteEntries[id].Ptr / 256);
-
-            //int width = spriteEntry.Width;
-            //int height = spriteEntry.Height;
-
             var bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height);
 
             var baseX = (int)(spriteEntry.Ptr % 256);
@@ -710,9 +780,9 @@ namespace Hiale.GTA2NET.Core.Style
                 {
                     for (var x = 0; x < bmp.Width; ++x)
                     {
-                        uint spriteColor = spriteData[(baseX + x) + (baseY + y) * 256];
+                        uint spriteColor = styleData.SpriteData[(baseX + x) + (baseY + y) * 256];
                         var palId = (palette / 64) * 256 * 64 + (palette % 64) + spriteColor * 64;
-                        var baseColor = (physicalPalettes[palId]) & 0xFFFFFF;
+                        var baseColor = (styleData.PhysicalPalettes[palId]) & 0xFFFFFF;
                         var color = BitConverter.GetBytes(baseColor);
                         p[0] = color[0];
                         p[1] = color[1];
@@ -728,7 +798,7 @@ namespace Hiale.GTA2NET.Core.Style
             var memoryStream = new MemoryStream();
             bmp.Save(memoryStream, ImageFormat.Png);
             memoryStream.Position = 0;
-            zip.AddStream(ZipStorer.Compression.Deflate, Globals.SpritesSuffix + "/" + fileName + Globals.TextureImageFormat, memoryStream, DateTime.Now, string.Empty);
+            zip.AddStream(ZipStorer.Compression.Deflate, fileName + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
             memoryStream.Close();
             //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }

@@ -23,10 +23,11 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
 using System.Runtime.InteropServices;
 
-namespace Hiale.GTA2NET.Helper
+namespace Hiale.GTA2NET.WinUI
 {
     public class NativeWin32
     {
@@ -34,5 +35,8 @@ namespace Hiale.GTA2NET.Helper
 
         [DllImport(User32)]
         public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int y, int cx, int cy, int wFlags);
+
+        [DllImport(User32)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
     }
 }
