@@ -679,13 +679,10 @@ namespace Hiale.GTA2NET
             //    GameSettings.Default.ResolutionHeight;
 
             // Use current desktop resolution if autodetect is selected.
-            if (resolutionWidth <= 0 ||
-                resolutionHeight <= 0)
+            if (resolutionWidth <= 0 || resolutionHeight <= 0)
             {
-                resolutionWidth =
-                    GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-                resolutionHeight =
-                    GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+                resolutionWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+                resolutionHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             }
 
             #if XBOX360

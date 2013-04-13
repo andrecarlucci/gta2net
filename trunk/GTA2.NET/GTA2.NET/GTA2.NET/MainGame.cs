@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Text;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common;
 using FarseerPhysics.Common.Decomposition;
@@ -182,6 +183,8 @@ namespace Hiale.GTA2NET
         protected override void Initialize()
         {
             base.Initialize();
+            var handle = WinUI.NativeWin32.FindWindow(null, Window.Title); //Window.Handle seems to be wrong!
+            WinUI.NativeWin32.SetWindowPos(handle, 0, 0, 0, width, height, 0);
 
             //_chasingObject = new Car();
             //_chasingObject.Position = new Vector3(65, 181, GetHighestPoint(65, 181));

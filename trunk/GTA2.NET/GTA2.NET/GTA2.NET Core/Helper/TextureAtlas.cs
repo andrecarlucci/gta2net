@@ -158,8 +158,6 @@ namespace Hiale.GTA2NET.Core.Helper
         [XmlIgnore]
         public ZipStorer ZipStore { get; protected set; }
 
-        protected string ImageDirName;
-
         protected List<ZipStorer.ZipFileEntry> ZipEntries;
 
         protected Dictionary<uint, int> CrcDictionary; //Helper list to find duplicate images.
@@ -181,6 +179,11 @@ namespace Hiale.GTA2NET.Core.Helper
 
         protected List<ImageEntry> CreateImageEntries(CancellableContext context, out bool cancelled)
         {
+            return CreateImageEntries(string.Empty, context, out cancelled);
+        }
+
+        protected List<ImageEntry> CreateImageEntries(string directory, CancellableContext context, out bool cancelled)
+        {
             cancelled = false;
             var entries = new List<ImageEntry>();
             CrcDictionary.Clear();
@@ -192,7 +195,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return null;
                 }
-                if (!ZipEntries[i].FilenameInZip.StartsWith(ImageDirName))
+                if (!ZipEntries[i].FilenameInZip.StartsWith(directory))
                     continue;
                 var source = GetBitmapFromZip(ZipStore, ZipEntries[i]);
                 var entry = new ImageEntry();
@@ -256,7 +259,12 @@ namespace Hiale.GTA2NET.Core.Helper
             }
         }
 
-        public abstract void BuildTextureAtlas();
+        public void BuildTextureAtlas()
+        {
+            var context = new CancellableContext(null);
+            bool cancelled;
+            BuildTextureAtlas(context, out cancelled);
+        }
 
         protected abstract void BuildTextureAtlas(CancellableContext context, out bool cancel);
 
@@ -378,14 +386,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public TextureAtlasTiles(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
         {
-            ImageDirName = Globals.TilesSuffix + "/";
-        }
-
-        public override void BuildTextureAtlas()
-        {
-            var context = new CancellableContext(null);
-            bool cancelled;
-            BuildTextureAtlas(context, out cancelled);
+            //
         }
 
         protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
@@ -450,22 +451,14 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public TextureAtlasSprites(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
         {
-            ImageDirName = Globals.SpritesSuffix + "/";
             _duplicateDictionary = new Dictionary<int, SpriteItem>();
-        }
-
-        public override void BuildTextureAtlas()
-        {
-            var context = new CancellableContext(null);
-            bool cancelled;
-            BuildTextureAtlas(context, out cancelled);
         }
 
         protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
         {
             cancelled = false;
 
-            var entries = CreateImageEntries(context, out cancelled);
+            var entries = CreateImageEntries("Cars", context, out cancelled);
             if (cancelled)
                 return;
 

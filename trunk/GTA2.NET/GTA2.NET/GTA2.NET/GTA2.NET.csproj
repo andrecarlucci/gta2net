@@ -49,7 +49,6 @@
     <Compile Include="GameScreens\IGameScreen.cs" />
     <Compile Include="GameScreens\InGameScreen.cs" />
     <Compile Include="Helper\FaceCoordinates.cs" />
-    <Compile Include="Helper\NativeWin32.cs" />
     <Compile Include="Helper\PlayerInput.cs" />
     <Compile Include="Helper\RandomHelper.cs" />
     <Compile Include="Input.cs" />
