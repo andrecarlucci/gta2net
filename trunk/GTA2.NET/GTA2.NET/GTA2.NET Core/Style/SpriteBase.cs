@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: SpriteBase.cs
-// Created: 21.02.2013
+// Created: 20.01.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale

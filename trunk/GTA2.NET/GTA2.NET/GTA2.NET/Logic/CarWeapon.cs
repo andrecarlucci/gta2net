@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: CarWeapon.cs
-// Created: 21.02.2013
+// Created: 24.02.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale

@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: CarPhysics.cs
-// Created: 21.02.2013
+// Created: 28.01.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -28,6 +28,7 @@ using System;
 
 namespace Hiale.GTA2NET.Core
 {
+    //Based on http://www.gtaforums.com/index.php?showtopic=147090
     [Serializable]
     public class CarPhysics
     {
