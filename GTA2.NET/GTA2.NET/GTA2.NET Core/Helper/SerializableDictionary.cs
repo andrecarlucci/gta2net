@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: SerializableDictionary.cs
-// Created: 21.02.2013
+// Created: 16.02.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 
 namespace Hiale.GTA2NET.Core.Helper
 {
+    //Source: http://weblogs.asp.net/pwelter34/archive/2006/05/03/444961.aspx
     [XmlRoot("dictionary")]
     public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IXmlSerializable
     {

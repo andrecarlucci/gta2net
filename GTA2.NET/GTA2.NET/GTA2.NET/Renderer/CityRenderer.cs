@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: CityRenderer.cs
-// Created: 21.02.2013
+// Created: 08.02.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale

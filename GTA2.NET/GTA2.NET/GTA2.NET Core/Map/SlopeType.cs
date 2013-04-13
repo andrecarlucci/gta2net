@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: SlopeType.cs
-// Created: 09.03.2013
+// Created: 09.02.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
