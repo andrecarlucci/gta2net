@@ -88,6 +88,7 @@
     <Compile Include="Style\DoorInfo.cs" />
     <Compile Include="Style\FontBase.cs" />
     <Compile Include="Style\ObjectInfo.cs" />
+    <Compile Include="Style\Palette.cs" />
     <Compile Include="Style\PaletteBase.cs" />
     <Compile Include="Style\SpriteBase.cs" />
     <Compile Include="Style\SpriteEntry.cs" />

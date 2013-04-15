@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Delta.cs
-// Created: 21.02.2013
+// File: Palette.cs
+// Created: 14.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -24,42 +24,25 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Style
 {
-    public class Delta
+    public class Palette
     {
-        private int _sprite;
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Sprite
+        public Color[] Colors;
+
+        public Palette()
         {
-            get { return _sprite; }
-            set { _sprite = value; }
+            Colors = new Color[256];
         }
 
-        List<int> _deltaSize;
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<int> DeltaSize
+        public void Parse(byte[] data, int position)
         {
-            get { return _deltaSize; }
-            set { _deltaSize = value; }
-        }
-
-        public Delta()
-        {
-            _deltaSize = new List<int>();
-        }
-
-        public override string ToString()
-        {
-            return "Sprite: " + _sprite + " (" + _deltaSize.Count + ")";
+            if (data.Length != 4 || data[3] != 0)
+                throw new ArgumentException();
+            //Format is Blue, Green, Red, [Reserved Byte]
+            Colors[position] = new Color(data[2], data[1], data[0], 0);
         }
     }
 }
