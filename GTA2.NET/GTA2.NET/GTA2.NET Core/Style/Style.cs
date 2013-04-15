@@ -43,14 +43,16 @@ namespace Hiale.GTA2NET.Core.Style
         private struct StyleData
         {
             public ushort[] PaletteIndexes;
-            public uint[] PhysicalPalettes;
+            public Palette[] Palettes;
             public PaletteBase PaletteBase;
             public byte[] TileData;
             public byte[] SpriteData;
             public SpriteEntry[] SpriteEntries;
             public SpriteBase SpriteBase;
             public FontBase FontBase;
-
+            public Delta[] DeltaIndexes; 
+            public byte[] DeltaData;
+            
             public SerializableDictionary<int, CarInfo> CarInfo;
             public Dictionary<int, List<int>> CarSprites; //Helper variable to see which sprites are used by more than one model.
 
@@ -76,7 +78,7 @@ namespace Hiale.GTA2NET.Core.Style
         public IAsyncResult ReadFromFileAsync(string stylePath)
         {
             var worker = new ConvertStyleFileDelegate(ReadFromFile);
-            var completedCallback = new AsyncCallback(ConversionCompletedCallback);
+            var completedCallback = new AsyncCallback(BuildTextureAtlasCompletedCallback);
 
             lock (_sync)
             {
@@ -109,13 +111,15 @@ namespace Hiale.GTA2NET.Core.Style
             var styleData = new StyleData
                 {
                     PaletteIndexes = new ushort[] {},
-                    PhysicalPalettes = new uint[] {},
+                    Palettes = new Palette[] {},
                     PaletteBase = new PaletteBase(),
                     TileData = new byte[] {},
                     SpriteData = new byte[] {},
                     SpriteEntries = new SpriteEntry[] {},
                     SpriteBase = new SpriteBase(),
                     FontBase = new FontBase(),
+                    DeltaData = new byte[] {},
+                    DeltaIndexes = new Delta[] {},
                     CarInfo = new SerializableDictionary<int, CarInfo>(),
                     CarSprites = new Dictionary<int, List<int>>()
                 };
@@ -130,15 +134,18 @@ namespace Hiale.GTA2NET.Core.Style
                 var stream = new FileStream(stylePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 styleData.OriginalDateTime = File.GetLastWriteTime(stylePath);
                 reader = new BinaryReader(stream);
-                System.Text.Encoding encoder = System.Text.Encoding.ASCII;
-                reader.ReadBytes(4); //GBMP
+                var encoder = System.Text.Encoding.ASCII;
+                var magicNumber = encoder.GetString(reader.ReadBytes(4)); //GBMP
+                if (magicNumber != "GBST")
+                    throw new FormatException("Wrong style format!");
                 int version = reader.ReadUInt16();
                 System.Diagnostics.Debug.WriteLine("Style version: " + version);
                 while (stream.Position < stream.Length)
                 {
                     var chunkType = encoder.GetString(reader.ReadBytes(4));
                     var chunkSize = (int) reader.ReadUInt32();
-                    System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " + chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
+                    System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " +
+                                                       chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
 
                     if (context.IsCancelling)
                     {
@@ -151,7 +158,7 @@ namespace Hiale.GTA2NET.Core.Style
                             styleData.TileData = ReadTiles(reader, chunkSize);
                             break;
                         case "PPAL": //Physical Palette
-                            styleData.PhysicalPalettes = ReadPhysicalPalette(reader, chunkSize);
+                            styleData.Palettes = ReadPhysicalPalette(reader, chunkSize);
                             break;
                         case "SPRB": //Sprite Bases
                             styleData.SpriteBase = ReadSpriteBases(reader);
@@ -166,11 +173,11 @@ namespace Hiale.GTA2NET.Core.Style
                             styleData.FontBase = ReadFonts(reader, styleData.SpriteBase.Font);
                             break;
                         case "DELX": //Delta Index
-                            ReadDeltaIndex(reader, chunkSize);
+                            styleData.DeltaIndexes = ReadDeltaIndex(reader, chunkSize);
                             break;
-                            //case "DELS": //Delta Store
-                            //    ReadDeltaStore(reader, chunkSize);
-                            //    break; 
+                        case "DELS": //Delta Store
+                            styleData.DeltaData = ReadDeltaStore(reader, chunkSize);
+                            break;
                         case "CARI": //Car Info
                             styleData.CarInfo = ReadCars(reader, chunkSize, styleData.CarSprites);
                             break;
@@ -193,6 +200,10 @@ namespace Hiale.GTA2NET.Core.Style
                     }
                 }
             }
+            catch (Exception e)
+            {
+                throw;
+            }
             finally
             {
                 if (reader != null)
@@ -210,6 +221,9 @@ namespace Hiale.GTA2NET.Core.Style
             try
             {
                 SaveCarData(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix);
+                SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_palettes.png");
+
+                SaveDelta(styleData, 1, 31, 1);
 
                 memoryStreamTiles = new MemoryStream();
                 using (var zip = ZipStorer.Create(memoryStreamTiles, string.Empty))
@@ -301,7 +315,7 @@ namespace Hiale.GTA2NET.Core.Style
             args[0] = outputFile + Globals.TextureImageFormat;
             args[1] = inputZip;
             var atlas = (T) Activator.CreateInstance(typeof (T), args);
-            atlas.BuildTextureAtlasCompleted += AtlasBuildTextureAtlasCompleted;
+            atlas.BuildTextureAtlasCompleted += BuildTextureAtlasCompleted;
             atlas.BuildTextureAtlasAsync();
             return atlas;
         }
@@ -314,7 +328,26 @@ namespace Hiale.GTA2NET.Core.Style
             textWriter.Close();
         }
 
-        private void AtlasBuildTextureAtlasCompleted(object sender, AsyncCompletedEventArgs e)
+        private static void SavePalettes(Palette[] palettes, string fileName)
+        {
+            using (var bmp = new Bitmap(palettes.Length, 256))
+            {
+                //using (Graphics g = Graphics.FromImage(bmp))
+                //{
+                for (int i = 0; i < palettes.Length; i++)
+                {
+                    for (int j = 0; j < palettes[i].Colors.Length; j++)
+                    {
+                        var targetColor = Color.FromArgb(byte.MaxValue, palettes[i].Colors[j].R, palettes[i].Colors[j].G, palettes[i].Colors[j].B);
+                        bmp.SetPixel(i, j, targetColor);
+                    }
+                }
+                //}
+                bmp.Save(fileName, ImageFormat.Png);
+            }
+        }
+
+        private void BuildTextureAtlasCompleted(object sender, AsyncCompletedEventArgs e)
         {
             lock (_syncTextureAtlasFinished)
             {
@@ -329,7 +362,7 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        private void ConversionCompletedCallback(IAsyncResult ar)
+        private void BuildTextureAtlasCompletedCallback(IAsyncResult ar)
         {
             // get the original worker delegate and the AsyncOperation instance
             var worker = (ConvertStyleFileDelegate)((AsyncResult)ar).AsyncDelegate;
@@ -362,7 +395,7 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        private byte[] ReadTiles(BinaryReader reader, int chunkSize)
+        private static byte[] ReadTiles(BinaryReader reader, int chunkSize)
         {
             System.Diagnostics.Debug.WriteLine("Reading tiles... Found " + chunkSize / (64 * 64) + " tiles");
             var tileData = reader.ReadBytes(chunkSize);
@@ -375,15 +408,15 @@ namespace Hiale.GTA2NET.Core.Style
             var fontBase = new FontBase
                 {
                     FontCount = reader.ReadUInt16(),
-                    Base = new UInt16[256],
-                    SpriteBase = new UInt16[256]
+                    Base = new ushort[256],
+                    SpriteBase = new ushort[256]
                 };
             fontBase.Base[0] = spriteBaseFont;
             for (var i = 0; i < fontBase.FontCount; i++)
             {
                 fontBase.Base[i] = reader.ReadUInt16();
                 if (i > 0)
-                    fontBase.SpriteBase[i] = (UInt16)(fontBase.SpriteBase[i - 1] + fontBase.Base[i]);
+                    fontBase.SpriteBase[i] = (ushort)(fontBase.SpriteBase[i - 1] + fontBase.Base[i]);
                 System.Diagnostics.Debug.WriteLine("Font: " + i + " (" + fontBase.Base[i] + " characters, Spritebase: " + fontBase.SpriteBase[i]);
             }
             return fontBase;
@@ -398,13 +431,26 @@ namespace Hiale.GTA2NET.Core.Style
             return paletteIndexes;
         }
 
-        private static uint[] ReadPhysicalPalette(BinaryReader reader, int chunkSize)
+        private static Palette[] ReadPhysicalPalette(BinaryReader reader, int chunkSize)
         {
             System.Diagnostics.Debug.WriteLine("Reading physical palettes...");
-            var physicalPalettes = new uint[chunkSize / 4];
-            for (var i = 0; i < physicalPalettes.Length; i++)
-                physicalPalettes[i] = reader.ReadUInt32();
-            return physicalPalettes;
+            var palettesCount = chunkSize / 1024;
+            var palettes = new Palette[palettesCount];
+            for (var i = 0; i < palettes.Length; i++)
+                palettes[i] = new Palette();
+
+            for (var i = 0; i < palettesCount / 64; i++)
+            {
+                for (var j = 0; j < 256; j++)
+                {
+                    for (var k = 0; k < 64; k++)
+                    {
+                        var x = i * 64 + k;
+                        palettes[x].Parse(reader.ReadBytes(4), j);
+                    }
+                }
+            }
+            return palettes;
         }
 
         private static SpriteBase ReadSpriteBases(BinaryReader reader)
@@ -415,13 +461,13 @@ namespace Hiale.GTA2NET.Core.Style
             System.Diagnostics.Debug.WriteLine("Car base: " + spriteBase.Car);
             spriteBase.Ped = reader.ReadUInt16();
             System.Diagnostics.Debug.WriteLine("Ped base: " + spriteBase.Ped);
-            spriteBase.CodeObj = (UInt16)(spriteBase.Ped + reader.ReadUInt16());
+            spriteBase.CodeObj = (ushort)(spriteBase.Ped + reader.ReadUInt16());
             System.Diagnostics.Debug.WriteLine("CodeObj base: " + spriteBase.CodeObj);
-            spriteBase.MapObj = (UInt16)(spriteBase.CodeObj + reader.ReadUInt16());
+            spriteBase.MapObj = (ushort)(spriteBase.CodeObj + reader.ReadUInt16());
             System.Diagnostics.Debug.WriteLine("MapObj base: " + spriteBase.MapObj);
-            spriteBase.User = (UInt16)(spriteBase.MapObj + reader.ReadUInt16());
+            spriteBase.User = (ushort)(spriteBase.MapObj + reader.ReadUInt16());
             System.Diagnostics.Debug.WriteLine("User base: " + spriteBase.User);
-            spriteBase.Font = (UInt16)(spriteBase.User + reader.ReadUInt16());
+            spriteBase.Font = (ushort)(spriteBase.User + reader.ReadUInt16());
             System.Diagnostics.Debug.WriteLine("Font base: " + spriteBase.Font);
             var unused = reader.ReadUInt16(); //unused
             System.Diagnostics.Debug.WriteLine("[UNUSED BASE]: " + unused);
@@ -535,7 +581,7 @@ namespace Hiale.GTA2NET.Core.Style
             return paletteBase;
         }
 
-        private IList<Delta> ReadDeltaIndex(BinaryReader reader, int chunkSize)
+        private static Delta[] ReadDeltaIndex(BinaryReader reader, int chunkSize)
         {
             System.Diagnostics.Debug.WriteLine("Reading delta index");
             var deltas = new List<Delta>();
@@ -550,23 +596,25 @@ namespace Hiale.GTA2NET.Core.Style
                 deltas.Add(delta);
                 position += 4 + (deltaCount * 2);
             }
-            return deltas;
+            return deltas.ToArray();
         }
 
-        private void ReadDeltaStore(BinaryReader reader, int chunkSize)
+        private static byte[] ReadDeltaStore(BinaryReader reader, int chunkSize)
         {
             System.Diagnostics.Debug.WriteLine("Reading delta store");
-            var position = 0;
-            var i = 0;
-            while (position < chunkSize)
-            {
-                i++;
-                int offset = reader.ReadUInt16();
-                byte length = reader.ReadByte();
-                reader.ReadBytes(length);
-                position += 3 + length;
-            }
-            System.Diagnostics.Debug.WriteLine(i);
+            var deltaData = reader.ReadBytes(chunkSize);
+            return deltaData;
+            //var position = 0;
+            //var i = 0;
+            //while (position < chunkSize)
+            //{
+            //    i++;
+            //    int offset = reader.ReadUInt16();
+            //    byte length = reader.ReadByte();
+            //    reader.ReadBytes(length);
+            //    position += 3 + length;
+            //}
+            //System.Diagnostics.Debug.WriteLine(i);
         }
 
         private static IList<Surface> ReadSurfaces(BinaryReader reader, int chunkSize)
@@ -612,7 +660,7 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        private static void SaveTile(StyleData styleData, ZipStorer zip, ref int id) //should be ok
+        private static void SaveTile(StyleData styleData, ZipStorer zip, ref int id)
         {
             var bmp = new Bitmap(64, 64);
             var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
@@ -628,13 +676,11 @@ namespace Hiale.GTA2NET.Core.Style
                     {
                         uint tileColor = styleData.TileData[(y + (id / 4) * 64) * 256 + (x + (id % 4) * 64)];
                         var palId = (styleData.PaletteIndexes[id] / 64) * 256 * 64 + (styleData.PaletteIndexes[id] % 64) + tileColor * 64;
-                        var baseColor = (styleData.PhysicalPalettes[palId]) & 0xFFFFFF;
-                        var color = BitConverter.GetBytes(baseColor);
-                        p[0] = color[0];
-                        p[1] = color[1];
-                        p[2] = color[2];
-                        var alphaColor = tileColor > 0 ? (byte)0xFF : (byte)0;
-                        p[3] = alphaColor;
+                        var paletteIndex = palId%64;
+                        p[0] = styleData.Palettes[paletteIndex].Colors[tileColor].B;
+                        p[1] = styleData.Palettes[paletteIndex].Colors[tileColor].G;
+                        p[2] = styleData.Palettes[paletteIndex].Colors[tileColor].R;
+                        p[3] = tileColor > 0 ? (byte)0xFF : (byte)0;
                         p += 4;
                     }
                     p += nOffset;
@@ -658,7 +704,6 @@ namespace Hiale.GTA2NET.Core.Style
                 //SaveCarSprite(zip, carSpriteItem.Key, carSpriteItem.Value);
                 SaveCarSprite(styleData, zip, carSpriteItem.Key, carSpriteItem.Value);
             }
-            //return;
 
             //Peds
             #region Peds
@@ -704,7 +749,7 @@ namespace Hiale.GTA2NET.Core.Style
                     for (var j = 0; j < 53; j++)
                     {
                         //SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
-                        SaveSpriteRemap(styleData, styleData.SpriteEntries[i], (UInt32) (remapPalette + j), zip, j + i + "_" + j + ".png");
+                        SaveSpriteRemap(styleData, styleData.SpriteEntries[i], (UInt32) (remapPalette + j), zip, "Peds/ " + j + i + "_" + j);
                     }
                 }
             }
@@ -756,7 +801,7 @@ namespace Hiale.GTA2NET.Core.Style
                         var remapIDhack = remapId;
                         if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
                             remapIDhack--;
-                        SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Car/" + spriteId + "_" + model + "_" + remapId);
+                        SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Cars/" + spriteId + "_" + model + "_" + remapId);
                     }
                 }
             }
@@ -781,14 +826,11 @@ namespace Hiale.GTA2NET.Core.Style
                     for (var x = 0; x < bmp.Width; ++x)
                     {
                         uint spriteColor = styleData.SpriteData[(baseX + x) + (baseY + y) * 256];
-                        var palId = (palette / 64) * 256 * 64 + (palette % 64) + spriteColor * 64;
-                        var baseColor = (styleData.PhysicalPalettes[palId]) & 0xFFFFFF;
-                        var color = BitConverter.GetBytes(baseColor);
-                        p[0] = color[0];
-                        p[1] = color[1];
-                        p[2] = color[2];
-                        var alphaColor = spriteColor > 0 ? (byte)0xFF : (byte)0;
-                        p[3] = alphaColor;
+                        //var palId = (palette / 64) * 256 * 64 + (palette % 64) + spriteColor * 64;
+                        p[0] = styleData.Palettes[palette].Colors[spriteColor].B;
+                        p[1] = styleData.Palettes[palette].Colors[spriteColor].G;
+                        p[2] = styleData.Palettes[palette].Colors[spriteColor].R;
+                        p[3] = spriteColor > 0 ? (byte)0xFF : (byte)0;
                         p += 4;
                     }
                     p += nOffset;
@@ -801,6 +843,41 @@ namespace Hiale.GTA2NET.Core.Style
             zip.AddStream(ZipStorer.Compression.Deflate, fileName + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
             memoryStream.Close();
             //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
+        }
+
+        private static void SaveDeltas()
+        {
+            
+        }
+
+        private static void SaveDelta(StyleData styleData, int spriteId, uint palette,  uint deltaId)
+        {
+            int offset = 0;
+            foreach (var deltaIndex in styleData.DeltaIndexes)
+            {
+                if (deltaIndex.Sprite == spriteId)
+                {
+                    SpriteEntry spriteEntry = styleData.SpriteEntries[spriteId];
+                    if (deltaIndex.DeltaSize.Count > 0)
+                    {
+                        //int offset = 1;
+                        for (var i = 0; i < deltaId; i++)
+                            offset += deltaIndex.DeltaSize[i];
+
+
+                        var deltaData = new byte[deltaIndex.DeltaSize[(int)deltaId]];
+                        Array.Copy(styleData.DeltaData, offset, deltaData, 0, deltaIndex.DeltaSize[(int) deltaId]);
+
+                    }
+                }
+                else
+                {
+                    for (var i = 0; i < deltaIndex.DeltaSize.Count; i++)
+                        offset += deltaIndex.DeltaSize[i];
+                }
+                
+            }
+            
         }
 
         protected virtual void OnConvertStyleFileProgressChanged(ProgressMessageChangedEventArgs e)
