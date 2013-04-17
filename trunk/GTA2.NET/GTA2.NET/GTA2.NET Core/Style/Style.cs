@@ -32,7 +32,6 @@ using System.Linq;
 using System.IO;
 using System.Drawing;
 using System.Runtime.Remoting.Messaging;
-using System.Xml.Serialization;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Helper.Threading;
 
@@ -144,8 +143,7 @@ namespace Hiale.GTA2NET.Core.Style
                 {
                     var chunkType = encoder.GetString(reader.ReadBytes(4));
                     var chunkSize = (int) reader.ReadUInt32();
-                    System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " +
-                                                       chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
+                    System.Diagnostics.Debug.WriteLine("Found chunk '" + chunkType + "' with size " + chunkSize.ToString(CultureInfo.InvariantCulture) + ".");
 
                     if (context.IsCancelling)
                     {
@@ -194,7 +192,7 @@ namespace Hiale.GTA2NET.Core.Style
                             ReadSurfaces(reader, chunkSize);
                             break;
                         default:
-                            System.Diagnostics.Debug.WriteLine("Skipping chunk...");
+                            System.Diagnostics.Debug.WriteLine("Skipping chunk '" +  chunkType + "'...");
                             reader.ReadBytes(chunkSize);
                             break;
                     }
@@ -216,97 +214,108 @@ namespace Hiale.GTA2NET.Core.Style
         private void SaveData(StyleData styleData, CancellableContext context, out bool cancelled)
         {
             var styleFile = Path.GetFileNameWithoutExtension(StylePath);
-            MemoryStream memoryStreamTiles = null;
-            MemoryStream memoryStreamSprites = null;
-            try
+            CarInfo.Serialize(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix + Globals.XmlFormat);
+            Palette.SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.PaletteSuffix + Globals.TextureImageFormat);
+
+            var memoryStreamTiles = new MemoryStream();
+            using (var zip = ZipStorer.Create(memoryStreamTiles, string.Empty))
             {
-                SaveCarData(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix);
-                SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_palettes.png");
-
-                //SaveDelta(styleData, 1, 31, 1);
-
-                memoryStreamTiles = new MemoryStream();
-                using (var zip = ZipStorer.Create(memoryStreamTiles, string.Empty))
-                {
-                    if (context.IsCancelling)
-                    {
-                        cancelled = true;
-                        return;
-                    }
-                    SaveTiles(styleData, zip, context);
-                    if (context.IsCancelling)
-                    {
-                        cancelled = true;
-                        return;
-                    }
-
-                }
-                memoryStreamTiles.Position = 0;
-                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_tiles.zip", FileMode.Create, FileAccess.Write))
-                {
-                    var bytes = new byte[memoryStreamTiles.Length];
-                    memoryStreamTiles.Read(bytes, 0, (int)memoryStreamTiles.Length);
-                    stream.Write(bytes, 0, bytes.Length);
-                }
                 if (context.IsCancelling)
                 {
                     cancelled = true;
                     return;
                 }
-                memoryStreamSprites = new MemoryStream();
-                using (var zip = ZipStorer.Create(memoryStreamSprites, string.Empty))
-                {
-                    if (context.IsCancelling)
-                    {
-                        cancelled = true;
-                        return;
-
-                    }
-                    SaveSprites(styleData, zip, context);
-                    if (context.IsCancelling)
-                    {
-                        cancelled = true;
-                        return;
-                    }
-                }
-                memoryStreamSprites.Position = 0;
-                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_sprites.zip", FileMode.Create, FileAccess.Write))
-                {
-                    var bytes = new byte[memoryStreamSprites.Length];
-                    memoryStreamSprites.Read(bytes, 0, (int)memoryStreamSprites.Length);
-                    stream.Write(bytes, 0, bytes.Length);
-                }
+                SaveTiles(styleData, zip, context);
                 if (context.IsCancelling)
                 {
                     cancelled = true;
                     return;
                 }
 
-                memoryStreamTiles.Position = 0;
-                memoryStreamSprites.Position = 0;
-
-                TextureAtlas atlas = CreateTextureAtlas<TextureAtlasTiles>(ZipStorer.Open(memoryStreamTiles, FileAccess.Read), styleFile + "_" + Globals.TilesSuffix.ToLower());
-                _memoryStreams.Add(atlas, memoryStreamTiles);
-                _runningAtlas.Add(atlas);
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-                }
-
-                atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), styleFile + "_" + Globals.SpritesSuffix.ToLower());
-                _memoryStreams.Add(atlas, memoryStreamSprites);
-                _runningAtlas.Add(atlas);
-                WaitHandle.WaitOne();
-                cancelled = WaitHandle.Value;
             }
-            finally
+            memoryStreamTiles.Position = 0;
+            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_tiles.zip", FileMode.Create, FileAccess.Write))
             {
-                //if (memoryStreamTiles != null)
-                //    memoryStreamTiles.Dispose();
-                //if (memoryStreamSprites != null)
-                //    memoryStreamSprites.Close();
+                var bytes = new byte[memoryStreamTiles.Length];
+                memoryStreamTiles.Read(bytes, 0, (int)memoryStreamTiles.Length);
+                stream.Write(bytes, 0, bytes.Length);
             }
+            if (context.IsCancelling)
+            {
+                cancelled = true;
+                return;
+            }
+            var memoryStreamSprites = new MemoryStream();
+            using (var zip = ZipStorer.Create(memoryStreamSprites, string.Empty))
+            {
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+
+                }
+                SaveSprites(styleData, zip, context);
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+            }
+            memoryStreamSprites.Position = 0;
+            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_sprites.zip", FileMode.Create, FileAccess.Write))
+            {
+                var bytes = new byte[memoryStreamSprites.Length];
+                memoryStreamSprites.Read(bytes, 0, (int)memoryStreamSprites.Length);
+                stream.Write(bytes, 0, bytes.Length);
+            }
+            if (context.IsCancelling)
+            {
+                cancelled = true;
+                return;
+            }
+            var memoryStreamDeltas = new MemoryStream();
+            using (var zip = ZipStorer.Create(memoryStreamDeltas, string.Empty))
+            {
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+                SaveDeltas(styleData, zip, context);
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+            }
+            memoryStreamDeltas.Position = 0;
+            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_deltas.zip", FileMode.Create, FileAccess.Write))
+            {
+                var bytes = new byte[memoryStreamDeltas.Length];
+                memoryStreamDeltas.Read(bytes, 0, (int)memoryStreamDeltas.Length);
+                stream.Write(bytes, 0, bytes.Length);
+            }
+
+            memoryStreamTiles.Position = 0;
+            memoryStreamSprites.Position = 0;
+            memoryStreamDeltas.Position = 0;
+
+            memoryStreamDeltas.Close();
+
+            TextureAtlas atlas = CreateTextureAtlas<TextureAtlasTiles>(ZipStorer.Open(memoryStreamTiles, FileAccess.Read), styleFile + Globals.TilesSuffix);
+            _memoryStreams.Add(atlas, memoryStreamTiles);
+            _runningAtlas.Add(atlas);
+            if (context.IsCancelling)
+            {
+                cancelled = true;
+                return;
+            }
+
+            atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), styleFile + Globals.SpritesSuffix);
+            _memoryStreams.Add(atlas, memoryStreamSprites);
+            _runningAtlas.Add(atlas);
+            WaitHandle.WaitOne();
+            cancelled = WaitHandle.Value;
         }
 
         public T CreateTextureAtlas<T>(ZipStorer inputZip, string outputFile) where T : TextureAtlas, new()
@@ -318,33 +327,6 @@ namespace Hiale.GTA2NET.Core.Style
             atlas.BuildTextureAtlasCompleted += BuildTextureAtlasCompleted;
             atlas.BuildTextureAtlasAsync();
             return atlas;
-        }
-
-        private static void SaveCarData(SerializableDictionary<int, CarInfo> carInfo, string fileName)
-        {
-            var textWriter = new StreamWriter(fileName);
-            var serializer = new XmlSerializer(typeof(SerializableDictionary<int, CarInfo>));
-            serializer.Serialize(textWriter, carInfo);
-            textWriter.Close();
-        }
-
-        private static void SavePalettes(Palette[] palettes, string fileName)
-        {
-            using (var bmp = new Bitmap(palettes.Length, 256))
-            {
-                //using (Graphics g = Graphics.FromImage(bmp))
-                //{
-                for (int i = 0; i < palettes.Length; i++)
-                {
-                    for (int j = 0; j < palettes[i].Colors.Length; j++)
-                    {
-                        var targetColor = Color.FromArgb(byte.MaxValue, palettes[i].Colors[j].R, palettes[i].Colors[j].G, palettes[i].Colors[j].B);
-                        bmp.SetPixel(i, j, targetColor);
-                    }
-                }
-                //}
-                bmp.Save(fileName, ImageFormat.Png);
-            }
         }
 
         private void BuildTextureAtlasCompleted(object sender, AsyncCompletedEventArgs e)
@@ -638,12 +620,12 @@ namespace Hiale.GTA2NET.Core.Style
             return surfaces;
         }
 
-        private static void SaveTiles(StyleData styleData, ZipStorer zip, CancellableContext asyncContext)
+        private static void SaveTiles(StyleData styleData, ZipStorer zip, CancellableContext context)
         {
             var tilesCount = styleData.TileData.Length / (64 * 64);
             for (var i = 0; i < tilesCount; i++)
             {
-                if (asyncContext.IsCancelling)
+                if (context.IsCancelling)
                     return;
                 SaveTile(styleData, zip, ref i);
             }
@@ -651,36 +633,38 @@ namespace Hiale.GTA2NET.Core.Style
 
         private static void SaveTile(StyleData styleData, ZipStorer zip, ref int id)
         {
-            var bmp = new Bitmap(64, 64);
-            var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-            var stride = bmData.Stride;
-            var scan0 = bmData.Scan0;
-            unsafe
+            using (var bmp = new Bitmap(64, 64))
             {
-                var p = (byte*)(void*)scan0;
-                var nOffset = stride - bmp.Width * 4;
-                for (var y = 0; y < bmp.Height; ++y)
+                var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+                var stride = bmData.Stride;
+                var scan0 = bmData.Scan0;
+                unsafe
                 {
-                    for (var x = 0; x < bmp.Width; ++x)
+                    var p = (byte*) (void*) scan0;
+                    var nOffset = stride - bmp.Width*4;
+                    for (var y = 0; y < bmp.Height; ++y)
                     {
-                        uint tileColor = styleData.TileData[(y + (id / 4) * 64) * 256 + (x + (id % 4) * 64)];
-                        var palId = (styleData.PaletteIndexes[id] / 64) * 256 * 64 + (styleData.PaletteIndexes[id] % 64) + tileColor * 64;
-                        var paletteIndex = palId%64;
-                        p[0] = styleData.Palettes[paletteIndex].Colors[tileColor].B;
-                        p[1] = styleData.Palettes[paletteIndex].Colors[tileColor].G;
-                        p[2] = styleData.Palettes[paletteIndex].Colors[tileColor].R;
-                        p[3] = tileColor > 0 ? (byte)0xFF : (byte)0;
-                        p += 4;
+                        for (var x = 0; x < bmp.Width; ++x)
+                        {
+                            uint tileColor = styleData.TileData[(y + (id/4)*64)*256 + (x + (id%4)*64)];
+                            var palId = (styleData.PaletteIndexes[id]/64)*256*64 + (styleData.PaletteIndexes[id]%64) + tileColor*64;
+                            var paletteIndex = palId%64;
+                            p[0] = styleData.Palettes[paletteIndex].Colors[tileColor].B;
+                            p[1] = styleData.Palettes[paletteIndex].Colors[tileColor].G;
+                            p[2] = styleData.Palettes[paletteIndex].Colors[tileColor].R;
+                            p[3] = tileColor > 0 ? (byte) 255 : (byte) 0;
+                            p += 4;
+                        }
+                        p += nOffset;
                     }
-                    p += nOffset;
                 }
+                bmp.UnlockBits(bmData);
+                var memoryStream = new MemoryStream();
+                bmp.Save(memoryStream, ImageFormat.Png);
+                memoryStream.Position = 0;
+                zip.AddStream(ZipStorer.Compression.Deflate, id + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
+                memoryStream.Close();
             }
-            bmp.UnlockBits(bmData);
-            var memoryStream = new MemoryStream();
-            bmp.Save(memoryStream, ImageFormat.Png);
-            memoryStream.Position = 0;
-            zip.AddStream(ZipStorer.Compression.Deflate, id + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
-            memoryStream.Close();
         }
 
         private static void SaveSprites(StyleData styleData, ZipStorer zip, CancellableContext context)
@@ -798,48 +782,57 @@ namespace Hiale.GTA2NET.Core.Style
 
         private static void SaveSpriteRemap(StyleData styleData, SpriteEntry spriteEntry, uint palette, ZipStorer zip, string fileName)
         {
-            var bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height);
-
-            var baseX = (int)(spriteEntry.Ptr % 256);
-            var baseY = (int)(spriteEntry.Ptr / 256);
-
-            var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-            var stride = bmData.Stride;
-            var scan0 = bmData.Scan0;
-            unsafe
+            using (var bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height))
             {
-                var p = (byte*)(void*)scan0;
-                var nOffset = stride - bmp.Width * 4;
-                for (var y = 0; y < bmp.Height; ++y)
+                var baseX = (int) (spriteEntry.Ptr%256);
+                var baseY = (int) (spriteEntry.Ptr/256);
+
+                var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+                var stride = bmData.Stride;
+                var scan0 = bmData.Scan0;
+                unsafe
                 {
-                    for (var x = 0; x < bmp.Width; ++x)
+                    var p = (byte*) (void*) scan0;
+                    var nOffset = stride - bmp.Width*4;
+                    for (var y = 0; y < bmp.Height; ++y)
                     {
-                        uint spriteColor = styleData.SpriteData[(baseX + x) + (baseY + y) * 256];
-                        //var palId = (palette / 64) * 256 * 64 + (palette % 64) + spriteColor * 64;
-                        p[0] = styleData.Palettes[palette].Colors[spriteColor].B;
-                        p[1] = styleData.Palettes[palette].Colors[spriteColor].G;
-                        p[2] = styleData.Palettes[palette].Colors[spriteColor].R;
-                        p[3] = spriteColor > 0 ? (byte)0xFF : (byte)0;
-                        p += 4;
+                        for (var x = 0; x < bmp.Width; ++x)
+                        {
+                            uint spriteColor = styleData.SpriteData[(baseX + x) + (baseY + y)*256];
+                            //var palId = (palette / 64) * 256 * 64 + (palette % 64) + spriteColor * 64;
+                            p[0] = styleData.Palettes[palette].Colors[spriteColor].B;
+                            p[1] = styleData.Palettes[palette].Colors[spriteColor].G;
+                            p[2] = styleData.Palettes[palette].Colors[spriteColor].R;
+                            p[3] = spriteColor > 0 ? (byte) 255 : (byte) 0;
+                            p += 4;
+                        }
+                        p += nOffset;
                     }
-                    p += nOffset;
+                }
+                bmp.UnlockBits(bmData);
+                var memoryStream = new MemoryStream();
+                bmp.Save(memoryStream, ImageFormat.Png);
+                memoryStream.Position = 0;
+                zip.AddStream(ZipStorer.Compression.Deflate, fileName + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
+                memoryStream.Close();
+            }
+        }
+
+        private static void SaveDeltas(StyleData styleData, ZipStorer zip, CancellableContext context)
+        {
+            const uint palette = 31; //for now
+            for (int i = 0; i < styleData.DeltaIndexes.Length; i++)
+            {
+                for (uint j = 0; j < styleData.DeltaIndexes[i].DeltaSize.Count; j++)
+                {
+                    if (context.IsCancelling)
+                        return;
+                    SaveDelta(styleData, styleData.DeltaIndexes[i].Sprite, palette, j, zip, styleData.DeltaIndexes[i].Sprite + "_" + j + Globals.TextureImageFormat);
                 }
             }
-            bmp.UnlockBits(bmData);
-            var memoryStream = new MemoryStream();
-            bmp.Save(memoryStream, ImageFormat.Png);
-            memoryStream.Position = 0;
-            zip.AddStream(ZipStorer.Compression.Deflate, fileName + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
-            memoryStream.Close();
-            //bmp.Save(fileName, System.Drawing.Imaging.ImageFormat.Png);
         }
 
-        private static void SaveDeltas()
-        {
-            
-        }
-
-        private static void SaveDelta(StyleData styleData, int spriteId, uint palette,  uint deltaId)
+        private static void SaveDelta(StyleData styleData, int spriteId, uint palette, uint deltaId, ZipStorer zip, string fileName)
         {
             var offset = 0;
             foreach (var deltaIndex in styleData.DeltaIndexes)
@@ -852,41 +845,42 @@ namespace Hiale.GTA2NET.Core.Style
                         for (var i = 0; i < deltaId; i++)
                             offset += deltaIndex.DeltaSize[i];
 
-                        Bitmap bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height);
-
-                        var pos = 0;
-                        var recordLen = 0;
-                        var deltaLen = offset + deltaIndex.DeltaSize[(int) deltaId];
-                        while (offset < deltaLen)
+                        using (Bitmap bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height))
                         {
-                            pos = BitConverter.ToUInt16(styleData.DeltaData, offset) + pos + recordLen;
-                            var x = pos%256;
-                            var y = pos/256;
-                            offset += 2;
-                            recordLen = styleData.DeltaData[offset];
-                            offset++;
-                            for (var i = 0; i < recordLen; i++)
+                            var pos = 0;
+                            var recordLen = 0;
+                            var deltaLen = offset + deltaIndex.DeltaSize[(int) deltaId];
+                            while (offset < deltaLen)
                             {
-                                var color = styleData.Palettes[palette].Colors[styleData.DeltaData[offset]];
-                                var imagePosX = x + i;
-                                var imagePosY = y;
-                                bmp.SetPixel(imagePosX, imagePosY, Color.FromArgb(255, color.R, color.G, color.B));
+                                pos = BitConverter.ToUInt16(styleData.DeltaData, offset) + pos + recordLen;
+                                var x = pos%256;
+                                var y = pos/256;
+                                offset += 2;
+                                recordLen = styleData.DeltaData[offset];
                                 offset++;
+                                for (var i = 0; i < recordLen; i++)
+                                {
+                                    var color = styleData.Palettes[palette].Colors[styleData.DeltaData[offset]];
+                                    var imagePosX = x + i;
+                                    var imagePosY = y;
+                                    bmp.SetPixel(imagePosX, imagePosY, Color.FromArgb(255, color.R, color.G, color.B));
+                                    offset++;
+                                }
                             }
-                        }
 
-                        bmp.Save("test.png", ImageFormat.Png);
-                        bmp.Dispose();
+                            var memoryStream = new MemoryStream();
+                            bmp.Save(memoryStream, ImageFormat.Png);
+                            memoryStream.Position = 0;
+                            zip.AddStream(ZipStorer.Compression.Deflate, fileName + Globals.TextureImageFormat, memoryStream, styleData.OriginalDateTime, string.Empty);
+                            memoryStream.Close();
+                        }
                     }
                 }
                 else
                 {
-                    for (var i = 0; i < deltaIndex.DeltaSize.Count; i++)
-                        offset += deltaIndex.DeltaSize[i];
+                    offset += deltaIndex.DeltaSize.Sum();
                 }
-                
             }
-            
         }
 
         protected virtual void OnConvertStyleFileProgressChanged(ProgressMessageChangedEventArgs e)

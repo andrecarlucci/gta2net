@@ -31,10 +31,12 @@ namespace Hiale.GTA2NET.Core
         public const string GraphicsSubDir = "gfx";
         public const string MapsSubDir = "maps";
         public const string MiscSubDir = "misc";
-        public const string TilesSuffix = "Tiles";
-        public const string SpritesSuffix = "Sprites";
+        public const string TilesSuffix = "_tiles";
+        public const string SpritesSuffix = "_sprites";
         public const string TextureImageFormat = ".png";
-        public const string CarStyleSuffix = "_car.xml";
+        public const string XmlFormat = ".xml";
+        public const string CarStyleSuffix = "_car";
+        public const string PaletteSuffix = "_palette";
 
         //Original game files
         public static readonly string[] StyleMapFiles = { "bil", "ste", "wil" };

@@ -433,7 +433,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 }
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
-            Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + ".xml");
+            Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
 
         }
     }
@@ -512,7 +512,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 SpriteDictionary.Add(item, rect);
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
-            Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + ".xml");
+            Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
         }
 
         private static SpriteItem ParseFileName(string fileName)

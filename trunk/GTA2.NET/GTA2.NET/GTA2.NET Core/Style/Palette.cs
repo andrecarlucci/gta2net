@@ -24,7 +24,9 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using Microsoft.Xna.Framework;
+using System.Drawing;
+using System.Drawing.Imaging;
+using Color = Microsoft.Xna.Framework.Color;
 
 namespace Hiale.GTA2NET.Core.Style
 {
@@ -43,6 +45,69 @@ namespace Hiale.GTA2NET.Core.Style
                 throw new ArgumentException();
             //Format is Blue, Green, Red, [Reserved Byte]
             Colors[position] = new Color(data[2], data[1], data[0], 0);
+        }
+
+        public static void SavePalettes(Palette[] palettes, string fileName)
+        {
+            using (var bmp = new Bitmap(palettes.Length, 256))
+            {
+                var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                var stride = bmData.Stride;
+                var scan0 = bmData.Scan0;
+                unsafe
+                {
+                    var p = (byte*)(void*)scan0;
+                    var nOffset = stride - bmp.Width * 4;
+                    for (var y = 0; y < bmp.Height; ++y)
+                    {
+                        for (var x = 0; x < bmp.Width; ++x)
+                        {
+                            p[0] = palettes[x].Colors[y].B;
+                            p[1] = palettes[x].Colors[y].G;
+                            p[2] = palettes[x].Colors[y].R;
+                            p[3] = 255;
+                            p += 4;
+                        }
+                        p += nOffset;
+                    }
+                }
+                bmp.UnlockBits(bmData);
+                bmp.Save(fileName, ImageFormat.Png);
+            }
+        }
+
+        public static Palette[] LoadPalettes(string fileName)
+        {
+            Palette[] ps;
+            using (var bmp = (Bitmap)Image.FromFile(fileName))
+            {
+                ps = new Palette[bmp.Width];
+                for (var i = 0; i < ps.Length; i++)
+                    ps[i] = new Palette();
+
+                var bmData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                var stride = bmData.Stride;
+                var scan0 = bmData.Scan0;
+
+                unsafe
+                {
+                    var p = (byte*)(void*)scan0;
+                    var nOffset = stride - bmp.Width * 4;
+
+                    for (var y = 0; y < bmp.Height; ++y)
+                    {
+                        for (var x = 0; x < bmp.Width; ++x)
+                        {
+                            ps[x].Colors[y] = new Color(p[2], p[1], p[0]);
+                            p += 4;
+                        }
+                        p += nOffset;
+                    }
+
+                }
+                bmp.UnlockBits(bmData);
+            }
+            return ps;
         }
     }
 }
