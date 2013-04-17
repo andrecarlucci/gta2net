@@ -50,7 +50,7 @@ namespace Hiale.GTA2NET.Core.Style
             public SpriteEntry[] SpriteEntries;
             public SpriteBase SpriteBase;
             public FontBase FontBase;
-            public Delta[] DeltaIndexes; 
+            public DeltaIndex[] DeltaIndexes; 
             public byte[] DeltaData;
             
             public SerializableDictionary<int, CarInfo> CarInfo;
@@ -119,7 +119,7 @@ namespace Hiale.GTA2NET.Core.Style
                     SpriteBase = new SpriteBase(),
                     FontBase = new FontBase(),
                     DeltaData = new byte[] {},
-                    DeltaIndexes = new Delta[] {},
+                    DeltaIndexes = new DeltaIndex[] {},
                     CarInfo = new SerializableDictionary<int, CarInfo>(),
                     CarSprites = new Dictionary<int, List<int>>()
                 };
@@ -223,7 +223,7 @@ namespace Hiale.GTA2NET.Core.Style
                 SaveCarData(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix);
                 SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_palettes.png");
 
-                SaveDelta(styleData, 1, 31, 1);
+                //SaveDelta(styleData, 1, 31, 1);
 
                 memoryStreamTiles = new MemoryStream();
                 using (var zip = ZipStorer.Create(memoryStreamTiles, string.Empty))
@@ -581,14 +581,14 @@ namespace Hiale.GTA2NET.Core.Style
             return paletteBase;
         }
 
-        private static Delta[] ReadDeltaIndex(BinaryReader reader, int chunkSize)
+        private static DeltaIndex[] ReadDeltaIndex(BinaryReader reader, int chunkSize)
         {
-            System.Diagnostics.Debug.WriteLine("Reading delta index");
-            var deltas = new List<Delta>();
+            System.Diagnostics.Debug.WriteLine("Reading delta indexes...");
+            var deltas = new List<DeltaIndex>();
             var position = 0;
             while (position < chunkSize)
             {
-                var delta = new Delta { Sprite = reader.ReadUInt16() };
+                var delta = new DeltaIndex { Sprite = reader.ReadUInt16() };
                 int deltaCount = reader.ReadByte();
                 reader.ReadByte(); //dummy data
                 for (var i = 0; i < deltaCount; i++)
@@ -601,20 +601,9 @@ namespace Hiale.GTA2NET.Core.Style
 
         private static byte[] ReadDeltaStore(BinaryReader reader, int chunkSize)
         {
-            System.Diagnostics.Debug.WriteLine("Reading delta store");
+            System.Diagnostics.Debug.WriteLine("Reading delta store...");
             var deltaData = reader.ReadBytes(chunkSize);
             return deltaData;
-            //var position = 0;
-            //var i = 0;
-            //while (position < chunkSize)
-            //{
-            //    i++;
-            //    int offset = reader.ReadUInt16();
-            //    byte length = reader.ReadByte();
-            //    reader.ReadBytes(length);
-            //    position += 3 + length;
-            //}
-            //System.Diagnostics.Debug.WriteLine(i);
         }
 
         private static IList<Surface> ReadSurfaces(BinaryReader reader, int chunkSize)
@@ -852,22 +841,42 @@ namespace Hiale.GTA2NET.Core.Style
 
         private static void SaveDelta(StyleData styleData, int spriteId, uint palette,  uint deltaId)
         {
-            int offset = 0;
+            var offset = 0;
             foreach (var deltaIndex in styleData.DeltaIndexes)
             {
                 if (deltaIndex.Sprite == spriteId)
                 {
-                    SpriteEntry spriteEntry = styleData.SpriteEntries[spriteId];
+                    var spriteEntry = styleData.SpriteEntries[spriteId];
                     if (deltaIndex.DeltaSize.Count > 0)
                     {
-                        //int offset = 1;
                         for (var i = 0; i < deltaId; i++)
                             offset += deltaIndex.DeltaSize[i];
 
+                        Bitmap bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height);
 
-                        var deltaData = new byte[deltaIndex.DeltaSize[(int)deltaId]];
-                        Array.Copy(styleData.DeltaData, offset, deltaData, 0, deltaIndex.DeltaSize[(int) deltaId]);
+                        var pos = 0;
+                        var recordLen = 0;
+                        var deltaLen = offset + deltaIndex.DeltaSize[(int) deltaId];
+                        while (offset < deltaLen)
+                        {
+                            pos = BitConverter.ToUInt16(styleData.DeltaData, offset) + pos + recordLen;
+                            var x = pos%256;
+                            var y = pos/256;
+                            offset += 2;
+                            recordLen = styleData.DeltaData[offset];
+                            offset++;
+                            for (var i = 0; i < recordLen; i++)
+                            {
+                                var color = styleData.Palettes[palette].Colors[styleData.DeltaData[offset]];
+                                var imagePosX = x + i;
+                                var imagePosY = y;
+                                bmp.SetPixel(imagePosX, imagePosY, Color.FromArgb(255, color.R, color.G, color.B));
+                                offset++;
+                            }
+                        }
 
+                        bmp.Save("test.png", ImageFormat.Png);
+                        bmp.Dispose();
                     }
                 }
                 else

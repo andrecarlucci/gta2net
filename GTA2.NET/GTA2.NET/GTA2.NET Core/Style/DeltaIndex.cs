@@ -30,7 +30,7 @@ using System.Text;
 
 namespace Hiale.GTA2NET.Core.Style
 {
-    public class Delta
+    public class DeltaIndex
     {
         private int _sprite;
         /// <summary>
@@ -52,7 +52,7 @@ namespace Hiale.GTA2NET.Core.Style
             set { _deltaSize = value; }
         }
 
-        public Delta()
+        public DeltaIndex()
         {
             _deltaSize = new List<int>();
         }
