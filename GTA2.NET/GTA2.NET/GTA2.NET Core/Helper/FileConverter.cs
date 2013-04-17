@@ -87,23 +87,23 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public static bool CheckConvertedAssets(string path)
         {
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.TilesSuffix + ".xml")))
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.XmlFormat))) //Texture Atlas Tiles
                 return false;
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.SpritesSuffix + ".xml")))
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.SpritesSuffix + Globals.XmlFormat))) //Texture Atlas Sprites
                 return false;
-
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.TilesSuffix + Globals.TextureImageFormat)))
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.TextureImageFormat))) //Texture Tiles
                 return false;
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_" + Globals.SpritesSuffix + Globals.TextureImageFormat)))
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.SpritesSuffix + Globals.TextureImageFormat))) //Texture Sprites
                 return false;
-
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.PaletteSuffix + Globals.TextureImageFormat))) //Palettes
                 return false;
-            if (Globals.MapFilesMultiplayer.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension)))
+            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension))) //Main Maps
                 return false;
-            if (Globals.MiscFiles.Any(miscFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + miscFile)))
+            if (Globals.MapFilesMultiplayer.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension))) //Multiplayer Maps
                 return false;
-            if (Globals.StyleMapFiles.Any(carStyleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + carStyleFile + Globals.CarStyleSuffix)))
+            if (Globals.MiscFiles.Any(miscFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + miscFile))) //Special Files
+                return false;
+            if (Globals.StyleMapFiles.Any(carStyleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + carStyleFile + Globals.CarStyleSuffix + Globals.XmlFormat))) //Car Data
                 return false;
             return true;
         }

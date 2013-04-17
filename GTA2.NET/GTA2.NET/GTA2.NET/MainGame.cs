@@ -207,7 +207,7 @@ namespace Hiale.GTA2NET
             //Style = new Style();
             //Style.ReadFromFile(Globals.GraphicsSubDir + "\\bil.sty");
 
-            var carInfo = CarInfo.Deserialize(Globals.MiscSubDir + "\\bil_car.xml");
+            var carInfo = CarInfo.Deserialize(Globals.MiscSubDir + "\\bil_car" + Globals.XmlFormat);
 
             //var collision = new MapCollision(Map);
             //collision.CollisionMap(new Vector2(73,192));

@@ -45,9 +45,17 @@ namespace Hiale.GTA2NET.Core
             Doors = new List<DoorInfo>();
         }
 
-        public static SerializableDictionary<int, CarInfo> Deserialize(string path)
+        public static void Serialize(SerializableDictionary<int, CarInfo> carInfo, string fileName)
         {
-            TextReader textReader = new StreamReader(path);
+            var textWriter = new StreamWriter(fileName);
+            var serializer = new XmlSerializer(typeof(SerializableDictionary<int, CarInfo>));
+            serializer.Serialize(textWriter, carInfo);
+            textWriter.Close();
+        }
+
+        public static SerializableDictionary<int, CarInfo> Deserialize(string fileName)
+        {
+            TextReader textReader = new StreamReader(fileName);
             var deserializer = new XmlSerializer(typeof(SerializableDictionary<int, CarInfo>));
             var dict = (SerializableDictionary<int, CarInfo>)deserializer.Deserialize(textReader);
             textReader.Close();
