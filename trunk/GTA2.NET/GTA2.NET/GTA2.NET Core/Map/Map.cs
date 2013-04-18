@@ -135,7 +135,7 @@ namespace Hiale.GTA2NET.Core.Map
                         ReadLights(reader, chunkSize);
                         break;
                     default:
-                        System.Diagnostics.Debug.WriteLine("Skipping chunk...");
+                        System.Diagnostics.Debug.WriteLine("Skipping chunk '" + chunkType + "'...");
                         reader.ReadBytes(chunkSize);
                         break;
                 }

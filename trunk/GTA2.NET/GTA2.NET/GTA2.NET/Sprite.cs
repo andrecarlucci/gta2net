@@ -79,9 +79,9 @@ namespace Hiale.GTA2NET
 
         private readonly float _heightHalf;
 
-        public Sprite(GameplayObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<SpriteItem, CompactRectangle> spriteDictionary)
+        public Sprite(GameplayObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
         {
-            SpriteItem item = new SpriteItem();
+            var item = new SpriteItem();
 
             //Bus
             //item.Sprite = 10;
@@ -94,10 +94,10 @@ namespace Hiale.GTA2NET
             //item.Remap = 36;
 
             item.Sprite = 9;
-            item.Model = 10;
-            item.Remap = -1;
+            //item.Model = 10;
+            //item.Remap = -1;
 
-            var sourceRectangle = spriteDictionary[item];
+            var sourceRectangle = spriteDictionary[item.Sprite].Rectangle;
             Width = sourceRectangle.Width / 64f; //1 Unit = 64px
             Height = sourceRectangle.Height / 64f;
             _widthHalf = Width / 2;

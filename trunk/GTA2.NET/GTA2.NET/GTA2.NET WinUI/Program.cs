@@ -30,15 +30,31 @@ namespace Hiale.GTA2NET.WinUI
 {
     public static class Program
     {
-        public static bool Main()
+        private static bool _initialized;
+
+        private static void Initialize()
         {
+            if (_initialized)
+                return;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            _initialized = true;
+        }
+
+        public static bool ConvertAssets()
+        {
+            Initialize();
             var form = new ConvertForm();
             Application.Run(form);
-            if (form.DialogResult == DialogResult.Cancel)
-                return false;
-            return true;
+            return form.DialogResult != DialogResult.Cancel;
         }
+
+        public static void CarDebug()
+        {
+            Initialize();
+            var form = new SpriteForm();
+            Application.Run(form);
+        }
+
     }
 }

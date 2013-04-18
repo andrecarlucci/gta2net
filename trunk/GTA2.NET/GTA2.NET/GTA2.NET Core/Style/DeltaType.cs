@@ -1,7 +1,7 @@
-// GTA2.NET
+﻿// GTA2.NET
 // 
-// File: Program.cs
-// Created: 21.02.2013
+// File: DeltaType.cs
+// Created: 18.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -24,40 +24,45 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using System.IO;
-using System.Reflection;
-using Hiale.GTA2NET.Core.Helper;
-using Hiale.GTA2NET.WinUI;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
-namespace Hiale.GTA2NET
+namespace Hiale.GTA2NET.Core.Style
 {
-    static class Program
+    public enum DeltaType
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            var currentDir = Path.GetDirectoryName(assembly.Location);
-            if (!FileConverter.CheckConvertedAssets(currentDir))
-            {
-                if (!WinUI.Program.ConvertAssets())
-                    return;
-            }
-
-            if (args.Length > 0 && args[0].ToLower() == "-cardebug")
-            {
-                WinUI.Program.CarDebug();
-                return;
-            }
-
-            using (var game = new MainGame())
-            {
-                game.Run();
-            }            
-        }
+        DentRearLeft = 0,
+        DentRearRight = 1,
+        DentFrontRight = 2,
+        DentFrontLeft = 3,
+        FrontShieldDamaged = 4,
+        BrakeLightRight = 5, //there seem to be no left version of this
+        HeadLightRight = 6, //same here
+        DriverDoorAlmostClosed = 7,
+        DriverDoorSlightlyOpened = 8,
+        DriverDoorAlmostOpen = 9,
+        DriverDoorOpen = 10,
     }
 }
 
+//http://en.wikigta.org/wiki/Creating_vehicles_%28GTA2%29#Deltas
+//Rear Right Dent
+//Rear Left Dent
+//Front Left Dent
+//Front Right Dent
+//Damaged Windsreen
+//Left Brake Light
+//Left Headlight
+//Left Front Door 1
+//Left Front Door 2
+//Left Front Door 3
+//Left Front Door 4
+//Left Back Door/FBI Light 1
+//Left Back Door/FBI Light 2
+//Left Back Door/FBI Light 3
+//Left Back Door/FBI Light 4
+//Emergency/Roof Light/Decal
+//Emergency Light
+//Right Rear Emergency Light
+//Left Rear Emergency Light

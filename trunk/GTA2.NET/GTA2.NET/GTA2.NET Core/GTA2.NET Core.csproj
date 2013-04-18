@@ -85,6 +85,7 @@
     <Compile Include="Properties\SharedAssemblyInfo.cs" />
     <Compile Include="Style\CarInfoFlags.cs" />
     <Compile Include="Style\DeltaIndex.cs" />
+    <Compile Include="Style\DeltaType.cs" />
     <Compile Include="Style\DoorInfo.cs" />
     <Compile Include="Style\FontBase.cs" />
     <Compile Include="Style\ObjectInfo.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="Style\PaletteBase.cs" />
     <Compile Include="Style\SpriteBase.cs" />
     <Compile Include="Style\SpriteEntry.cs" />
+    <Compile Include="Style\SpriteType.cs" />
     <Compile Include="Style\Style.cs" />
     <Compile Include="Style\Surface.cs" />
   </ItemGroup>
