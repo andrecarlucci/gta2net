@@ -26,17 +26,20 @@
 
 using System;
 using System.Globalization;
+using System.Xml.Serialization;
+using Hiale.GTA2NET.Core.Style;
 
 namespace Hiale.GTA2NET.Core.Helper
 {
     [Serializable]
     public struct SpriteItem
     {
+        [XmlIgnore] //this is the key of the dictionary
         public int Sprite;
 
-        public int Model;
+        public SpriteType Type;
 
-        public int Remap;
+        public CompactRectangle Rectangle;
 
         public override string ToString()
         {

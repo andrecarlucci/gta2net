@@ -214,6 +214,11 @@ namespace Hiale.GTA2NET.Core.Style
         private void SaveData(StyleData styleData, CancellableContext context, out bool cancelled)
         {
             var styleFile = Path.GetFileNameWithoutExtension(StylePath);
+            foreach (var carInfo in styleData.CarInfo)
+            {
+                carInfo.Value.DefaultPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + carInfo.Value.Sprite];
+                carInfo.Value.RemapPaletteBase = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite];
+            }
             CarInfo.Serialize(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix + Globals.XmlFormat);
             Palette.SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.PaletteSuffix + Globals.TextureImageFormat);
 
@@ -493,10 +498,8 @@ namespace Hiale.GTA2NET.Core.Style
                     carInfo.InfoFlags += 0x100;
                 if (infoFlags2Value1)
                     carInfo.InfoFlags += 0x200;
-                for (int i = 0; i < numRemaps; i++)
-                {
+                for (var i = 0; i < numRemaps; i++)
                     carInfo.RemapList.Add(reader.ReadByte());
-                }
                 var numDoors = reader.ReadByte();
                 for (var i = 0; i < numDoors; i++)
                 {
@@ -757,27 +760,28 @@ namespace Hiale.GTA2NET.Core.Style
 
         }
 
-        private static void SaveCarSprite(StyleData styleData, ZipStorer zip, int spriteId, IEnumerable<int> modelList)
+        private static void SaveCarSprite(StyleData styleData, ZipStorer zip, int spriteId, IList<int> modelList)
         {
             var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + spriteId];
             var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite];
             var spriteEntry = styleData.SpriteEntries[spriteId];
             //UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
-            foreach (var model in modelList)
-            {
-                SaveSpriteRemap(styleData, spriteEntry, basePalette, zip, "Cars/" + spriteId + "_" + model + "_-1"); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
+            //foreach (var model in modelList)
+            //{
+                SaveSpriteRemap(styleData, spriteEntry, basePalette, zip, "Cars/" + spriteId); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
                 if (EXPORT_REMAPS)
                 {
-                    var remapList = styleData.CarInfo[model].RemapList;
+                    //var remapList = styleData.CarInfo[model].RemapList;
+                    var remapList = styleData.CarInfo[0].RemapList;
                     foreach (var remapId in remapList)
                     {
                         var remapIDhack = remapId;
                         if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
                             remapIDhack--;
-                        SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Cars/" + spriteId + "_" + model + "_" + remapId);
+                        SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Cars/" + spriteId + "_" + remapId);
                     }
                 }
-            }
+            //}
         }
 
         private static void SaveSpriteRemap(StyleData styleData, SpriteEntry spriteEntry, uint palette, ZipStorer zip, string fileName)
@@ -820,14 +824,14 @@ namespace Hiale.GTA2NET.Core.Style
 
         private static void SaveDeltas(StyleData styleData, ZipStorer zip, CancellableContext context)
         {
-            const uint palette = 31; //for now
             for (int i = 0; i < styleData.DeltaIndexes.Length; i++)
             {
+                var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.DeltaIndexes[i].Sprite];
                 for (uint j = 0; j < styleData.DeltaIndexes[i].DeltaSize.Count; j++)
                 {
                     if (context.IsCancelling)
                         return;
-                    SaveDelta(styleData, styleData.DeltaIndexes[i].Sprite, palette, j, zip, styleData.DeltaIndexes[i].Sprite + "_" + j + Globals.TextureImageFormat);
+                    SaveDelta(styleData, styleData.DeltaIndexes[i].Sprite, basePalette, j, zip, styleData.DeltaIndexes[i].Sprite + "_" + j);
                 }
             }
         }
@@ -845,7 +849,7 @@ namespace Hiale.GTA2NET.Core.Style
                         for (var i = 0; i < deltaId; i++)
                             offset += deltaIndex.DeltaSize[i];
 
-                        using (Bitmap bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height))
+                        using (var bmp = new Bitmap(spriteEntry.Width, spriteEntry.Height))
                         {
                             var pos = 0;
                             var recordLen = 0;

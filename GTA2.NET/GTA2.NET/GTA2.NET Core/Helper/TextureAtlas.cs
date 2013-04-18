@@ -34,6 +34,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Xml.Serialization;
 using System.IO;
 using Hiale.GTA2NET.Core.Helper.Threading;
+using Hiale.GTA2NET.Core.Style;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Hiale.GTA2NET.Core.Helper
@@ -47,6 +48,7 @@ namespace Hiale.GTA2NET.Core.Helper
         protected class ImageEntry
         {
             public int Index;
+            public string Directory;
             public string FileName;
             public int X;
             public int Y;
@@ -195,8 +197,8 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return null;
                 }
-                if (!ZipEntries[i].FilenameInZip.StartsWith(directory))
-                    continue;
+                //if (!ZipEntries[i].FilenameInZip.StartsWith(directory))
+                //    continue;
                 var source = GetBitmapFromZip(ZipStore, ZipEntries[i]);
                 var entry = new ImageEntry();
                 if (!CrcDictionary.ContainsKey(ZipEntries[i].Crc32))
@@ -204,7 +206,9 @@ namespace Hiale.GTA2NET.Core.Helper
                 else
                     entry.SameSpriteIndex = CrcDictionary[ZipEntries[i].Crc32];
                 entry.Index = i;
-                entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
+                var pathParts = ParsePath(ZipEntries[i].FilenameInZip);
+                entry.Directory = pathParts[0];
+                entry.FileName = pathParts[1];
                 entry.Width = source.Width + 2*Padding;  // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
                 entry.Height = source.Height + 2*Padding;
                 entry.ZipEntryIndex = i;
@@ -329,10 +333,10 @@ namespace Hiale.GTA2NET.Core.Helper
             return widthPower2;
         }
 
-        private static string ParsePath(string path)
+        private static string[] ParsePath(string path)
         {
             var pos = path.LastIndexOf('/');
-            return path.Substring(pos + 1, path.Length - pos - Globals.TextureImageFormat.Length - 1);
+            return new[] {pos > -1 ? path.Substring(0, pos) : string.Empty,   path.Substring(pos + 1, path.Length - pos - Globals.TextureImageFormat.Length - 1)};
         }
 
         public void Serialize(string path)
@@ -440,7 +444,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
     public class TextureAtlasSprites : TextureAtlas
     {
-        public SerializableDictionary<SpriteItem, CompactRectangle> SpriteDictionary { get; set; }
+        public SerializableDictionary<int, SpriteItem> SpriteDictionary { get; set; }
 
         private readonly Dictionary<int, SpriteItem> _duplicateDictionary; //Helper list to find duplicate images.
 
@@ -482,7 +486,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var root = new Node(0, 0, outputWidth, outputHeight);
 
             CreateOutputBitmap(outputWidth, outputHeight);
-            SpriteDictionary = new SerializableDictionary<SpriteItem, CompactRectangle>();
+            SpriteDictionary = new SerializableDictionary<int, SpriteItem>();
             foreach (var entry in entries)
             {
                 if (context.IsCancelling)
@@ -497,36 +501,49 @@ namespace Hiale.GTA2NET.Core.Helper
                 entry.X = node.Rectangle.X;
                 entry.Y = node.Rectangle.Y;
 
-                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[_duplicateDictionary[entry.SameSpriteIndex]];
+                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[_duplicateDictionary[entry.SameSpriteIndex].Sprite].Rectangle;
+
+                //if (entry.SameSpriteIndex != 0)
+                //    System.Diagnostics.Debug.WriteLine("OK");
+                //var rect = PaintAndGetRectangle(entry);
                 var fileName = entry.FileName;
-                SpriteItem item;
+                var item = new SpriteItem();
                 try
                 {
-                    item = ParseFileName(fileName);
+                    item.Sprite = int.Parse(fileName);
+                    switch (entry.Directory)
+                    {
+                        case "Cars":
+                            item.Type = SpriteType.Car;
+                            break;
+                        case "Peds":
+                            item.Type = SpriteType.Pedestrian;
+                            break;
+                        case "CodeObj":
+                            item.Type = SpriteType.CodeObject;
+                            break;
+                        case "MapObj":
+                            item.Type = SpriteType.MapObject;
+                            break;
+                        case "User":
+                            item.Type = SpriteType.User;
+                            break;
+                        case "Font":
+                            item.Type = SpriteType.Font;
+                            break;
+                    }
+                    item.Rectangle = rect;
                 }
                 catch (Exception)
                 {
                     continue;
                 }
+
                 _duplicateDictionary.Add(entry.Index, item);
-                SpriteDictionary.Add(item, rect);
+                SpriteDictionary.Add(item.Sprite, item);
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
-        }
-
-        private static SpriteItem ParseFileName(string fileName)
-        {
-            var item = new SpriteItem();
-            var parts = fileName.Split('_');
-            item.Sprite = int.Parse(parts[0]);
-            item.Remap = -1;
-            if (parts.Length == 3)
-            {
-                item.Model = int.Parse(parts[1]);
-                item.Remap = int.Parse(parts[2]);
-            }
-            return item;
         }
     }
 }

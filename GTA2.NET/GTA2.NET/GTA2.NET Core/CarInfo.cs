@@ -171,6 +171,17 @@ namespace Hiale.GTA2NET.Core
         //}
 
         /// <summary>
+        /// Default palette which this car uses
+        /// </summary>
+        public ushort DefaultPalette { get; set; }
+
+        /// <summary>
+        /// Start index of the remap palettes. Add a RemapList item to this value to get the actual palette.
+        /// </summary>
+        public ushort RemapPaletteBase { get; set; }
+
+
+        /// <summary>
         /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this car.
         /// </summary>
         public List<byte> RemapList { get; set; }

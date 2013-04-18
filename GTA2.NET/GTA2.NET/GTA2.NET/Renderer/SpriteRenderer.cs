@@ -43,7 +43,7 @@ namespace Hiale.GTA2NET.Renderer
         Texture2D spriteTexture;
         //List<Sprite> sprites;
         Dictionary<GameplayObject, Sprite> sprites;
-        Dictionary<SpriteItem, CompactRectangle> spriteAtlas;
+        Dictionary<int, SpriteItem> spriteAtlas;
         
 
         //Triangle stuff, use DynamicVertexBuffer?
