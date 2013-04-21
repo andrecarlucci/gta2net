@@ -56,6 +56,7 @@ namespace Hiale.GTA2NET.Core.Style
             public Dictionary<int, List<int>> CarSprites; //Helper variable to see which sprites are used by more than one model.
 
             public SerializableDictionary<int, SpriteItem> Sprites;
+            public SerializableDictionary<int, DeltaItem> Deltas; 
 
             public DateTime OriginalDateTime;
 
@@ -122,6 +123,7 @@ namespace Hiale.GTA2NET.Core.Style
                     DeltaData = new byte[] {},
                     DeltaIndexes = new DeltaIndex[] {},
                     Sprites = new SerializableDictionary<int, SpriteItem>(),
+                    Deltas = new SerializableDictionary<int, DeltaItem>(),
                     CarInfo = new SerializableDictionary<int, CarInfo>(),
                     CarSprites = new Dictionary<int, List<int>>()
                 };
@@ -303,8 +305,6 @@ namespace Hiale.GTA2NET.Core.Style
             memoryStreamSprites.Position = 0;
             memoryStreamDeltas.Position = 0;
 
-            memoryStreamDeltas.Close();
-
             TextureAtlas atlas = CreateTextureAtlas<TextureAtlasTiles>(ZipStorer.Open(memoryStreamTiles, FileAccess.Read), styleFile + Globals.TilesSuffix);
             _memoryStreams.Add(atlas, memoryStreamTiles);
             _runningAtlas.Add(atlas);
@@ -317,8 +317,21 @@ namespace Hiale.GTA2NET.Core.Style
             atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), styleFile + Globals.SpritesSuffix, styleData.Sprites);
             _memoryStreams.Add(atlas, memoryStreamSprites);
             _runningAtlas.Add(atlas);
+            if (context.IsCancelling)
+            {
+                cancelled = true;
+                return;
+            }
+
+            //atlas = CreateTextureAtlas<TextureAtlasDeltas>(ZipStorer.Open(memoryStreamDeltas, FileAccess.Read), styleFile + "_deltas", styleData.Deltas);
+            //_memoryStreams.Add(atlas, memoryStreamDeltas);
+            //_runningAtlas.Add(atlas);
+            memoryStreamDeltas.Close();
+
             WaitHandle.WaitOne();
             cancelled = WaitHandle.Value;
+
+            GC.Collect();
         }
 
         public T CreateTextureAtlas<T>(ZipStorer inputZip, string outputFile) where T : TextureAtlas, new()
@@ -721,6 +734,7 @@ namespace Hiale.GTA2NET.Core.Style
             27  t/m 52 	Other normal pedestrians 
             */
             #endregion Peds
+
             var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite + styleData.PaletteBase.CarRemap];
             for (var i = styleData.SpriteBase.Ped; i < styleData.SpriteBase.CodeObj; i++)
             {
@@ -822,7 +836,7 @@ namespace Hiale.GTA2NET.Core.Style
 
         private static void SaveDeltas(StyleData styleData, ZipStorer zip, CancellableContext context)
         {
-            for (int i = 0; i < styleData.DeltaIndexes.Length; i++)
+            for (var i = 0; i < styleData.DeltaIndexes.Length; i++)
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.DeltaIndexes[i].Sprite];
                 for (uint j = 0; j < styleData.DeltaIndexes[i].DeltaSize.Count; j++)
