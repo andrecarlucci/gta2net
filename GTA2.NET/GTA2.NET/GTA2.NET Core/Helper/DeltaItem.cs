@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: DeltaIndex.cs
-// Created: 21.02.2013
+// File: DeltaItem.cs
+// Created: 21.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,40 +23,26 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+using System;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 
-namespace Hiale.GTA2NET.Core.Style
+namespace Hiale.GTA2NET.Core.Helper
 {
-    internal class DeltaIndex
+    [Serializable]
+    public class DeltaItem
     {
-        private int _sprite;
-        /// <summary>
-        /// 
-        /// </summary>
-        public int Sprite
+        [XmlIgnore] //this is the key of the dictionary
+        public int SpriteId;
+
+        public CompactRectangle Rectangle { get; set; }
+
+        public DeltaItem()
         {
-            get { return _sprite; }
-            set { _sprite = value; }
+            //XML Serializer
         }
 
-        List<int> _deltaSize;
-        /// <summary>
-        /// 
-        /// </summary>
-        public List<int> DeltaSize
-        {
-            get { return _deltaSize; }
-            set { _deltaSize = value; }
-        }
-
-        public DeltaIndex()
-        {
-            _deltaSize = new List<int>();
-        }
-
-        public override string ToString()
-        {
-            return "Sprite: " + _sprite + " (" + _deltaSize.Count + ")";
-        }
+        [XmlArrayItem("SubItem")]
+        public List<int> DeltaSubItems { get; set; }
     }
 }

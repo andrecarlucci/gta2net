@@ -27,7 +27,7 @@ using System;
 
 namespace Hiale.GTA2NET.Core.Style
 {
-    public struct SpriteEntry
+    internal struct SpriteEntry
     {
         public uint Ptr;
         public byte Width;

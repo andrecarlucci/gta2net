@@ -25,7 +25,7 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 namespace Hiale.GTA2NET.Core.Style
 {
-    public struct SpriteBase
+    internal struct SpriteBase
     {
         public ushort Car;
         public ushort Ped;

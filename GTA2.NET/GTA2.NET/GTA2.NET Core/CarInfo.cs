@@ -27,7 +27,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml;
 using System.Xml.Serialization;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Style;

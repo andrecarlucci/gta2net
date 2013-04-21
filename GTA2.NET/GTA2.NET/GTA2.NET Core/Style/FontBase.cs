@@ -27,7 +27,7 @@ using System;
 
 namespace Hiale.GTA2NET.Core.Style
 {
-    public struct FontBase
+    internal struct FontBase
     {
         public UInt16 FontCount;
         public UInt16[] Base;

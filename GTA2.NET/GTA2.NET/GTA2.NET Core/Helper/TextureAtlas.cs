@@ -34,7 +34,6 @@ using System.Runtime.Remoting.Messaging;
 using System.Xml.Serialization;
 using System.IO;
 using Hiale.GTA2NET.Core.Helper.Threading;
-using Hiale.GTA2NET.Core.Style;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Hiale.GTA2NET.Core.Helper
@@ -48,7 +47,6 @@ namespace Hiale.GTA2NET.Core.Helper
         protected class ImageEntry
         {
             public int Index;
-            public string Directory;
             public string FileName;
             public int X;
             public int Y;
@@ -125,8 +123,8 @@ namespace Hiale.GTA2NET.Core.Helper
             {
                 if (CompareSize)
                 {
-                    var xSize = x.Height * 1024 + x.Width;
-                    var ySize = y.Height * 1024 + y.Width;
+                    var xSize = x.Height*1024 + x.Width;
+                    var ySize = y.Height*1024 + y.Width;
                     return ySize.CompareTo(xSize);
                 }
                 return x.Index.CompareTo(y.Index);
@@ -136,9 +134,12 @@ namespace Hiale.GTA2NET.Core.Helper
         public event AsyncCompletedEventHandler BuildTextureAtlasCompleted;
 
         private delegate void BuildTextureAtlasDelegate(CancellableContext context, out bool cancelled);
+
         private readonly object _sync = new object();
+
         [XmlIgnore]
         public bool IsBusy { get; private set; }
+
         private CancellableContext _buildTextureAtlasContext;
 
         /// <summary>
@@ -169,22 +170,18 @@ namespace Hiale.GTA2NET.Core.Helper
         protected TextureAtlas()
         {
             //needed by xml serializer
-            Padding = 0;
+            Padding = 2;
             CrcDictionary = new Dictionary<uint, int>();
         }
 
-        protected TextureAtlas(string imagePath, ZipStorer zipStore) : this()
+        protected TextureAtlas(string imagePath, ZipStorer zipStore)
+            : this()
         {
             ImagePath = imagePath;
             ZipStore = zipStore;
         }
 
         protected List<ImageEntry> CreateImageEntries(CancellableContext context, out bool cancelled)
-        {
-            return CreateImageEntries(string.Empty, context, out cancelled);
-        }
-
-        protected List<ImageEntry> CreateImageEntries(string directory, CancellableContext context, out bool cancelled)
         {
             cancelled = false;
             var entries = new List<ImageEntry>();
@@ -206,10 +203,8 @@ namespace Hiale.GTA2NET.Core.Helper
                 else
                     entry.SameSpriteIndex = CrcDictionary[ZipEntries[i].Crc32];
                 entry.Index = i;
-                var pathParts = ParsePath(ZipEntries[i].FilenameInZip);
-                entry.Directory = pathParts[0];
-                entry.FileName = pathParts[1];
-                entry.Width = source.Width + 2*Padding;  // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
+                entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
+                entry.Width = source.Width + 2*Padding; // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
                 entry.Height = source.Height + 2*Padding;
                 entry.ZipEntryIndex = i;
                 entries.Add(entry);
@@ -220,10 +215,10 @@ namespace Hiale.GTA2NET.Core.Helper
 
         protected static Bitmap GetBitmapFromZip(ZipStorer zipStore, ZipStorer.ZipFileEntry zipFileEntry)
         {
-            var memoryStream = new MemoryStream((int)zipFileEntry.FileSize);
+            var memoryStream = new MemoryStream((int) zipFileEntry.FileSize);
             zipStore.ExtractFile(zipFileEntry, memoryStream);
             memoryStream.Position = 0;
-            var bmp = (Bitmap)Image.FromStream(memoryStream);
+            var bmp = (Bitmap) Image.FromStream(memoryStream);
             memoryStream.Close();
             return bmp;
         }
@@ -274,8 +269,8 @@ namespace Hiale.GTA2NET.Core.Helper
 
         private void BuildTextureAtlasCompleteCallback(IAsyncResult ar)
         {
-            var worker = (BuildTextureAtlasDelegate)((AsyncResult)ar).AsyncDelegate;
-            var async = (AsyncOperation)ar.AsyncState;
+            var worker = (BuildTextureAtlasDelegate) ((AsyncResult) ar).AsyncDelegate;
+            var async = (AsyncOperation) ar.AsyncState;
             bool cancelled;
 
             // finish the asynchronous operation
@@ -290,7 +285,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
             // raise the completed event
             var completedArgs = new AsyncCompletedEventArgs(null, cancelled, null);
-            async.PostOperationCompleted(e => OnBuildTextureAtlasCompleted((AsyncCompletedEventArgs)e), completedArgs);
+            async.PostOperationCompleted(e => OnBuildTextureAtlasCompleted((AsyncCompletedEventArgs) e), completedArgs);
         }
 
         public void CancelBuildTextureAtlas()
@@ -315,28 +310,40 @@ namespace Hiale.GTA2NET.Core.Helper
 
             // Extract the maximum and median widths.
             var maxWidth = widths[widths.Count - 1];
-            var medianWidth = widths[widths.Count / 2];
+            var medianWidth = widths[widths.Count/2];
 
             // Heuristic assumes an NxN grid of median sized sprites.
-            var width = medianWidth * (int)Math.Round(Math.Sqrt(entries.Count));
+            var width = medianWidth*(int) Math.Round(Math.Sqrt(entries.Count));
 
             // Make sure we never choose anything smaller than our largest sprite.
             width = Math.Max(width, maxWidth);
 
-            int widthPower2;
+            return PowerOfTwo(width);
+        }
+
+        protected static int GuessOutputHeight(ICollection<ImageEntry> entries, int width)
+        {
+            var totalArea = entries.Sum(imageEntry => imageEntry.Width*imageEntry.Height);
+            var height = (int) Math.Ceiling((float) totalArea/width);
+            return PowerOfTwo(height);
+        }
+
+        protected static int PowerOfTwo(int minimum)
+        {
+            uint current;
             var exponent = 0;
             do
             {
-                widthPower2 = (int) Extensions.PowerOf2(exponent);
+                current = (uint) (1 << exponent);
                 exponent++;
-            } while (widthPower2 < width);
-            return widthPower2;
+            } while (current < minimum);
+            return (int) current;
         }
 
-        private static string[] ParsePath(string path)
+        private static string ParsePath(string path)
         {
             var pos = path.LastIndexOf('/');
-            return new[] {pos > -1 ? path.Substring(0, pos) : string.Empty,   path.Substring(pos + 1, path.Length - pos - Globals.TextureImageFormat.Length - 1)};
+            return path.Substring(pos + 1, path.Length - pos - Globals.TextureImageFormat.Length - 1);
         }
 
         public void Serialize(string path)
@@ -347,11 +354,11 @@ namespace Hiale.GTA2NET.Core.Helper
             textWriter.Close();
         }
 
-        public static T Deserialize<T>(string path) where T: TextureAtlas
+        public static T Deserialize<T>(string path) where T : TextureAtlas
         {
             var textReader = new StreamReader(path);
             var deserializer = new XmlSerializer(typeof (T));
-            var atlas = (T)deserializer.Deserialize(textReader);
+            var atlas = (T) deserializer.Deserialize(textReader);
             textReader.Close();
             return atlas;
         }
@@ -374,7 +381,9 @@ namespace Hiale.GTA2NET.Core.Helper
                 if (Graphics != null)
                     Graphics.Dispose();
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+            }
         }
 
     }
@@ -395,12 +404,11 @@ namespace Hiale.GTA2NET.Core.Helper
 
         protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
         {
-            cancelled = false;
             var entries = CreateImageEntries(context, out cancelled);
             if (cancelled)
                 return;
             var outputWidth = GuessOutputWidth(entries);
-            var outputHeight = outputWidth; //ToDo
+            var outputHeight = GuessOutputHeight(entries, outputWidth);
 
             var root = new Node(0, 0, outputWidth, outputHeight);
 
@@ -426,15 +434,8 @@ namespace Hiale.GTA2NET.Core.Helper
                 entry.Y = node.Rectangle.Y;
 
                 var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : TileDictionary[entry.SameSpriteIndex];
-                try
-                {
-                    var index = int.Parse(entry.FileName);
-                    TileDictionary.Add(index, rect);
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
+                var index = int.Parse(entry.FileName);
+                TileDictionary.Add(index, rect);
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
@@ -446,9 +447,6 @@ namespace Hiale.GTA2NET.Core.Helper
     {
         public SerializableDictionary<int, SpriteItem> SpriteDictionary { get; set; }
 
-        private readonly Dictionary<int, SpriteItem> _duplicateDictionary; //Helper list to find duplicate images.
-
-
         public TextureAtlasSprites()
         {
             //this constructor is needed by xml serializer
@@ -457,14 +455,17 @@ namespace Hiale.GTA2NET.Core.Helper
         public TextureAtlasSprites(string imagePath, ZipStorer zipStore, SerializableDictionary<int, SpriteItem> spriteDictionary) : base(imagePath, zipStore)
         {
             SpriteDictionary = spriteDictionary;
-            _duplicateDictionary = new Dictionary<int, SpriteItem>();
+        }
+
+        public static void FillSpriteId(SerializableDictionary<int, SpriteItem> spriteDictionary)
+        {
+            foreach (var spriteItem in spriteDictionary)
+                spriteItem.Value.SpriteId = spriteItem.Key;
         }
 
         protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
         {
-            cancelled = false;
-
-            var entries = CreateImageEntries("Cars", context, out cancelled);
+            var entries = CreateImageEntries(context, out cancelled);
             if (cancelled)
                 return;
 
@@ -473,7 +474,7 @@ namespace Hiale.GTA2NET.Core.Helper
             entries.Sort(comparer);
 
             var outputWidth = GuessOutputWidth(entries);
-            var outputHeight = outputWidth; //ToDo
+            var outputHeight = GuessOutputHeight(entries, outputWidth);
 
             if (context.IsCancelling)
             {
@@ -496,20 +497,96 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
-
-                var node  = root.Insert(entry.Width, entry.Height);
+                var node = root.Insert(entry.Width, entry.Height);
                 if (node == null)
-                    continue;
+                    continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
                 entry.X = node.Rectangle.X;
                 entry.Y = node.Rectangle.Y;
 
-                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[_duplicateDictionary[entry.SameSpriteIndex].SpriteId].Rectangle;
+                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[entry.SameSpriteIndex].Rectangle;
+
                 var item = SpriteDictionary[entry.Index];
                 item.Rectangle = rect;
-                _duplicateDictionary.Add(entry.Index, item);
+            }
+            Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
+            Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
+        }
+    }
+
+    public class TextureAtlasDeltas : TextureAtlas
+    {
+        public SerializableDictionary<int, DeltaItem> DeltaDictionary { get; set; }
+
+        public TextureAtlasDeltas()
+        {
+            //this constructor is needed by xml serializer
+        }
+
+        public TextureAtlasDeltas(string imagePath, ZipStorer zipStore, SerializableDictionary<int, DeltaItem> deltaDictionary) : base(imagePath, zipStore)
+        {
+            DeltaDictionary = deltaDictionary;
+        }
+
+        public static void FillSpriteId(SerializableDictionary<int, DeltaItem> deltaDictionary)
+        {
+            foreach (var deltaItem in deltaDictionary)
+                deltaItem.Value.SpriteId = deltaItem.Key;
+        }
+
+
+        protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
+        {
+            var entries = CreateImageEntries(context, out cancelled);
+            if (cancelled)
+                return;
+
+            // Sort so the largest sprites get arranged first.
+            var comparer = new ImageEntryComparer {CompareSize = true};
+            entries.Sort(comparer);
+
+            var outputWidth = GuessOutputWidth(entries);
+            var outputHeight = GuessOutputHeight(entries, outputWidth);
+
+            if (context.IsCancelling)
+            {
+                cancelled = true;
+                return;
+            }
+
+            // Sort the sprites back into index order.
+            comparer.CompareSize = false;
+            entries.Sort(comparer);
+
+            var root = new Node(0, 0, outputWidth, outputHeight);
+
+            CreateOutputBitmap(outputWidth, outputHeight);
+            //SpriteDictionary = new SerializableDictionary<int, SpriteItem>();
+            foreach (var entry in entries)
+            {
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+                var node = root.Insert(entry.Width, entry.Height);
+                if (node == null)
+                    continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
+                entry.X = node.Rectangle.X;
+                entry.Y = node.Rectangle.Y;
+
+                //var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[entry.SameSpriteIndex].Rectangle;
+                var rect = PaintAndGetRectangle(entry);
+
+                //var item = DeltaDictionary[entry.Index];
+                //item.Rectangle = rect;
+                var deltaItem = new DeltaItem {SpriteId = entry.Index, DeltaSubItems = new List<int>(), Rectangle = rect};
+                DeltaDictionary.Add(entry.Index, deltaItem);
+
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
         }
     }
 }
+
+
