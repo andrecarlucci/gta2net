@@ -217,11 +217,6 @@ namespace Hiale.GTA2NET.Core.Style
         private void SaveData(StyleData styleData, CancellableContext context, out bool cancelled)
         {
             var styleFile = Path.GetFileNameWithoutExtension(StylePath);
-            foreach (var carInfo in styleData.CarInfo)
-            {
-                carInfo.Value.DefaultPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + carInfo.Value.Sprite];
-                carInfo.Value.RemapPaletteBase = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite];
-            }
             CarInfo.Serialize(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix + Globals.XmlFormat);
             Palette.SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.PaletteSuffix + Globals.TextureImageFormat);
 
@@ -319,7 +314,7 @@ namespace Hiale.GTA2NET.Core.Style
                 return;
             }
 
-            atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), styleFile + Globals.SpritesSuffix);
+            atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), styleFile + Globals.SpritesSuffix, styleData.Sprites);
             _memoryStreams.Add(atlas, memoryStreamSprites);
             _runningAtlas.Add(atlas);
             WaitHandle.WaitOne();
@@ -328,10 +323,19 @@ namespace Hiale.GTA2NET.Core.Style
 
         public T CreateTextureAtlas<T>(ZipStorer inputZip, string outputFile) where T : TextureAtlas, new()
         {
-            var args = new object[2];
+            return CreateTextureAtlas<T>(inputZip, outputFile, new object[] {});
+        }
+
+        public T CreateTextureAtlas<T>(ZipStorer inputZip, string outputFile, params object[] additionalValues) where T : TextureAtlas, new()
+        {
+            if (additionalValues == null)
+                additionalValues = new object[0];
+            var args = new object[2 + additionalValues.Length];
             args[0] = outputFile + Globals.TextureImageFormat;
             args[1] = inputZip;
-            var atlas = (T) Activator.CreateInstance(typeof (T), args);
+            for (var i = 0; i < additionalValues.Length; i++)
+                args[i + 2] = additionalValues[i];
+            var atlas = (T)Activator.CreateInstance(typeof(T), args);
             atlas.BuildTextureAtlasCompleted += BuildTextureAtlasCompleted;
             atlas.BuildTextureAtlasAsync();
             return atlas;
@@ -464,7 +468,7 @@ namespace Hiale.GTA2NET.Core.Style
             return spriteBase;
         }
 
-        private static SerializableDictionary<int, CarInfo> ReadCars(BinaryReader reader, int chunkSize, Dictionary<int, List<int>> carSprites)
+        private static SerializableDictionary<int, CarInfo> ReadCars(BinaryReader reader, int chunkSize, IDictionary<int, List<int>> carSprites)
         {
             System.Diagnostics.Debug.WriteLine("Reading car infos...");
             var carInfoDict = new SerializableDictionary<int, CarInfo>();
@@ -678,18 +682,13 @@ namespace Hiale.GTA2NET.Core.Style
             //cars
             for (var i = styleData.SpriteBase.Car; i < styleData.SpriteBase.Ped; i++)
             {
-                SaveCarSprite(styleData, zip, i);
-            }
-            foreach (var carSpriteItem in styleData.CarSprites)
-            {
                 if (context.IsCancelling)
                     return;
-                //SaveCarSprite(zip, carSpriteItem.Key, carSpriteItem.Value);
-                SaveCarSprite(styleData, zip, carSpriteItem.Key);
+                SaveCarSprite(styleData, zip, i);
             }
 
             //Peds
-            #region Peds
+            #region Peds Remap Info
             /*             
             Remaps
             0 	Cop
@@ -774,38 +773,13 @@ namespace Hiale.GTA2NET.Core.Style
         private static void SaveCarSprite(StyleData styleData, ZipStorer zip, int spriteId)
         {
             var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + spriteId];
-            var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite];
+            var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite]; //PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
             var spriteEntry = styleData.SpriteEntries[spriteId];
-            //UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
-            //foreach (var model in modelList)
-            //{
             SaveSpriteRemap(styleData, spriteEntry, basePalette, zip, "Cars/" + spriteId);
-            //if (!styleData.Sprites.ContainsKey(spriteId))
-            //{
             var reMaplist = new List<byte>();
             for (var i = 0; i < styleData.CarSprites[spriteId].Count; i++)
                 reMaplist.AddRange(styleData.CarInfo[styleData.CarSprites[spriteId][i]].RemapList);
             styleData.Sprites.Add(spriteId, new SpriteItem(SpriteType.Car, basePalette, remapPalette, reMaplist));
-            //}
-            //else
-            //{
-            // return;
-            // }
-
-            //styleData.Sprites.Add(spriteId, );    
-            //if (EXPORT_REMAPS)
-            //    {
-            //        //var remapList = styleData.CarInfo[model].RemapList;
-            //        var remapList = styleData.CarInfo[0].RemapList;
-            //        foreach (var remapId in remapList)
-            //        {
-            //            var remapIDhack = remapId;
-            //            if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
-            //                remapIDhack--;
-            //            SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Cars/" + spriteId + "_" + remapId);
-            //        }
-            //    }
-            //}
         }
 
         private static void SaveSpriteRemap(StyleData styleData, SpriteEntry spriteEntry, uint palette, ZipStorer zip, string fileName)

@@ -33,7 +33,7 @@ using Hiale.GTA2NET.Core.Style;
 namespace Hiale.GTA2NET.Core.Helper
 {
     [Serializable]
-    public struct SpriteItem
+    public class SpriteItem
     {
         [XmlIgnore] //this is the key of the dictionary
         public int SpriteId;
@@ -51,13 +51,19 @@ namespace Hiale.GTA2NET.Core.Helper
         public ushort RemapPaletteBase { get; set; }
 
         /// <summary>
-        /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this car.
+        /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this sprite.
         /// </summary>
+        [XmlArrayItem("Remap")]
         public List<byte> RemapList { get; set; }
 
-        public CompactRectangle Rectangle;
+        public CompactRectangle Rectangle { get; set; }
 
-        public SpriteItem(SpriteType type) : this()
+        private SpriteItem()
+        {
+            //XML Serializer
+        }
+
+        public SpriteItem(SpriteType type)
         {
             Type = type;
         }
@@ -75,7 +81,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public override string ToString()
         {
-            return SpriteId.ToString(CultureInfo.InvariantCulture);
+            return SpriteId.ToString(CultureInfo.InvariantCulture) + " - " + Type;
         }
 
     }

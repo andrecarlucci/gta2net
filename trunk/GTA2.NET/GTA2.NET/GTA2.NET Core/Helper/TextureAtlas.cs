@@ -448,13 +448,15 @@ namespace Hiale.GTA2NET.Core.Helper
 
         private readonly Dictionary<int, SpriteItem> _duplicateDictionary; //Helper list to find duplicate images.
 
+
         public TextureAtlasSprites()
         {
             //this constructor is needed by xml serializer
         }
 
-        public TextureAtlasSprites(string imagePath, ZipStorer zipStore) : base(imagePath, zipStore)
+        public TextureAtlasSprites(string imagePath, ZipStorer zipStore, SerializableDictionary<int, SpriteItem> spriteDictionary) : base(imagePath, zipStore)
         {
+            SpriteDictionary = spriteDictionary;
             _duplicateDictionary = new Dictionary<int, SpriteItem>();
         }
 
@@ -486,7 +488,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var root = new Node(0, 0, outputWidth, outputHeight);
 
             CreateOutputBitmap(outputWidth, outputHeight);
-            SpriteDictionary = new SerializableDictionary<int, SpriteItem>();
+            //SpriteDictionary = new SerializableDictionary<int, SpriteItem>();
             foreach (var entry in entries)
             {
                 if (context.IsCancelling)
@@ -502,45 +504,9 @@ namespace Hiale.GTA2NET.Core.Helper
                 entry.Y = node.Rectangle.Y;
 
                 var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[_duplicateDictionary[entry.SameSpriteIndex].SpriteId].Rectangle;
-
-                //if (entry.SameSpriteIndex != 0)
-                //    System.Diagnostics.Debug.WriteLine("OK");
-                //var rect = PaintAndGetRectangle(entry);
-                var fileName = entry.FileName;
-                var item = new SpriteItem();
-                try
-                {
-                    item.SpriteId = int.Parse(fileName);
-                    switch (entry.Directory)
-                    {
-                        case "Cars":
-                            item.Type = SpriteType.Car;
-                            break;
-                        case "Peds":
-                            item.Type = SpriteType.Pedestrian;
-                            break;
-                        case "CodeObj":
-                            item.Type = SpriteType.CodeObject;
-                            break;
-                        case "MapObj":
-                            item.Type = SpriteType.MapObject;
-                            break;
-                        case "User":
-                            item.Type = SpriteType.User;
-                            break;
-                        case "Font":
-                            item.Type = SpriteType.Font;
-                            break;
-                    }
-                    item.Rectangle = rect;
-                }
-                catch (Exception)
-                {
-                    continue;
-                }
-
+                var item = SpriteDictionary[entry.Index];
+                item.Rectangle = rect;
                 _duplicateDictionary.Add(entry.Index, item);
-                SpriteDictionary.Add(item.SpriteId, item);
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);

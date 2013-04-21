@@ -25,6 +25,7 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Helper;
 using Microsoft.Xna.Framework;
@@ -81,7 +82,7 @@ namespace Hiale.GTA2NET
 
         public Sprite(GameplayObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
         {
-            var item = new SpriteItem();
+            var item = new SpriteItem(SpriteType.Car);
 
             //Bus
             //item.Sprite = 10;
@@ -93,7 +94,7 @@ namespace Hiale.GTA2NET
             //item.Model = 12;
             //item.Remap = 36;
 
-            item.SpriteId = 9;
+            item.SpriteId = 10;
             //item.Model = 10;
             //item.Remap = -1;
 
