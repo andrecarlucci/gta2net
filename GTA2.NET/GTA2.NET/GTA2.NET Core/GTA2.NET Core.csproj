@@ -93,7 +93,7 @@
     <Compile Include="Style\PaletteBase.cs" />
     <Compile Include="Style\SpriteBase.cs" />
     <Compile Include="Style\SpriteEntry.cs" />
-    <Compile Include="Style\SpriteType.cs" />
+    <Compile Include="SpriteType.cs" />
     <Compile Include="Style\Style.cs" />
     <Compile Include="Style\Surface.cs" />
   </ItemGroup>
