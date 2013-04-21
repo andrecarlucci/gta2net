@@ -93,11 +93,11 @@ namespace Hiale.GTA2NET
             //item.Model = 12;
             //item.Remap = 36;
 
-            item.Sprite = 9;
+            item.SpriteId = 9;
             //item.Model = 10;
             //item.Remap = -1;
 
-            var sourceRectangle = spriteDictionary[item.Sprite].Rectangle;
+            var sourceRectangle = spriteDictionary[item.SpriteId].Rectangle;
             Width = sourceRectangle.Width / 64f; //1 Unit = 64px
             Height = sourceRectangle.Height / 64f;
             _widthHalf = Width / 2;

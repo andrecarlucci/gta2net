@@ -55,6 +55,8 @@ namespace Hiale.GTA2NET.Core.Style
             public SerializableDictionary<int, CarInfo> CarInfo;
             public Dictionary<int, List<int>> CarSprites; //Helper variable to see which sprites are used by more than one model.
 
+            public SerializableDictionary<int, SpriteItem> Sprites;
+
             public DateTime OriginalDateTime;
 
         }
@@ -119,6 +121,7 @@ namespace Hiale.GTA2NET.Core.Style
                     FontBase = new FontBase(),
                     DeltaData = new byte[] {},
                     DeltaIndexes = new DeltaIndex[] {},
+                    Sprites = new SerializableDictionary<int, SpriteItem>(),
                     CarInfo = new SerializableDictionary<int, CarInfo>(),
                     CarSprites = new Dictionary<int, List<int>>()
                 };
@@ -673,12 +676,16 @@ namespace Hiale.GTA2NET.Core.Style
         private static void SaveSprites(StyleData styleData, ZipStorer zip, CancellableContext context)
         {
             //cars
+            for (var i = styleData.SpriteBase.Car; i < styleData.SpriteBase.Ped; i++)
+            {
+                SaveCarSprite(styleData, zip, i);
+            }
             foreach (var carSpriteItem in styleData.CarSprites)
             {
                 if (context.IsCancelling)
                     return;
                 //SaveCarSprite(zip, carSpriteItem.Key, carSpriteItem.Value);
-                SaveCarSprite(styleData, zip, carSpriteItem.Key, carSpriteItem.Value);
+                SaveCarSprite(styleData, zip, carSpriteItem.Key);
             }
 
             //Peds
@@ -720,14 +727,15 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Peds/" + i);
-                if (EXPORT_REMAPS)
-                {
-                    for (var j = 0; j < 53; j++)
-                    {
-                        //SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
-                        SaveSpriteRemap(styleData, styleData.SpriteEntries[i], (UInt32) (remapPalette + j), zip, "Peds/ " + j + i + "_" + j);
-                    }
-                }
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Pedestrian, basePalette, remapPalette));
+                //if (EXPORT_REMAPS)
+                //{
+                //    for (var j = 0; j < 53; j++)
+                //    {
+                //        //SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
+                //        SaveSpriteRemap(styleData, styleData.SpriteEntries[i], (UInt32) (remapPalette + j), zip, "Peds/ " + j + i + "_" + j);
+                //    }
+                //}
             }
 
             //Code Obj
@@ -735,6 +743,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "CodeObj/" + i);
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.CodeObject, basePalette, remapPalette));
             }
 
             //Map obj
@@ -742,6 +751,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "MapObj/" + i);
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.MapObject, basePalette, remapPalette));
             }
 
             //User
@@ -749,6 +759,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "User/" + i);
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.User, basePalette, remapPalette));
             }
 
             ////Font
@@ -760,7 +771,7 @@ namespace Hiale.GTA2NET.Core.Style
 
         }
 
-        private static void SaveCarSprite(StyleData styleData, ZipStorer zip, int spriteId, IList<int> modelList)
+        private static void SaveCarSprite(StyleData styleData, ZipStorer zip, int spriteId)
         {
             var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + spriteId];
             var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite];
@@ -768,19 +779,32 @@ namespace Hiale.GTA2NET.Core.Style
             //UInt32 remapPalette = PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
             //foreach (var model in modelList)
             //{
-                SaveSpriteRemap(styleData, spriteEntry, basePalette, zip, "Cars/" + spriteId); //in this way, the naming sheme is the same as with remap (spriteID_model_remap.png)
-                if (EXPORT_REMAPS)
-                {
-                    //var remapList = styleData.CarInfo[model].RemapList;
-                    var remapList = styleData.CarInfo[0].RemapList;
-                    foreach (var remapId in remapList)
-                    {
-                        var remapIDhack = remapId;
-                        if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
-                            remapIDhack--;
-                        SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Cars/" + spriteId + "_" + remapId);
-                    }
-                }
+            SaveSpriteRemap(styleData, spriteEntry, basePalette, zip, "Cars/" + spriteId);
+            //if (!styleData.Sprites.ContainsKey(spriteId))
+            //{
+            var reMaplist = new List<byte>();
+            for (var i = 0; i < styleData.CarSprites[spriteId].Count; i++)
+                reMaplist.AddRange(styleData.CarInfo[styleData.CarSprites[spriteId][i]].RemapList);
+            styleData.Sprites.Add(spriteId, new SpriteItem(SpriteType.Car, basePalette, remapPalette, reMaplist));
+            //}
+            //else
+            //{
+            // return;
+            // }
+
+            //styleData.Sprites.Add(spriteId, );    
+            //if (EXPORT_REMAPS)
+            //    {
+            //        //var remapList = styleData.CarInfo[model].RemapList;
+            //        var remapList = styleData.CarInfo[0].RemapList;
+            //        foreach (var remapId in remapList)
+            //        {
+            //            var remapIDhack = remapId;
+            //            if (remapIDhack >= 35) //hack, remap ids above 35 seems to be broken, this fixes them. Don't ask me why!
+            //                remapIDhack--;
+            //            SaveSpriteRemap(styleData, spriteEntry, (uint) (remapPalette + remapIDhack), zip, "Cars/" + spriteId + "_" + remapId);
+            //        }
+            //    }
             //}
         }
 

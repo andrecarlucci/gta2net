@@ -501,7 +501,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 entry.X = node.Rectangle.X;
                 entry.Y = node.Rectangle.Y;
 
-                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[_duplicateDictionary[entry.SameSpriteIndex].Sprite].Rectangle;
+                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[_duplicateDictionary[entry.SameSpriteIndex].SpriteId].Rectangle;
 
                 //if (entry.SameSpriteIndex != 0)
                 //    System.Diagnostics.Debug.WriteLine("OK");
@@ -510,7 +510,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 var item = new SpriteItem();
                 try
                 {
-                    item.Sprite = int.Parse(fileName);
+                    item.SpriteId = int.Parse(fileName);
                     switch (entry.Directory)
                     {
                         case "Cars":
@@ -540,7 +540,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 }
 
                 _duplicateDictionary.Add(entry.Index, item);
-                SpriteDictionary.Add(item.Sprite, item);
+                SpriteDictionary.Add(item.SpriteId, item);
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
