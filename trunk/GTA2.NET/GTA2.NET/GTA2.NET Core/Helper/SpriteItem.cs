@@ -25,6 +25,7 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Serialization;
 using Hiale.GTA2NET.Core.Style;
@@ -35,15 +36,46 @@ namespace Hiale.GTA2NET.Core.Helper
     public struct SpriteItem
     {
         [XmlIgnore] //this is the key of the dictionary
-        public int Sprite;
+        public int SpriteId;
 
         public SpriteType Type;
 
+        /// <summary>
+        /// Default palette which this sprite uses
+        /// </summary>
+        public ushort DefaultPalette { get; set; }
+
+        /// <summary>
+        /// Start index of the remap palettes. Add a RemapList item to this value to get the actual palette.
+        /// </summary>
+        public ushort RemapPaletteBase { get; set; }
+
+        /// <summary>
+        /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this car.
+        /// </summary>
+        public List<byte> RemapList { get; set; }
+
         public CompactRectangle Rectangle;
+
+        public SpriteItem(SpriteType type) : this()
+        {
+            Type = type;
+        }
+
+        public SpriteItem(SpriteType type, ushort defaultPalette, ushort remapPaletteBase) : this(type)
+        {
+            DefaultPalette = defaultPalette;
+            RemapPaletteBase = remapPaletteBase;
+        }
+
+        public SpriteItem(SpriteType type, ushort defaultPalette, ushort remapPaletteBase, List<byte> remapList) : this(type, defaultPalette, remapPaletteBase)
+        {
+            RemapList = remapList;
+        }
 
         public override string ToString()
         {
-            return Sprite.ToString(CultureInfo.InvariantCulture);
+            return SpriteId.ToString(CultureInfo.InvariantCulture);
         }
 
     }
