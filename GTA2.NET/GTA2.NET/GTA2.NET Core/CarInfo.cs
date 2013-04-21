@@ -27,6 +27,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
 using System.Xml.Serialization;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Style;
@@ -67,6 +68,7 @@ namespace Hiale.GTA2NET.Core
             var carInfoCollection = new List<CarInfo>();
             foreach (var carInfoItem in carInfo)
             {
+                carInfoItem.Value.Model = carInfoItem.Key;
                 foreach (var carPhysicsItem in carPhysics)
                 {
                     if (carInfoItem.Key != carPhysicsItem.Key)
@@ -88,6 +90,7 @@ namespace Hiale.GTA2NET.Core
         /// <summary>
         /// Model is the car model number. Every type of car has a unique model number. It can be used as an ID.
         /// </summary>
+        [XmlIgnore] //this is the key of the dictionary
         public int Model { get; set; }
 
         public string Name
@@ -171,19 +174,9 @@ namespace Hiale.GTA2NET.Core
         //}
 
         /// <summary>
-        /// Default palette which this car uses
-        /// </summary>
-        public ushort DefaultPalette { get; set; }
-
-        /// <summary>
-        /// Start index of the remap palettes. Add a RemapList item to this value to get the actual palette.
-        /// </summary>
-        public ushort RemapPaletteBase { get; set; }
-
-
-        /// <summary>
         /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this car.
         /// </summary>
+        [XmlIgnore] //saved at the TextureDictionary
         public List<byte> RemapList { get; set; }
 
         ///// <summary>

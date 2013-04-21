@@ -29,8 +29,8 @@ using System.Xml.Serialization;
 
 namespace Hiale.GTA2NET.Core.Helper
 {
-    //Source: http://weblogs.asp.net/pwelter34/archive/2006/05/03/444961.aspx
-    [XmlRoot("dictionary")]
+    //Based on http://weblogs.asp.net/pwelter34/archive/2006/05/03/444961.aspx
+    [XmlRoot("Dictionary")]
     public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, IXmlSerializable
     {
         public System.Xml.Schema.XmlSchema GetSchema()
@@ -48,11 +48,11 @@ namespace Hiale.GTA2NET.Core.Helper
                 return;
             while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
             {
-                reader.ReadStartElement("item");
-                reader.ReadStartElement("key");
+                reader.ReadStartElement("Item");
+                reader.ReadStartElement("Key");
                 var key = (TKey)keySerializer.Deserialize(reader);
                 reader.ReadEndElement();
-                reader.ReadStartElement("value");
+                reader.ReadStartElement("Value");
                 var value = (TValue)valueSerializer.Deserialize(reader);
                 reader.ReadEndElement();
                 Add(key, value);
@@ -68,11 +68,11 @@ namespace Hiale.GTA2NET.Core.Helper
             var valueSerializer = new XmlSerializer(typeof(TValue));
             foreach (var key in Keys)
             {
-                writer.WriteStartElement("item");
-                writer.WriteStartElement("key");
+                writer.WriteStartElement("Item");
+                writer.WriteStartElement("Key");
                 keySerializer.Serialize(writer, key);
                 writer.WriteEndElement();
-                writer.WriteStartElement("value");
+                writer.WriteStartElement("Value");
                 var value = this[key];
                 valueSerializer.Serialize(writer, value);
                 writer.WriteEndElement();
