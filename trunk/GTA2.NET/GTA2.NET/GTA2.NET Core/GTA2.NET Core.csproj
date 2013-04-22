@@ -71,8 +71,11 @@
     <Compile Include="Map\BlockFace.cs" />
     <Compile Include="Map\BlockFaceEdge.cs" />
     <Compile Include="Map\BlockFaceLid.cs" />
+    <Compile Include="Map\BlockFactory.cs" />
     <Compile Include="Map\BlockInfo.cs" />
     <Compile Include="Collision\CollisionMapType.cs" />
+    <Compile Include="Map\Blocks\Cube.cs" />
+    <Compile Include="Map\Blocks\Empty.cs" />
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Collision\MapCollision.cs" />
