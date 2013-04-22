@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core.Map.Blocks;
 using Hiale.GTA2NET.Core.Helper;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -86,6 +87,7 @@ namespace Hiale.GTA2NET.Core.Map
         public Map(string fileName) : this()
         {
             ReadFromFile(fileName);
+            LoadTexture();
         }
 
         /// <summary>
@@ -105,6 +107,7 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
+        #region Map Read
         public void ReadFromFile(string fileName)
         {
             System.Diagnostics.Debug.WriteLine("Loading map from file \"" + fileName + "\"");
@@ -171,6 +174,7 @@ namespace Hiale.GTA2NET.Core.Map
                 blockInfo.Arrows = reader.ReadByte();
                 blockInfo.SlopeType = reader.ReadByte();
                 BlockInfo block = BlockFactory.Build(blockInfo, Vector3.One);
+                block.tileAtlas = this.tileAtlas;
                 blocks[i] = block;
             }
             CreateUncompressedMap(baseOffsets, columns, blocks);
@@ -264,5 +268,50 @@ namespace Hiale.GTA2NET.Core.Map
                 }
             }
         }
+        #endregion
+        #region Textures
+
+        private Dictionary<int, CompactRectangle> tileAtlas;
+
+        private void LoadTexture()
+        {
+            var atlasPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + "bil" + Globals.TilesSuffix + Globals.XmlFormat; //TODO: not use "bil" hardcoded.
+            var dict = TextureAtlas.Deserialize<TextureAtlasTiles>(atlasPath);
+            tileAtlas = dict.TileDictionary;
+        }
+        #endregion
+        #region Draw
+        public List<VertexPositionNormalTexture> Coors { get; private set; }
+        public List<int> IndexBufferCollection { get; private set; }
+        public void CalcCoord()
+        {
+            Coors = new List<VertexPositionNormalTexture>();
+            IndexBufferCollection = new List<int>();
+
+            for (int k = 0; k < Height; k++)
+                for (int i = 0; i < Width; i++)
+                    for (int j = 0; j < Length; j++)
+                    {
+                        if (i == 72 && j == 182)
+                            Console.Read();
+                        BlockInfo a = _cityBlocks[i, j, k];
+                        //a.Position = new Vector3(i, j, k);
+                        a.tileAtlas = tileAtlas;
+                        a.SetUpCube();
+                        int idx = 0;
+                        foreach (VertexPositionNormalTexture vx in a.Coors)
+                        {
+                            Coors.Add(vx);
+                            idx++;
+                        }
+                        int c = Coors.Count - idx;
+                        foreach (int ib in a.IndexBufferCollection)
+                        {
+                            IndexBufferCollection.Add(c + ib);
+                        }
+                    }
+        }
+
+        #endregion
     }
 }
