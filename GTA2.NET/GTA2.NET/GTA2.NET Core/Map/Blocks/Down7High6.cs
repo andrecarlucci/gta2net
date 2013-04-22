@@ -1,6 +1,6 @@
 ﻿// GTA2.NET
 // 
-// File: Empty.cs
+// File: Down7High6.cs
 // Created: 22.04.2013
 // Created by: João Pires
 // 
@@ -27,45 +27,31 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    class Empty : BlockInfo
+    class Down7High6 : BlockInfo
     {
-        public Empty() : base()
+        public Down7High6() : base()
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
+            this.SlopeType = SlopeType.Down7High6;
         }
 
-        public Empty(blockInfo blockInfo, Vector3 pos) : base(blockInfo, pos)
+        public Down7High6(blockInfo blockInfo, Vector3 pos) : base(blockInfo, pos)
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
+            this.SlopeType = SlopeType.Down7High6;
         }
         
-        public Empty(Vector3 pos) : base()
-        {
-            this.SlopeType = Core.Map.SlopeType.Empty;
-            this.Position = pos;
-        }
-
         public override BlockInfo DeepCopy()
         {
-            return new Empty(this.blockInfo, this.Position);
+            return new Down7High6(this.blockInfo, this.Position);
         }
 
         public override BlockInfo DeepCopy(blockInfo blockInfo, Vector3 pos)
         {
-            return new Empty(blockInfo, pos);
-        }
-
-        public override void SetUpCube()
-        {
-            return;
+            return new Down7High6(blockInfo, pos);
         }
         
-        public override bool IsEmpty
+        public override void SetUpCube()
         {
-            get
-            {
-                return true;
-            }
+            SetUpSlope_High(13, 3);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿// GTA2.NET
 // 
-// File: Empty.cs
+// File: DiagonalFacingUpRight.cs
 // Created: 22.04.2013
 // Created by: João Pires
 // 
@@ -27,45 +27,31 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    class Empty : BlockInfo
+    class DiagonalFacingUpRight : BlockInfo
     {
-        public Empty() : base()
+        public DiagonalFacingUpRight() : base() 
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
+            this.SlopeType = SlopeType.DiagonalFacingUpRight;
         }
 
-        public Empty(blockInfo blockInfo, Vector3 pos) : base(blockInfo, pos)
+        public DiagonalFacingUpRight(blockInfo blockInfo, Vector3 pos) : base(blockInfo, pos) 
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
-        }
-        
-        public Empty(Vector3 pos) : base()
-        {
-            this.SlopeType = Core.Map.SlopeType.Empty;
-            this.Position = pos;
+            this.SlopeType = SlopeType.DiagonalFacingUpRight;
         }
 
         public override BlockInfo DeepCopy()
         {
-            return new Empty(this.blockInfo, this.Position);
+            return new DiagonalFacingUpRight(this.blockInfo, this.Position);
         }
 
         public override BlockInfo DeepCopy(blockInfo blockInfo, Vector3 pos)
         {
-            return new Empty(blockInfo, pos);
-        }
-
-        public override void SetUpCube()
-        {
-            return;
+            return new DiagonalFacingUpRight(blockInfo, pos);
         }
         
-        public override bool IsEmpty
+        public override void SetUpCube()
         {
-            get
-            {
-                return true;
-            }
+            SetUpSlopeDiagonal(0);
         }
     }
 }

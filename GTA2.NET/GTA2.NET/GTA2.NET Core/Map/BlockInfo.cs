@@ -42,7 +42,6 @@ namespace Hiale.GTA2NET.Core.Map
         public byte SlopeType;
     }
 
-
     /// <summary>
     /// Represents a Block from the Map.
     /// </summary>
@@ -98,7 +97,7 @@ namespace Hiale.GTA2NET.Core.Map
 
         protected blockInfo blockInfo;
 
-        public Dictionary<int, Rectangle> TileAtlas;
+        public Dictionary<int, CompactRectangle> tileAtlas;
 
         protected BlockInfo(blockInfo blockInfo, Vector3 pos)
         {
@@ -147,12 +146,15 @@ namespace Hiale.GTA2NET.Core.Map
         /// </summary>
         /// <param name="slopeType">SlopeType to test</param>
         /// <returns>True </returns>
-        public abstract Boolean IsMe(SlopeType slopeType);
+        public bool IsMe(SlopeType slopeType)
+        {
+            return (SlopeType == slopeType);
+        }
 
         /// <summary>
         /// Calculate the coordinates of the verticies.
         /// </summary>
-        protected abstract void SetUpCube();
+        public abstract void SetUpCube();
 
         public void ParseSlope(byte type)
         {
@@ -334,10 +336,10 @@ namespace Hiale.GTA2NET.Core.Map
         }
         #endregion
 
-        protected Vector2[] GetTexturePositions(Rectangle sourceRectangle, RotationType rotation, bool flip)
+        protected Vector2[] GetTexturePositions(CompactRectangle sourceRectangle, RotationType rotation, bool flip)
         {
-            double pixelPerWidth = 1f / 2046;
-            double pixelPerHeight = 1f / 2112;
+            double pixelPerWidth = 1f / 4096;   //TODO: this values must be equals to the tiles size.
+            double pixelPerHeight = 1f / 2048;
             Vector2[] texturePosition = new Vector2[4];
 
             Vector2 texTopLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
@@ -392,6 +394,652 @@ namespace Hiale.GTA2NET.Core.Map
             }
             return texturePosition;
         }
+
+        #region slopes
+        /// <summary>
+        /// Creates a Low Slope.
+        /// </summary>
+        /// <param name="subType"></param>
+        /// <param name="rotation"></param>
+        protected void SetLowSlope(byte subType, byte rotation)
+        {
+            //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
+            FaceCoordinates frontCoordinates;
+            FaceCoordinates backCoordinates;
+            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+
+            float slopeScalar = 1f;
+
+            switch (subType)
+            {
+                case 26:
+                    slopeScalar = 0.5f;
+                    break;
+                case 45:
+                    slopeScalar = 0;
+                    break;
+                case 7:
+                    slopeScalar = 0.875f;
+                    break;
+            }
+
+            Vector3 middleTopLeft = frontCoordinates.TopLeft;
+            Vector3 middleTopRight = frontCoordinates.TopRight;
+            Vector3 middleBottomRight = frontCoordinates.BottomRight;
+            Vector3 middleBottomLeft = frontCoordinates.BottomLeft;
+            FaceCoordinates middleCoordinates = new FaceCoordinates(middleTopLeft, middleTopRight, middleBottomRight, middleBottomLeft);
+
+            if (rotation > 0)
+            {
+                frontCoordinates = RotateSlope(frontCoordinates, rotation);
+                backCoordinates = RotateSlope(backCoordinates, rotation);
+                middleCoordinates = RotateSlope(middleCoordinates, rotation);
+            }
+
+            middleCoordinates.TopLeft.Z -= slopeScalar * GlobalScalar.Z;
+            middleCoordinates.TopRight.Z -= slopeScalar * GlobalScalar.Z;
+            middleCoordinates.BottomRight.Z -= slopeScalar * GlobalScalar.Z;
+            middleCoordinates.BottomLeft.Z -= slopeScalar * GlobalScalar.Z;
+
+            //Lid face
+            if (this.Lid.TileNumber > 0)
+            {
+                RotationType lidRotation = this.Lid.Rotation;
+                RotateEnum(ref lidRotation, rotation);
+                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Lid.TileNumber], lidRotation, this.Lid.Flip);
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, texPos[2]));
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+
+                int startIndex = this.Coors.Count - 4;
+                this.IndexBufferCollection.Add(startIndex);
+                this.IndexBufferCollection.Add(startIndex + 1);
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex);
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 3);
+            }
+
+            BlockFace topFace = null;
+            BlockFace bottomFace = null;
+            BlockFace rightFace = null;
+            switch (rotation)
+            {
+                case 0: //No rotation
+                    topFace = this.Top;
+                    bottomFace = this.Bottom;
+                    rightFace = this.Right;
+                    break;
+                case 1: //
+                    topFace = this.Left;
+                    bottomFace = this.Right;
+                    rightFace = this.Top;
+                    break;
+                case 2:
+                    topFace = this.Bottom;
+                    bottomFace = this.Top;
+                    rightFace = this.Left;
+                    break;
+                case 3:
+                    topFace = this.Right;
+                    bottomFace = this.Left;
+                    rightFace = this.Bottom;
+                    break;
+
+            }
+
+            //Top face
+            if (topFace.TileNumber > 0)
+            {
+                Vector2[] texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                Vector2 center = GetCenterPosition(ref texPos[3], ref texPos[0], slopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
+
+                int startIndex = this.Coors.Count - 3;
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 1);
+                this.IndexBufferCollection.Add(startIndex + 0);
+            }
+            //Bottom face
+            if (bottomFace.TileNumber > 0)
+            {
+                Vector2[] texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                Vector2 center = GetCenterPosition(ref texPos[2], ref texPos[1], slopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+
+                int startIndex = this.Coors.Count - 3;
+                this.IndexBufferCollection.Add(startIndex);
+                this.IndexBufferCollection.Add(startIndex + 1);
+                this.IndexBufferCollection.Add(startIndex + 2);
+            }
+
+            //Right face
+            if (rightFace.TileNumber > 0) //this face is not supported by GTA2, the editor removes this face.
+            {
+                Vector2[] texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
+                Vector2 center = GetCenterPosition(ref texPos[1], ref texPos[2], slopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
+                center = GetCenterPosition(ref texPos[0], ref texPos[3], slopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[3]));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[2]));
+
+                int startIndex = this.Coors.Count - 4;
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 1);
+                this.IndexBufferCollection.Add(startIndex + 0);
+                this.IndexBufferCollection.Add(startIndex);
+                this.IndexBufferCollection.Add(startIndex + 3);
+                this.IndexBufferCollection.Add(startIndex + 2);
+            }
+        }
+
+        protected static Vector2 GetCenterPosition(ref Vector2 lowerEnd, ref Vector2 higherEnd, float amount) //ToDo: method name
+        {
+            Vector2 center;
+            center.X = MathHelper.Lerp(lowerEnd.X, higherEnd.X, amount);
+            center.Y = MathHelper.Lerp(lowerEnd.Y, higherEnd.Y, amount);
+            return center;
+        }
+
+        /// <summary>
+        /// Roteate a slope by 90° (rotation = 1), 180° (rotation = 2) or 270° (rotation = 3)
+        /// </summary>
+        /// <param name="frontCoordinates"></param>
+        /// <param name="rotation"></param>
+        protected FaceCoordinates RotateSlope(FaceCoordinates frontCoordinates, byte rotation)
+        {
+            for (int i = 0; i < rotation; i++)
+            {
+                Vector3 topLeft = frontCoordinates.BottomLeft;
+                Vector3 topRight = frontCoordinates.TopLeft;
+                Vector3 bottomRight = frontCoordinates.TopRight;
+                Vector3 bottomLeft = frontCoordinates.BottomRight;
+
+                frontCoordinates.TopLeft = topLeft;
+                frontCoordinates.TopRight = topRight;
+                frontCoordinates.BottomRight = bottomRight;
+                frontCoordinates.BottomLeft = bottomLeft;
+            }
+            return frontCoordinates;
+        }
+
+        protected static void RotateEnum(ref RotationType type, byte rotation)
+        {
+            for (int i = 0; i < rotation; i++)
+            {
+                switch (type)
+                {
+                    case RotationType.RotateNone:
+                        type = RotationType.Rotate90;
+                        break;
+                    case RotationType.Rotate90:
+                        type = RotationType.Rotate180;
+                        break;
+                    case RotationType.Rotate180:
+                        type = RotationType.Rotate270;
+                        break;
+                    case RotationType.Rotate270:
+                        type = RotationType.RotateNone;
+                        break;
+                }
+            }
+        }
+        #endregion
+
+        #region High Slopes
+        protected void SetUpSlope_High(byte subType, byte rotation)
+        {
+            //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
+            FaceCoordinates frontCoordinates;
+            FaceCoordinates backCoordinates;
+            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+
+            float middleSlopeScalar = 1f;
+            float frontSlopeScalar = 0f;
+            switch (subType)
+            {
+                case 26:
+                    middleSlopeScalar = 0.5f;
+                    frontSlopeScalar = 0;
+                    break;
+                case 7:
+                    middleSlopeScalar = 0.875f;
+                    frontSlopeScalar = 0.75f;
+                    break;
+                case 8:
+                    middleSlopeScalar = 0.75f;
+                    frontSlopeScalar = 0.625f;
+                    break;
+                case 9:
+                    middleSlopeScalar = 0.625f;
+                    frontSlopeScalar = 0.5f;
+                    break;
+                case 10:
+                    middleSlopeScalar = 0.5f;
+                    frontSlopeScalar = 0.375f;
+                    break;
+                case 11:
+                    middleSlopeScalar = 0.375f;
+                    frontSlopeScalar = 0.25f;
+                    break;
+                case 12:
+                    middleSlopeScalar = 0.25f;
+                    frontSlopeScalar = 0.125f;
+                    break;
+                case 13:
+                    middleSlopeScalar = 0.125f;
+                    frontSlopeScalar = 0;
+                    break;
+            }
+
+            Vector3 middleTopLeft = frontCoordinates.TopLeft;
+            Vector3 middleTopRight = frontCoordinates.TopRight;
+            Vector3 middleBottomRight = frontCoordinates.BottomRight;
+            Vector3 middleBottomLeft = frontCoordinates.BottomLeft;
+            FaceCoordinates middleCoordinates = new FaceCoordinates(middleTopLeft, middleTopRight, middleBottomRight, middleBottomLeft);
+
+            if (rotation > 0)
+            {
+                frontCoordinates = RotateSlope(frontCoordinates, rotation);
+                backCoordinates = RotateSlope(backCoordinates, rotation);
+                middleCoordinates = RotateSlope(middleCoordinates, rotation);
+            }
+
+            frontCoordinates.TopLeft.Z -= frontSlopeScalar * GlobalScalar.Z;
+            frontCoordinates.TopRight.Z -= frontSlopeScalar * GlobalScalar.Z;
+            frontCoordinates.BottomRight.Z -= frontSlopeScalar * GlobalScalar.Z;
+            frontCoordinates.BottomLeft.Z -= frontSlopeScalar * GlobalScalar.Z;
+
+            middleCoordinates.TopLeft.Z -= middleSlopeScalar * GlobalScalar.Z;
+            middleCoordinates.TopRight.Z -= middleSlopeScalar * GlobalScalar.Z;
+            middleCoordinates.BottomRight.Z -= middleSlopeScalar * GlobalScalar.Z;
+            middleCoordinates.BottomLeft.Z -= middleSlopeScalar * GlobalScalar.Z;
+
+            //Front face (diagonal)
+            if (this.Lid.TileNumber > 0)
+            {
+                RotationType lidRotation = this.Lid.Rotation;
+                RotateEnum(ref lidRotation, rotation);
+                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Lid.TileNumber], lidRotation, this.Lid.Flip);
+                this.Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, texPos[2]));
+                this.Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+
+                int startIndex = this.Coors.Count - 4;
+                this.IndexBufferCollection.Add(startIndex + 0);
+                this.IndexBufferCollection.Add(startIndex + 1);
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 0);
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 3);
+            }
+
+            BlockFace topFace = null;
+            BlockFace bottomFace = null;
+            BlockFace leftFace = null;
+            BlockFace rightFace = null;
+            switch (rotation)
+            {
+                case 0:
+                    topFace = this.Top;
+                    bottomFace = this.Bottom;
+                    leftFace = this.Left;
+                    rightFace = this.Right;
+                    break;
+                case 1:
+                    topFace = this.Left;
+                    bottomFace = this.Right;
+                    leftFace = this.Bottom;
+                    rightFace = this.Top;
+                    break;
+                case 2:
+                    topFace = this.Bottom;
+                    bottomFace = this.Top;
+                    leftFace = this.Right;
+                    rightFace = this.Left;
+                    break;
+                case 3:
+                    topFace = this.Right;
+                    bottomFace = this.Left;
+                    leftFace = this.Top;
+                    rightFace = this.Bottom;
+                    break;
+            }
+
+            //Top face
+            if (topFace.TileNumber > 0)
+            {
+                Vector2[] texPos = GetTexturePositions(tileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                Vector2 center = GetCenterPosition(ref texPos[0], ref texPos[3], frontSlopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, center)); //was 3
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[1]));
+                center = GetCenterPosition(ref texPos[1], ref texPos[2], middleSlopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopLeft, Vector3.Zero, center));
+
+                int startIndex = this.Coors.Count - 4;
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 1);
+                this.IndexBufferCollection.Add(startIndex + 0);
+
+                this.IndexBufferCollection.Add(startIndex + 3);
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 0);
+            }
+            //Bottom face
+            if (bottomFace.TileNumber > 0)
+            {
+                Vector2[] texPos = GetTexturePositions(tileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                Vector2 center = GetCenterPosition(ref texPos[2], ref texPos[1], frontSlopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, center)); //was texPos[2]
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                this.Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+                center = GetCenterPosition(ref texPos[3], ref texPos[0], middleSlopeScalar);
+                this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, center));
+
+                int startIndex = this.Coors.Count - 4;
+                this.IndexBufferCollection.Add(startIndex);
+                this.IndexBufferCollection.Add(startIndex + 1);
+                this.IndexBufferCollection.Add(startIndex + 2);
+
+                this.IndexBufferCollection.Add(startIndex + 0);
+                this.IndexBufferCollection.Add(startIndex + 2);
+                this.IndexBufferCollection.Add(startIndex + 3);
+            }
+
+            //ToDo Left face (but probably not supported in GTA2 anyway)
+
+            //Right face
+            CreateRightVertices(frontCoordinates, backCoordinates, rotation);
+        }
+
+        protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Byte rotation)
+        {
+            if (this.Right.TileNumber > 0)
+            {
+                FaceCoordinates newFront = new FaceCoordinates();
+                FaceCoordinates newBack = new FaceCoordinates();
+                if (rotation == 0)
+                {
+                    newFront = CorrectLeftRightVertices(frontCoords, false);
+                    newBack = CorrectLeftRightVertices(backCoords, false);
+                }
+                else if (rotation == 2)
+                {
+                    newFront = CorrectLeftRightVertices(frontCoords, true);
+                    newBack = CorrectLeftRightVertices(backCoords, true);
+                }
+                //ToDo: Add more rotation codes...
+                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Right.TileNumber], this.Lid.Rotation, this.Lid.Flip);
+                Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
+                Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
+                Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
+                Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+
+                //...
+                int startIndex = Coors.Count - 4;
+                IndexBufferCollection.Add(startIndex + 2);
+                IndexBufferCollection.Add(startIndex + 1);
+                IndexBufferCollection.Add(startIndex);
+                IndexBufferCollection.Add(startIndex);
+                IndexBufferCollection.Add(startIndex + 3);
+                IndexBufferCollection.Add(startIndex + 2);
+            }
+        }
+        protected FaceCoordinates CorrectLeftRightVertices(FaceCoordinates coordinates, Boolean left)
+        {
+            FaceCoordinates newCoords = new FaceCoordinates();
+
+            float value;
+            if (left)
+                value = -GlobalScalar.X;
+            else
+                value = GlobalScalar.X;
+
+            newCoords.TopLeft.X = coordinates.TopLeft.X + value;
+            newCoords.TopRight.X = coordinates.TopRight.X + value;
+            newCoords.BottomRight.X = coordinates.BottomRight.X + value;
+            newCoords.BottomLeft.X = coordinates.BottomLeft.X + value;
+
+            newCoords.TopLeft.Y = coordinates.TopLeft.Y;
+            newCoords.TopRight.Y = coordinates.TopRight.Y;
+            newCoords.BottomRight.Y = coordinates.BottomRight.Y;
+            newCoords.BottomLeft.Y = coordinates.BottomLeft.Y;
+
+            newCoords.TopLeft.Z = coordinates.TopLeft.Z;
+            newCoords.TopRight.Z = coordinates.TopRight.Z;
+            newCoords.BottomRight.Z = coordinates.BottomRight.Z;
+            newCoords.BottomLeft.Z = coordinates.BottomLeft.Z;
+
+            return newCoords;
+        }
+        #endregion
+
+        #region DiagonalSlopes
+
+        protected void SetUpSlopeDiagonal(byte rotation)
+        {
+            FaceCoordinates frontCoordinates;
+            FaceCoordinates backCoordinates;
+            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+
+            if (rotation > 0)
+            {
+                frontCoordinates = RotateSlope(frontCoordinates, rotation);
+                backCoordinates = RotateSlope(backCoordinates, rotation);
+            }
+
+            //Front face (diagonal)
+            if (this.Lid)
+            {
+                RotationType lidRotation = this.Lid.Rotation;
+                RotateEnum(ref lidRotation, rotation);
+
+                if (this.Lid.Flip) //ToDo: This is just a dirty way! Problem: rotation Bug if flipped
+                {
+                    switch (lidRotation)
+                    {
+                        case RotationType.Rotate90:
+                            lidRotation = RotationType.Rotate270;
+                            break;
+                        case RotationType.Rotate270:
+                            lidRotation = RotationType.Rotate90;
+                            break;
+                    }
+                }
+
+                var texPos = GetTexturePositions(tileAtlas[this.Lid.TileNumber], lidRotation, this.Lid.Flip);
+                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
+
+                var startIndex = Coors.Count - 3;
+                IndexBufferCollection.Add(startIndex);
+                IndexBufferCollection.Add(startIndex + 1);
+                IndexBufferCollection.Add(startIndex + 2);
+            }
+
+            //int TileNumber = 0;
+            BlockFace diagonalFace = null;
+            switch (rotation)
+            {
+                case 0:
+                    diagonalFace = this.Right;
+                    break;
+                case 1:
+                    diagonalFace = this.Left;
+                    break;
+                case 2:
+                    diagonalFace = this.Left;
+                    break;
+                case 3:
+                    diagonalFace = this.Right;
+                    break;
+            }
+
+            //Diagonal face
+            if (diagonalFace)
+            {
+                var texPos = GetTexturePositions(tileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
+                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
+                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[2]));
+                Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
+                Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[0]));
+
+                var startIndex = Coors.Count - 4;
+                IndexBufferCollection.Add(startIndex + 2);
+                IndexBufferCollection.Add(startIndex + 1);
+                IndexBufferCollection.Add(startIndex);
+                IndexBufferCollection.Add(startIndex + 3);
+                IndexBufferCollection.Add(startIndex + 2);
+                IndexBufferCollection.Add(startIndex);
+            }
+
+            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+            switch (rotation)
+            {
+                case 0: //Facing up right
+                    CreateBottomVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateLeftVertices(ref frontCoordinates, ref backCoordinates, this);
+                    break;
+                case 1: //Facing up left
+                    CreateBottomVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateRightVertices(ref frontCoordinates, ref backCoordinates, this);
+                    break;
+                case 2: //Facing down left --> BUG
+                    CreateTopVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateRightVertices(ref frontCoordinates, ref backCoordinates, this);
+                    break;
+                case 3: //Facing down right --> BUG
+                    CreateTopVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateLeftVertices(ref frontCoordinates, ref backCoordinates, this);
+                    break;
+            }
+        }
+
+        private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
+        {
+            if (!block.Bottom)
+                return;
+            var texPos = GetTexturePositions(tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
+
+            var startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex + 3);
+        }
+
+        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
+        {
+            CreateLeftVertices(ref frontCoords, ref backCoords, block, block.Left, 0);
+        }
+
+        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block, BlockFace leftFace, byte rotation)
+        {
+            if (!leftFace)
+                return;
+            var newFront = new FaceCoordinates();
+            var newBack = new FaceCoordinates();
+            switch (rotation)
+            {
+                case 0:
+                    newFront = CorrectLeftRightVertices(frontCoords, true);
+                    newBack = CorrectLeftRightVertices(backCoords, true);
+                    break;
+                case 2:
+                    newFront = CorrectLeftRightVertices(frontCoords, false);
+                    newBack = CorrectLeftRightVertices(backCoords, false);
+                    break;
+            }
+            var texPos = GetTexturePositions(tileAtlas[leftFace.TileNumber], leftFace.Rotation, leftFace.Flip);
+            Coors.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
+            Coors.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
+
+            //Left also has a strange index buffer order...
+            var startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex + 3);
+            IndexBufferCollection.Add(startIndex);
+        }
+
+        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
+        {
+            CreateRightVertices(ref frontCoords, ref backCoords, ref block, block.Right, 0);
+        }
+
+        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace rightFace, byte rotation)
+        {
+            if (!rightFace)
+                return;
+            var newFront = new FaceCoordinates();
+            var newBack = new FaceCoordinates();
+            switch (rotation)
+            {
+                case 0:
+                    newFront = CorrectLeftRightVertices(frontCoords, false);
+                    newBack = CorrectLeftRightVertices(backCoords, false);
+                    break;
+                case 2:
+                    newFront = CorrectLeftRightVertices(frontCoords, true);
+                    newBack = CorrectLeftRightVertices(backCoords, true);
+                    break;
+            }
+            //ToDo: Add more rotation codes...
+            var texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
+            Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+
+            //...
+            var startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 3);
+            IndexBufferCollection.Add(startIndex + 2);
+        }
+
+        private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
+        {
+            if (!block.Top)
+                return;
+            var texPos = GetTexturePositions(tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[0]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[3]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[1]));
+
+            var startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 3);
+            IndexBufferCollection.Add(startIndex + 1);
+        }
+
+        #endregion
 
         #region Not Implemented
 

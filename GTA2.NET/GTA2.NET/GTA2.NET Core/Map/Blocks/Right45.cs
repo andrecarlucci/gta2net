@@ -1,6 +1,6 @@
 ﻿// GTA2.NET
 // 
-// File: Empty.cs
+// File: Right45.cs
 // Created: 22.04.2013
 // Created by: João Pires
 // 
@@ -27,45 +27,31 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    class Empty : BlockInfo
+    class Right45 : BlockInfo
     {
-        public Empty() : base()
+        public Right45() : base() 
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
+            SlopeType = SlopeType.Right45;
         }
 
-        public Empty(blockInfo blockInfo, Vector3 pos) : base(blockInfo, pos)
+        public Right45(blockInfo blockInfo, Vector3 pos) : base(blockInfo, pos) 
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
-        }
-        
-        public Empty(Vector3 pos) : base()
-        {
-            this.SlopeType = Core.Map.SlopeType.Empty;
-            this.Position = pos;
+            SlopeType = SlopeType.Right45;
         }
 
         public override BlockInfo DeepCopy()
         {
-            return new Empty(this.blockInfo, this.Position);
+            return new Right45(this.blockInfo, this.Position);
         }
 
         public override BlockInfo DeepCopy(blockInfo blockInfo, Vector3 pos)
         {
-            return new Empty(blockInfo, pos);
-        }
-
-        public override void SetUpCube()
-        {
-            return;
+            return new Right45(blockInfo, pos);
         }
         
-        public override bool IsEmpty
+        public override void SetUpCube()
         {
-            get
-            {
-                return true;
-            }
+            SetLowSlope(45, 0);
         }
     }
 }
