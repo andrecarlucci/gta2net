@@ -323,10 +323,10 @@ namespace Hiale.GTA2NET.Core.Style
                 return;
             }
 
-            //atlas = CreateTextureAtlas<TextureAtlasDeltas>(ZipStorer.Open(memoryStreamDeltas, FileAccess.Read), styleFile + "_deltas", styleData.Deltas);
-            //_memoryStreams.Add(atlas, memoryStreamDeltas);
-            //_runningAtlas.Add(atlas);
-            memoryStreamDeltas.Close();
+            atlas = CreateTextureAtlas<TextureAtlasDeltas>(ZipStorer.Open(memoryStreamDeltas, FileAccess.Read), styleFile + "_deltas", styleData.Deltas);
+            _memoryStreams.Add(atlas, memoryStreamDeltas);
+            _runningAtlas.Add(atlas);
+            //memoryStreamDeltas.Close();
 
             WaitHandle.WaitOne();
             cancelled = WaitHandle.Value;
@@ -839,11 +839,15 @@ namespace Hiale.GTA2NET.Core.Style
             for (var i = 0; i < styleData.DeltaIndexes.Length; i++)
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.DeltaIndexes[i].Sprite];
+                var deltaItem = new DeltaItem();
+                styleData.Deltas.Add(styleData.DeltaIndexes[i].Sprite, deltaItem);
                 for (uint j = 0; j < styleData.DeltaIndexes[i].DeltaSize.Count; j++)
                 {
                     if (context.IsCancelling)
                         return;
                     SaveDelta(styleData, styleData.DeltaIndexes[i].Sprite, basePalette, j, zip, styleData.DeltaIndexes[i].Sprite + "_" + j);
+                    var spriteEntry = styleData.SpriteEntries[i];
+                    deltaItem.SubItems.Add(new DeltaSubItem(spriteEntry.Width, spriteEntry.Height));
                 }
             }
         }
@@ -883,7 +887,6 @@ namespace Hiale.GTA2NET.Core.Style
                                     offset++;
                                 }
                             }
-
                             var memoryStream = new MemoryStream();
                             bmp.Save(memoryStream, ImageFormat.Png);
                             memoryStream.Position = 0;

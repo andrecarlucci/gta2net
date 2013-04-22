@@ -56,6 +56,7 @@
     <Compile Include="Globals.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
     <Compile Include="Helper\DeltaItem.cs" />
+    <Compile Include="Helper\DeltaSubItem.cs" />
     <Compile Include="Helper\SerializableDictionary.cs" />
     <Compile Include="Helper\SpriteItem.cs" />
     <Compile Include="Helper\TextureAtlas.cs" />

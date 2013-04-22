@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: DeltaItem.cs
-// Created: 21.04.2013
+// File: DeltaSubItem.cs
+// Created: 22.04.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -24,26 +24,26 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using System.Collections.Generic;
-using System.Xml.Serialization;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Helper
 {
     [Serializable]
-    public class DeltaItem
+    public class DeltaSubItem
     {
-        [XmlIgnore] //this is the key of the dictionary
-        public int SpriteId;
+        public CompactRectangle Rectangle { get; set; }
 
-        //public CompactRectangle Rectangle { get; set; }
+        public Point Location { get; set; }
 
-        public DeltaItem()
+        public DeltaSubItem()
         {
             //XML Serializer
-            SubItems = new List<DeltaSubItem>();
         }
 
-        [XmlArrayItem("SubItem")]
-        public List<DeltaSubItem> SubItems { get; set; }
+        public DeltaSubItem(int width, int height)
+        {
+            Rectangle = new CompactRectangle(0, 0, width, height);
+        }
+
     }
 }
