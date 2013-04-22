@@ -731,7 +731,24 @@ namespace Hiale.GTA2NET.Core.Helper
                     entry.X = node.Rectangle.X;
                     entry.Y = node.Rectangle.Y;
 
-                    rect = useTrimmedImage ? Place(entry, bmp) : Place(entry);
+                    if (useTrimmedImage)
+                    {
+                        if (drawingRect.Width*drawingRect.Height > 0)
+                        {
+                            var trimmedImage = TrimBitmap(bmp);
+                            rect = Place(entry, trimmedImage);
+                            trimmedImage.Dispose();
+                            //ToDo: Change Location relative to the top left position
+                        }
+                        else
+                        {
+                            rect = new CompactRectangle();
+                        }
+                    }
+                    else
+                    {
+                        rect = Place(entry);
+                    }
                     bmp.Dispose();
                 }
                 else
