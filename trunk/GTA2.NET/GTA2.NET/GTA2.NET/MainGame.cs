@@ -211,7 +211,7 @@ namespace Hiale.GTA2NET
 
             //var collision = new MapCollision(Map);
             //collision.CollisionMap(new Vector2(73,192));
-            SetupPhysics();
+            //SetupPhysics();
 
             var carPhysics = CarPhysicReader.ReadFromFile();
             CarInfoList = CarInfo.CreateCarInfoCollection(carInfo, carPhysics);
@@ -288,11 +288,11 @@ namespace Hiale.GTA2NET
             // Update game engine
             base.Update(gameTime);
 
-            _world.Step((float)(gameTime.ElapsedGameTime.TotalMilliseconds * 0.001));
+            //_world.Step((float)(gameTime.ElapsedGameTime.TotalMilliseconds * 0.001));
 
             var mouseState = Mouse.GetState();
 
-            float elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            var elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var input = new PlayerInput();
             HandleInput(ref input);

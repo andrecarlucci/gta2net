@@ -24,7 +24,6 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using System.IO;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core.Helper;
 using System.Collections.Generic;
@@ -38,14 +37,14 @@ namespace Hiale.GTA2NET.Core.Map
     /// </summary>
     public struct blockInfo
     {
-        public UInt16 left, right, top, bottom, lid;
-        public byte arrows;
-        public byte slope_type;
+        public ushort Left, Right, Top, Bottom, Lid;
+        public byte Arrows;
+        public byte SlopeType;
     }
 
 
     /// <summary>
-    /// Represent a Block from the Map.
+    /// Represents a Block from the Map.
     /// </summary>
     public abstract class BlockInfo
     {
@@ -99,18 +98,18 @@ namespace Hiale.GTA2NET.Core.Map
 
         protected blockInfo blockInfo;
 
-        public Dictionary<int, Rectangle> tileAtlas;
+        public Dictionary<int, Rectangle> TileAtlas;
 
-        public BlockInfo(blockInfo blockInfo, Vector3 pos)
+        protected BlockInfo(blockInfo blockInfo, Vector3 pos)
         {
             this.blockInfo = blockInfo;
-            this.Left = new BlockFaceEdge(blockInfo.left);
-            this.Right = new BlockFaceEdge(blockInfo.right);
-            this.Top = new BlockFaceEdge(blockInfo.top);
-            this.Bottom = new BlockFaceEdge(blockInfo.bottom);
-            this.Lid = new BlockFaceLid(blockInfo.lid);
-            this.Arrows = (RoadTrafficType)blockInfo.arrows; //ToDo: Check, don't know if this works...
-            this.ParseSlope(blockInfo.slope_type);
+            this.Left = new BlockFaceEdge(blockInfo.Left);
+            this.Right = new BlockFaceEdge(blockInfo.Right);
+            this.Top = new BlockFaceEdge(blockInfo.Top);
+            this.Bottom = new BlockFaceEdge(blockInfo.Bottom);
+            this.Lid = new BlockFaceLid(blockInfo.Lid);
+            this.Arrows = (RoadTrafficType)blockInfo.Arrows; //ToDo: Check, don't know if this works...
+            this.ParseSlope(blockInfo.SlopeType);
             this.Position = pos;
 
             this.Coors = new List<VertexPositionNormalTexture>();
@@ -125,8 +124,8 @@ namespace Hiale.GTA2NET.Core.Map
             Bottom = BlockFaceEdge.Empty;
             Lid = BlockFaceLid.Empty;
 
-            this.Coors = new List<VertexPositionNormalTexture>();
-            this.IndexBufferCollection = new List<int>();
+            Coors = new List<VertexPositionNormalTexture>();
+            IndexBufferCollection = new List<int>();
         }
         
         /// <summary>
@@ -219,7 +218,7 @@ namespace Hiale.GTA2NET.Core.Map
         {
             get
             {
-                byte slope = (byte)SlopeType;
+                var slope = (byte)SlopeType;
                 return slope != 0 && slope < 41;
             }
         }
@@ -311,10 +310,7 @@ namespace Hiale.GTA2NET.Core.Map
         {
             if (IsEmpty)
                 return "[empty block]";
-            else
-            {
-                return "Lid: " + Lid + " Left: " + Left + " Top: " + Top + " Right: " + Right + " Bottom: " + Bottom + " Ground: " + GroundType.ToString();
-            }
+            return "Lid: " + Lid + " Left: " + Left + " Top: " + Top + " Right: " + Right + " Bottom: " + Bottom + " Ground: " + GroundType.ToString();
         }
 
         #region Coordinates
@@ -396,8 +392,6 @@ namespace Hiale.GTA2NET.Core.Map
             }
             return texturePosition;
         }
-
-
 
         #region Not Implemented
 

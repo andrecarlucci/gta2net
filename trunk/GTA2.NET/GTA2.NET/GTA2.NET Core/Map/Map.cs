@@ -163,13 +163,13 @@ namespace Hiale.GTA2NET.Core.Map
             for (var i = 0; i < blockCount; i++)
             {
                 blockInfo blockInfo;
-                blockInfo.left = reader.ReadUInt16();
-                blockInfo.right = reader.ReadUInt16();
-                blockInfo.top = reader.ReadUInt16();
-                blockInfo.bottom = reader.ReadUInt16();
-                blockInfo.lid = reader.ReadUInt16();
-                blockInfo.arrows = reader.ReadByte();
-                blockInfo.slope_type = reader.ReadByte();
+                blockInfo.Left = reader.ReadUInt16();
+                blockInfo.Right = reader.ReadUInt16();
+                blockInfo.Top = reader.ReadUInt16();
+                blockInfo.Bottom = reader.ReadUInt16();
+                blockInfo.Lid = reader.ReadUInt16();
+                blockInfo.Arrows = reader.ReadByte();
+                blockInfo.SlopeType = reader.ReadByte();
                 BlockInfo block = BlockFactory.Build(blockInfo, Vector3.One);
                 blocks[i] = block;
             }

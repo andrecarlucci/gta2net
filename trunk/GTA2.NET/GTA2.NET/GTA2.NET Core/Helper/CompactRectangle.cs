@@ -47,7 +47,7 @@ namespace Hiale.GTA2NET.Core.Helper
             Height = height;
         }
 
-        public static CompactRectangle FromRectlange(Rectangle rect)
+        public static CompactRectangle FromRectangle(Rectangle rect)
         {
             return new CompactRectangle {X = rect.X, Y = rect.X, Width = rect.Width, Height = rect.Height};
         }
@@ -55,6 +55,16 @@ namespace Hiale.GTA2NET.Core.Helper
         public Rectangle ToRectangle()
         {
             return new Rectangle(X, Y, Width, Height);
+        }
+
+        public static CompactRectangle FromDrawingRectangle(System.Drawing.Rectangle rect)
+        {
+            return new CompactRectangle {X = rect.X, Y = rect.X, Width = rect.Width, Height = rect.Height};
+        }
+
+        public System.Drawing.Rectangle ToDrawingRectangle()
+        {
+            return new System.Drawing.Rectangle(X, Y, Width, Height);
         }
 
     }

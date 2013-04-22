@@ -30,6 +30,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
 using System.Xml.Serialization;
 using System.IO;
@@ -53,7 +54,7 @@ namespace Hiale.GTA2NET.Core.Helper
             public int Width;
             public int Height;
             public int ZipEntryIndex;
-            public int SameSpriteIndex;
+            public int SameImageIndex;
         }
 
         //Based on http://www.blackpawn.com/texts/lightmaps/
@@ -170,7 +171,7 @@ namespace Hiale.GTA2NET.Core.Helper
         protected TextureAtlas()
         {
             //needed by xml serializer
-            Padding = 2;
+            Padding = 1;
             CrcDictionary = new Dictionary<uint, int>();
         }
 
@@ -201,7 +202,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 if (!CrcDictionary.ContainsKey(ZipEntries[i].Crc32))
                     CrcDictionary.Add(ZipEntries[i].Crc32, i);
                 else
-                    entry.SameSpriteIndex = CrcDictionary[ZipEntries[i].Crc32];
+                    entry.SameImageIndex = CrcDictionary[ZipEntries[i].Crc32];
                 entry.Index = i;
                 entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
                 entry.Width = source.Width + 2*Padding; // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
@@ -229,12 +230,18 @@ namespace Hiale.GTA2NET.Core.Helper
             Graphics = Graphics.FromImage(Image);
         }
 
-        protected CompactRectangle PaintAndGetRectangle(ImageEntry entry)
+        protected CompactRectangle Place(ImageEntry entry)
         {
             var source = GetBitmapFromZip(ZipStore, ZipEntries[entry.ZipEntryIndex]);
-            Graphics.DrawImageUnscaled(source, entry.X + Padding, entry.Y + Padding);
+            var rect = Place(entry, source);
             source.Dispose();
-            return new CompactRectangle(entry.X + Padding, entry.Y + Padding, entry.Width - 2*Padding, entry.Height - 2*Padding);
+            return rect;
+        }
+
+        protected CompactRectangle Place(ImageEntry entry, Bitmap bmp)
+        {
+            Graphics.DrawImageUnscaled(bmp, entry.X + Padding, entry.Y + Padding);
+            return new CompactRectangle(entry.X + Padding, entry.Y + Padding, entry.Width - 2 * Padding, entry.Height - 2 * Padding);
         }
 
         public virtual void BuildTextureAtlasAsync()
@@ -340,6 +347,112 @@ namespace Hiale.GTA2NET.Core.Helper
             return (int) current;
         }
 
+        //Based on http://stackoverflow.com/questions/4820212/automatically-trim-a-bitmap-to-minimum-size/4821100#4821100
+        public static System.Drawing.Rectangle CalculateTrimRegion(Bitmap source)
+        {
+            System.Drawing.Rectangle srcRect;
+            BitmapData data = null;
+            try
+            {
+                data = source.LockBits(new System.Drawing.Rectangle(0, 0, source.Width, source.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                var buffer = new byte[data.Height * data.Stride];
+                Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
+
+                int xMin = int.MaxValue,
+                    xMax = int.MinValue,
+                    yMin = int.MaxValue,
+                    yMax = int.MinValue;
+
+                var foundPixel = false;
+
+                // Find xMin
+                for (var x = 0; x < data.Width; x++)
+                {
+                    var stop = false;
+                    for (var y = 0; y < data.Height; y++)
+                    {
+                        var alpha = buffer[y * data.Stride + 4 * x + 3];
+                        if (alpha == 0)
+                            continue;
+                        xMin = x;
+                        stop = true;
+                        foundPixel = true;
+                        break;
+                    }
+                    if (stop)
+                        break;
+                }
+
+                // Image is empty...
+                if (!foundPixel)
+                    return new System.Drawing.Rectangle();
+
+                // Find yMin
+                for (var y = 0; y < data.Height; y++)
+                {
+                    var stop = false;
+                    for (var x = xMin; x < data.Width; x++)
+                    {
+                        var alpha = buffer[y * data.Stride + 4 * x + 3];
+                        if (alpha == 0)
+                            continue;
+                        yMin = y;
+                        stop = true;
+                        break;
+                    }
+                    if (stop)
+                        break;
+                }
+
+                // Find xMax
+                for (var x = data.Width - 1; x >= xMin; x--)
+                {
+                    var stop = false;
+                    for (var y = yMin; y < data.Height; y++)
+                    {
+                        var alpha = buffer[y * data.Stride + 4 * x + 3];
+                        if (alpha == 0)
+                            continue;
+                        xMax = x;
+                        stop = true;
+                        break;
+                    }
+                    if (stop)
+                        break;
+                }
+
+                // Find yMax
+                for (var y = data.Height - 1; y >= yMin; y--)
+                {
+                    var stop = false;
+                    for (var x = xMin; x <= xMax; x++)
+                    {
+                        var alpha = buffer[y * data.Stride + 4 * x + 3];
+                        if (alpha == 0)
+                            continue;
+                        yMax = y;
+                        stop = true;
+                        break;
+                    }
+                    if (stop)
+                        break;
+                }
+                srcRect = System.Drawing.Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
+            }
+            finally
+            {
+                if (data != null)
+                    source.UnlockBits(data);
+            }
+            return srcRect;
+        }
+
+        public static Bitmap TrimBitmap(Bitmap source)
+        {
+            var srcRect = CalculateTrimRegion(source);
+            return source.Clone(srcRect, source.PixelFormat);
+        }
+
         private static string ParsePath(string path)
         {
             var pos = path.LastIndexOf('/');
@@ -427,15 +540,32 @@ namespace Hiale.GTA2NET.Core.Helper
                     return;
                 }
 
-                var node = root.Insert(entry.Width, entry.Height);
-                if (node == null)
-                    continue;
-                entry.X = node.Rectangle.X;
-                entry.Y = node.Rectangle.Y;
-
-                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : TileDictionary[entry.SameSpriteIndex];
+                CompactRectangle rect;
+                if (entry.SameImageIndex == 0)
+                {
+                    var node = root.Insert(entry.Width, entry.Height);
+                    if (node == null)
+                        continue; //no space to put the image, increase the output image?
+                    entry.X = node.Rectangle.X;
+                    entry.Y = node.Rectangle.Y;
+                    rect = Place(entry);
+                }
+                else
+                {
+                    rect = TileDictionary[entry.SameImageIndex];
+                }
                 var index = int.Parse(entry.FileName);
                 TileDictionary.Add(index, rect);
+
+                //var node = root.Insert(entry.Width, entry.Height);
+                //if (node == null)
+                //    continue;
+                //entry.X = node.Rectangle.X;
+                //entry.Y = node.Rectangle.Y;
+
+                //var rect = entry.SameImageIndex == 0 ? Place(entry) : TileDictionary[entry.SameImageIndex];
+                //var index = int.Parse(entry.FileName);
+                //TileDictionary.Add(index, rect);
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
@@ -497,14 +627,21 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
-                var node = root.Insert(entry.Width, entry.Height);
-                if (node == null)
-                    continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
-                entry.X = node.Rectangle.X;
-                entry.Y = node.Rectangle.Y;
 
-                var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[entry.SameSpriteIndex].Rectangle;
-
+                CompactRectangle rect;
+                if (entry.SameImageIndex == 0)
+                {
+                    var node = root.Insert(entry.Width, entry.Height);
+                    if (node == null)
+                        continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
+                    entry.X = node.Rectangle.X;
+                    entry.Y = node.Rectangle.Y;
+                    rect = Place(entry);
+                }
+                else
+                {
+                    rect = SpriteDictionary[entry.SameImageIndex].Rectangle;
+                }
                 var item = SpriteDictionary[entry.Index];
                 item.Rectangle = rect;
             }
@@ -533,7 +670,6 @@ namespace Hiale.GTA2NET.Core.Helper
                 deltaItem.Value.SpriteId = deltaItem.Key;
         }
 
-
         protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
         {
             var entries = CreateImageEntries(context, out cancelled);
@@ -560,7 +696,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var root = new Node(0, 0, outputWidth, outputHeight);
 
             CreateOutputBitmap(outputWidth, outputHeight);
-            //SpriteDictionary = new SerializableDictionary<int, SpriteItem>();
+
             foreach (var entry in entries)
             {
                 if (context.IsCancelling)
@@ -568,24 +704,62 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return;
                 }
-                var node = root.Insert(entry.Width, entry.Height);
-                if (node == null)
-                    continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
-                entry.X = node.Rectangle.X;
-                entry.Y = node.Rectangle.Y;
 
-                //var rect = entry.SameSpriteIndex == 0 ? PaintAndGetRectangle(entry) : SpriteDictionary[entry.SameSpriteIndex].Rectangle;
-                var rect = PaintAndGetRectangle(entry);
+                var useTrimmedImage = false;
 
-                //var item = DeltaDictionary[entry.Index];
-                //item.Rectangle = rect;
-                var deltaItem = new DeltaItem {SpriteId = entry.Index, DeltaSubItems = new List<int>(), Rectangle = rect};
-                DeltaDictionary.Add(entry.Index, deltaItem);
+                var bmp = GetBitmapFromZip(ZipStore, ZipEntries[entry.ZipEntryIndex]);
+                var drawingRect = CalculateTrimRegion(bmp);
+                if ((drawingRect.Width*drawingRect.Height) < (entry.Width*entry.Height))
+                    useTrimmedImage = true;
 
+                CompactRectangle rect;
+                if (entry.SameImageIndex == 0)
+                {
+                    if (useTrimmedImage)
+                    {
+                        entry.Width = drawingRect.Width + 2*Padding;
+                        entry.Height = drawingRect.Height + 2*Padding;
+                    }
+
+                    //bmp.Dispose();
+                    var node = root.Insert(entry.Width, entry.Height); //ToDo: deltas are inserted at the wrong position sometimes.
+                    if (node == null)
+                    {
+                        bmp.Dispose();
+                        continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
+                    }
+                    entry.X = node.Rectangle.X;
+                    entry.Y = node.Rectangle.Y;
+
+                    rect = useTrimmedImage ? Place(entry, bmp) : Place(entry);
+                    bmp.Dispose();
+                }
+                else
+                {
+                    bmp.Dispose();
+                    var sameEntry = entries[entry.SameImageIndex];
+                    int sameSpriteId;
+                    int sameDeltaId;
+                    ParseFileName(sameEntry.FileName, out sameSpriteId, out sameDeltaId);
+                    rect = DeltaDictionary[sameSpriteId].SubItems[sameDeltaId].Rectangle;
+                }
+
+                int spriteId;
+                int deltaId;
+                ParseFileName(entry.FileName, out spriteId, out deltaId);
+                DeltaDictionary[spriteId].SubItems[deltaId].Rectangle = rect;
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
         }
+
+        private static void ParseFileName(string fileName, out int spriteId, out int deltaId)
+        {
+            var parts = fileName.Split('_');
+            spriteId = int.Parse(parts[0]);
+            deltaId = int.Parse(parts[1]);
+        }
+
     }
 }
 
