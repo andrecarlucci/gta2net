@@ -28,6 +28,8 @@ using System.Globalization;
 using System.IO;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Hiale.GTA2NET.Core.Map.Blocks;
+using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -75,7 +77,7 @@ namespace Hiale.GTA2NET.Core.Map
                 {
                     for (var k = 0; k < _cityBlocks.GetLength(2); k++)
                     {
-                        _cityBlocks[i, j, k] = new BlockInfo();
+                        _cityBlocks[i, j, k] = new Empty(new Vector3(i,j,k));
                     }
                 }
             }          
@@ -160,15 +162,16 @@ namespace Hiale.GTA2NET.Core.Map
             var blocks = new BlockInfo[blockCount];
             for (var i = 0; i < blockCount; i++)
             {
-                var blockInfo = new BlockInfo();
-                blockInfo.Left = new BlockFaceEdge(reader.ReadUInt16());
-                blockInfo.Right = new BlockFaceEdge(reader.ReadUInt16());
-                blockInfo.Top = new BlockFaceEdge(reader.ReadUInt16());
-                blockInfo.Bottom = new BlockFaceEdge(reader.ReadUInt16());
-                blockInfo.Lid = new BlockFaceLid(reader.ReadUInt16());
-                blockInfo.Arrows = (RoadTrafficType)reader.ReadByte(); //ToDo: Check, don't know if this works...
-                blockInfo.ParseSlope(reader.ReadByte());
-                blocks[i] = blockInfo;
+                blockInfo blockInfo;
+                blockInfo.left = reader.ReadUInt16();
+                blockInfo.right = reader.ReadUInt16();
+                blockInfo.top = reader.ReadUInt16();
+                blockInfo.bottom = reader.ReadUInt16();
+                blockInfo.lid = reader.ReadUInt16();
+                blockInfo.arrows = reader.ReadByte();
+                blockInfo.slope_type = reader.ReadByte();
+                BlockInfo block = BlockFactory.Build(blockInfo, Vector3.One);
+                blocks[i] = block;
             }
             CreateUncompressedMap(baseOffsets, columns, blocks);
         }
@@ -254,7 +257,8 @@ namespace Hiale.GTA2NET.Core.Map
                     {
                         if (k >= offset)
                         {
-                            _cityBlocks[i, j, k] = blocks[columns[columnIndex + k - offset + 1]];
+                            _cityBlocks[i, j, k] = blocks[columns[columnIndex + k - offset + 1]].DeepCopy();
+                            _cityBlocks[i, j, k].Position = new Vector3(i, j, k);
                         }
                     }
                 }

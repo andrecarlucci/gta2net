@@ -242,6 +242,12 @@ namespace Hiale.GTA2NET
                 if (obstacle is RectangleObstacle)
                 {
                     var rectObstacle = (RectangleObstacle)obstacle;
+                    //BIG HACK....
+                    if (rectObstacle.Position.X == 49 && rectObstacle.Position.Y == 181)
+                    {
+                        continue;
+                    }
+                    //END BIG HACK
                     body = BodyFactory.CreateRectangle(_world, rectObstacle.Width, rectObstacle.Length, 1,
                                                        new Vector2(
                                                            rectObstacle.Position.X + ((float) rectObstacle.Width/2),

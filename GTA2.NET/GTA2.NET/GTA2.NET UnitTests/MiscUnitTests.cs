@@ -47,11 +47,11 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void TestBitHelper()
         {
-            var block = new BlockInfo();
-            block.ParseSlope(31);
-            block.Lid = new BlockFaceLid(16906);
-            var stream = new MemoryStream();
-            block.Save(new BinaryWriter(stream));
+            //var block = new BlockInfo();
+            //block.ParseSlope(31);
+            //block.Lid = new BlockFaceLid(16906);
+            //var stream = new MemoryStream();
+            //block.Save(new BinaryWriter(stream));
 
             //const int testInt = 683795;
             //var r1 = BitHelper.CheckBit(testInt, 0);

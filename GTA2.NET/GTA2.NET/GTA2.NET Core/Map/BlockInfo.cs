@@ -27,19 +27,57 @@ using System;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core.Helper;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Map
 {
-    public class BlockInfo
+    /// <summary>
+    /// Represents the block structur in the original GTA map files.
+    /// For more information see GTA2 Map Format.
+    /// </summary>
+    public struct blockInfo
     {
+        public UInt16 left, right, top, bottom, lid;
+        public byte arrows;
+        public byte slope_type;
+    }
+
+
+    /// <summary>
+    /// Represent a Block from the Map.
+    /// </summary>
+    public abstract class BlockInfo
+    {
+        #region FaceCoordinates
+        /// <summary>
+        /// Represents the coordinates of the 4 vertices of each face from the block.
+        /// </summary>
+        protected struct FaceCoordinates
+        {
+            public Vector3 TopLeft;
+            public Vector3 TopRight;
+            public Vector3 BottomRight;
+            public Vector3 BottomLeft;
+
+            public FaceCoordinates(Vector3 topLeft, Vector3 topRight, Vector3 bottomRight, Vector3 bottomLeft)
+            {
+                TopLeft = topLeft;
+                TopRight = topRight;
+                BottomRight = bottomRight;
+                BottomLeft = bottomLeft;
+            }
+        }
+        #endregion
+
         public static float PartialBlockScalar = 0.375f;
 
-        public static BlockInfo Empty = new BlockInfo();
+        protected Vector3 GlobalScalar = new Vector3(1, 1, 0.5f);
 
         ///// <summary>
         ///// Position of this block in a map.
         ///// </summary>
-        //public Vector3 Position { get; set; } //remove?
+        public Vector3 Position { get; set; }
 
         public BlockFaceEdge Left { get; set; }
 
@@ -49,22 +87,35 @@ namespace Hiale.GTA2NET.Core.Map
 
         public BlockFaceEdge Bottom { get; set; }
 
-        public BlockFaceLid Lid { get; set; }
-
-        /// <summary>
-        /// ToDo
-        /// </summary>
-        public RoadTrafficType Arrows { get; set; }
-
-
-        ///// <summary>
-        ///// ToDo - enum
-        ///// </summary>
-        //public byte BaseSlopeType { get; private set; }
+        public BlockFaceLid Lid { get; set; }        
 
         public GroundType GroundType { get; private set; }
 
-        public SlopeType SlopeType { get; private set; }
+        public SlopeType SlopeType { get; protected set; }
+
+        public List<VertexPositionNormalTexture> Coors { get; protected set; }
+
+        public List<int> IndexBufferCollection { get; protected set; }
+
+        protected blockInfo blockInfo;
+
+        public Dictionary<int, Rectangle> tileAtlas;
+
+        public BlockInfo(blockInfo blockInfo, Vector3 pos)
+        {
+            this.blockInfo = blockInfo;
+            this.Left = new BlockFaceEdge(blockInfo.left);
+            this.Right = new BlockFaceEdge(blockInfo.right);
+            this.Top = new BlockFaceEdge(blockInfo.top);
+            this.Bottom = new BlockFaceEdge(blockInfo.bottom);
+            this.Lid = new BlockFaceLid(blockInfo.lid);
+            this.Arrows = (RoadTrafficType)blockInfo.arrows; //ToDo: Check, don't know if this works...
+            this.ParseSlope(blockInfo.slope_type);
+            this.Position = pos;
+
+            this.Coors = new List<VertexPositionNormalTexture>();
+            this.IndexBufferCollection = new List<int>();
+        }
 
         public BlockInfo()
         {
@@ -73,7 +124,36 @@ namespace Hiale.GTA2NET.Core.Map
             Top = BlockFaceEdge.Empty;
             Bottom = BlockFaceEdge.Empty;
             Lid = BlockFaceLid.Empty;
+
+            this.Coors = new List<VertexPositionNormalTexture>();
+            this.IndexBufferCollection = new List<int>();
         }
+        
+        /// <summary>
+        /// Makes a new copy of this object.
+        /// </summary>
+        /// <returns>The new copy.</returns>
+        public abstract BlockInfo DeepCopy();
+
+        /// <summary>
+        /// Makes a new copy of this object.
+        /// </summary>
+        /// <param name="blockInfo">The blockInfo</param>
+        /// <param name="pos">The position</param>
+        /// <returns>The new copy</returns>
+        public abstract BlockInfo DeepCopy(blockInfo blockInfo, Vector3 pos);
+
+        /// <summary>
+        /// Test if this instance represents the slopeType
+        /// </summary>
+        /// <param name="slopeType">SlopeType to test</param>
+        /// <returns>True </returns>
+        public abstract Boolean IsMe(SlopeType slopeType);
+
+        /// <summary>
+        /// Calculate the coordinates of the verticies.
+        /// </summary>
+        protected abstract void SetUpCube();
 
         public void ParseSlope(byte type)
         {
@@ -112,7 +192,7 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
-        public bool IsEmpty
+        public virtual bool IsEmpty
         {
             get
             {
@@ -132,31 +212,7 @@ namespace Hiale.GTA2NET.Core.Map
                     return true;
                 return false;
             }
-        }
-
-        //public bool IsDiagonalSlope
-        //{
-        //    get
-        //    {
-        //        return SlopeType == SlopeType.DiagonalFacingDownLeft || SlopeType == SlopeType.DiagonalFacingDownRight || SlopeType == SlopeType.DiagonalFacingUpLeft || SlopeType == SlopeType.DiagonalFacingUpRight;
-        //    }
-        //}
-
-        //public bool IsLowSlope
-        //{
-        //    get
-        //    {
-        //        return SlopeType == SlopeType.Up26Low || SlopeType == SlopeType.Down26Low || SlopeType == SlopeType.Left26Low || SlopeType == SlopeType.Right26Low;
-        //    }
-        //}
-
-        //public bool IsHighSlope
-        //{
-        //    get
-        //    {
-        //        return SlopeType == SlopeType.Up26High || SlopeType == SlopeType.Down26High || SlopeType == SlopeType.Left26High || SlopeType == SlopeType.Right26High;
-        //    }
-        //}
+        }               
 
         //the player can walk on these
         public bool IsMovableSlope
@@ -249,7 +305,135 @@ namespace Hiale.GTA2NET.Core.Map
                     return 45;
                 return 0;
             }
+        }        
+
+        public override string ToString()
+        {
+            if (IsEmpty)
+                return "[empty block]";
+            else
+            {
+                return "Lid: " + Lid + " Left: " + Left + " Top: " + Top + " Right: " + Right + " Bottom: " + Bottom + " Ground: " + GroundType.ToString();
+            }
         }
+
+        #region Coordinates
+
+        protected void PrepareCoordinates(Vector3 position, out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
+        {
+            position.Y *= -1;
+
+            //Coordinates of the cube
+            Vector3 topLeftFront = (new Vector3(0.0f, 0.0f, 1f) + position) * GlobalScalar;
+            Vector3 topRightFront = (new Vector3(1f, 0.0f, 1f) + position) * GlobalScalar;
+            Vector3 bottomLeftFront = (new Vector3(0.0f, -1f, 1f) + position) * GlobalScalar;
+            Vector3 bottomRightFront = (new Vector3(1f, -1f, 1f) + position) * GlobalScalar;
+            frontCoords = new FaceCoordinates(topLeftFront, topRightFront, bottomRightFront, bottomLeftFront);
+
+            Vector3 topLeftBack = (new Vector3(0.0f, 0.0f, 0.0f) + position) * GlobalScalar;
+            Vector3 topRightBack = (new Vector3(1f, 0.0f, 0.0f) + position) * GlobalScalar;
+            Vector3 bottomLeftBack = (new Vector3(0.0f, -1f, 0.0f) + position) * GlobalScalar;
+            Vector3 bottomRightBack = (new Vector3(1f, -1f, 0.0f) + position) * GlobalScalar;
+            backCoords = new FaceCoordinates(topLeftBack, topRightBack, bottomRightBack, bottomLeftBack);
+        }
+        #endregion
+
+        protected Vector2[] GetTexturePositions(Rectangle sourceRectangle, RotationType rotation, bool flip)
+        {
+            double pixelPerWidth = 1f / 2046;
+            double pixelPerHeight = 1f / 2112;
+            Vector2[] texturePosition = new Vector2[4];
+
+            Vector2 texTopLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
+            Vector2 texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
+            Vector2 texBottomRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
+            Vector2 texBottomLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
+
+            if (flip)
+            {
+                Vector2 helper = texTopLeft;
+                texTopLeft = texTopRight;
+                texTopRight = helper;
+                helper = texBottomLeft;
+                texBottomLeft = texBottomRight;
+                texBottomRight = helper;
+                if (rotation == RotationType.Rotate90) //Hack
+                {
+                    rotation = RotationType.Rotate270;
+                }
+                else if (rotation == RotationType.Rotate270)
+                {
+                    rotation = RotationType.Rotate90;
+                }
+            }
+
+            switch (rotation)
+            {
+                case RotationType.RotateNone:
+                    texturePosition[0] = texBottomLeft;
+                    texturePosition[1] = texBottomRight;
+                    texturePosition[2] = texTopRight;
+                    texturePosition[3] = texTopLeft;
+                    break;
+                case RotationType.Rotate90:
+                    texturePosition[3] = texBottomLeft;
+                    texturePosition[0] = texBottomRight;
+                    texturePosition[1] = texTopRight;
+                    texturePosition[2] = texTopLeft;
+                    break;
+                case RotationType.Rotate180:
+                    texturePosition[2] = texBottomLeft;
+                    texturePosition[3] = texBottomRight;
+                    texturePosition[0] = texTopRight;
+                    texturePosition[1] = texTopLeft;
+                    break;
+                case RotationType.Rotate270:
+                    texturePosition[1] = texBottomLeft;
+                    texturePosition[2] = texBottomRight;
+                    texturePosition[3] = texTopRight;
+                    texturePosition[0] = texTopLeft;
+                    break;
+            }
+            return texturePosition;
+        }
+
+
+
+        #region Not Implemented
+
+        /// <summary>
+        /// ToDo
+        /// </summary>
+        public RoadTrafficType Arrows { get; set; }
+
+        ///// <summary>
+        ///// ToDo - enum
+        ///// </summary>
+        //public byte BaseSlopeType { get; private set; }
+
+        //public bool IsDiagonalSlope
+        //{
+        //    get
+        //    {
+        //        return SlopeType == SlopeType.DiagonalFacingDownLeft || SlopeType == SlopeType.DiagonalFacingDownRight || SlopeType == SlopeType.DiagonalFacingUpLeft || SlopeType == SlopeType.DiagonalFacingUpRight;
+        //    }
+        //}
+
+        //public bool IsLowSlope
+        //{
+        //    get
+        //    {
+        //        return SlopeType == SlopeType.Up26Low || SlopeType == SlopeType.Down26Low || SlopeType == SlopeType.Left26Low || SlopeType == SlopeType.Right26Low;
+        //    }
+        //}
+
+        //public bool IsHighSlope
+        //{
+        //    get
+        //    {
+        //        return SlopeType == SlopeType.Up26High || SlopeType == SlopeType.Down26High || SlopeType == SlopeType.Left26High || SlopeType == SlopeType.Right26High;
+        //    }
+        //}
 
         //public bool IsAir()
         //{
@@ -273,14 +457,6 @@ namespace Hiale.GTA2NET.Core.Map
         //    return ((SlopeType & 1) == 1) && ((SlopeType & 2) == 2); //Bit 0 and Bit 1 are both 1
         //}
 
-        public override string ToString()
-        {
-            if (IsEmpty)
-                return "[empty block]";
-            else
-            {
-                return "Lid: " + Lid + " Left: " + Left + " Top: " + Top + " Right: " + Right + " Bottom: " + Bottom + " Ground: " + GroundType.ToString();
-            }
-        }
+        #endregion
     }
 }
