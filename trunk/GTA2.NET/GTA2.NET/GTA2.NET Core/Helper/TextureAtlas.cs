@@ -35,6 +35,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Xml.Serialization;
 using System.IO;
 using Hiale.GTA2NET.Core.Helper.Threading;
+using Point = Microsoft.Xna.Framework.Point;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Hiale.GTA2NET.Core.Helper
@@ -182,7 +183,7 @@ namespace Hiale.GTA2NET.Core.Helper
             ZipStore = zipStore;
         }
 
-        protected List<ImageEntry> CreateImageEntries(CancellableContext context, out bool cancelled)
+        protected virtual List<ImageEntry> CreateImageEntries(CancellableContext context, out bool cancelled)
         {
             cancelled = false;
             var entries = new List<ImageEntry>();
@@ -195,9 +196,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return null;
                 }
-                //if (!ZipEntries[i].FilenameInZip.StartsWith(directory))
-                //    continue;
-                var source = GetBitmapFromZip(ZipStore, ZipEntries[i]);
+                var source = GetBitmapFromZip(ZipStore, i);
                 var entry = new ImageEntry();
                 if (!CrcDictionary.ContainsKey(ZipEntries[i].Crc32))
                     CrcDictionary.Add(ZipEntries[i].Crc32, i);
@@ -205,17 +204,26 @@ namespace Hiale.GTA2NET.Core.Helper
                     entry.SameImageIndex = CrcDictionary[ZipEntries[i].Crc32];
                 entry.Index = i;
                 entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
-                entry.Width = source.Width + 2*Padding; // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
-                entry.Height = source.Height + 2*Padding;
                 entry.ZipEntryIndex = i;
                 entries.Add(entry);
-                source.Dispose();
+                if (source != null)
+                {
+                    entry.Width = source.Width + 2*Padding; // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
+                    entry.Height = source.Height + 2*Padding;
+                    source.Dispose();
+                }
+                else
+                {
+                    entry.Width = 0; // + 2*Padding;
+                    entry.Height = 0; // +2 * Padding;
+                }
             }
             return entries;
         }
 
-        protected static Bitmap GetBitmapFromZip(ZipStorer zipStore, ZipStorer.ZipFileEntry zipFileEntry)
+        protected virtual Bitmap GetBitmapFromZip(ZipStorer zipStore, int zipFileEntryIndex)
         {
+            var zipFileEntry = ZipEntries[zipFileEntryIndex];
             var memoryStream = new MemoryStream((int) zipFileEntry.FileSize);
             zipStore.ExtractFile(zipFileEntry, memoryStream);
             memoryStream.Position = 0;
@@ -224,24 +232,19 @@ namespace Hiale.GTA2NET.Core.Helper
             return bmp;
         }
 
-        protected void CreateOutputBitmap(int width, int height)
+        protected virtual void CreateOutputBitmap(int width, int height)
         {
             Image = new Bitmap(width, height);
             Graphics = Graphics.FromImage(Image);
         }
 
-        protected CompactRectangle Place(ImageEntry entry)
+        protected virtual CompactRectangle Place(ImageEntry entry)
         {
-            var source = GetBitmapFromZip(ZipStore, ZipEntries[entry.ZipEntryIndex]);
-            var rect = Place(entry, source);
+            var source = GetBitmapFromZip(ZipStore, entry.ZipEntryIndex);
+            Graphics.DrawImageUnscaled(source, entry.X + Padding, entry.Y + Padding);
+            var rect = new CompactRectangle(entry.X + Padding, entry.Y + Padding, entry.Width - 2*Padding, entry.Height - 2*Padding);
             source.Dispose();
             return rect;
-        }
-
-        protected CompactRectangle Place(ImageEntry entry, Bitmap bmp)
-        {
-            Graphics.DrawImageUnscaled(bmp, entry.X + Padding, entry.Y + Padding);
-            return new CompactRectangle(entry.X + Padding, entry.Y + Padding, entry.Width - 2 * Padding, entry.Height - 2 * Padding);
         }
 
         public virtual void BuildTextureAtlasAsync()
@@ -307,7 +310,7 @@ namespace Hiale.GTA2NET.Core.Helper
         /// <summary>
         /// Heuristic guesses what might be a good output width for a list of sprites.
         /// </summary>
-        protected static int GuessOutputWidth(ICollection<ImageEntry> entries)
+        protected virtual int GuessOutputWidth(ICollection<ImageEntry> entries)
         {
             // Gather the widths of all our sprites into a temporary list.
             var widths = entries.Select(entry => entry.Width).ToList();
@@ -328,14 +331,14 @@ namespace Hiale.GTA2NET.Core.Helper
             return PowerOfTwo(width);
         }
 
-        protected static int GuessOutputHeight(ICollection<ImageEntry> entries, int width)
+        protected virtual int GuessOutputHeight(ICollection<ImageEntry> entries, int width)
         {
             var totalArea = entries.Sum(imageEntry => imageEntry.Width*imageEntry.Height);
             var height = (int) Math.Ceiling((float) totalArea/width);
             return PowerOfTwo(height);
         }
 
-        protected static int PowerOfTwo(int minimum)
+        protected virtual int PowerOfTwo(int minimum)
         {
             uint current;
             var exponent = 0;
@@ -453,7 +456,7 @@ namespace Hiale.GTA2NET.Core.Helper
             return source.Clone(srcRect, source.PixelFormat);
         }
 
-        private static string ParsePath(string path)
+        protected virtual string ParsePath(string path)
         {
             var pos = path.LastIndexOf('/');
             return path.Substring(pos + 1, path.Length - pos - Globals.TextureImageFormat.Length - 1);
@@ -496,6 +499,7 @@ namespace Hiale.GTA2NET.Core.Helper
             }
             catch (Exception)
             {
+                //ignore
             }
         }
 
@@ -556,16 +560,6 @@ namespace Hiale.GTA2NET.Core.Helper
                 }
                 var index = int.Parse(entry.FileName);
                 TileDictionary.Add(index, rect);
-
-                //var node = root.Insert(entry.Width, entry.Height);
-                //if (node == null)
-                //    continue;
-                //entry.X = node.Rectangle.X;
-                //entry.Y = node.Rectangle.Y;
-
-                //var rect = entry.SameImageIndex == 0 ? Place(entry) : TileDictionary[entry.SameImageIndex];
-                //var index = int.Parse(entry.FileName);
-                //TileDictionary.Add(index, rect);
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
@@ -652,7 +646,11 @@ namespace Hiale.GTA2NET.Core.Helper
 
     public class TextureAtlasDeltas : TextureAtlas
     {
-        public SerializableDictionary<int, DeltaItem> DeltaDictionary { get; set; }
+        public SerializableDictionary<int, DeltaItem> DeltaDictionary { get; set; } //Key = Sprite ID
+
+        private readonly Dictionary<string, int[]> _deltaIndexDictionary; //Key = Filename, Value 0 = Sprite Id, Value 1 = Delta Index
+
+        private readonly Dictionary<int, System.Drawing.Rectangle> _cachedRectDictionary; //Key = Zip entry index
 
         public TextureAtlasDeltas()
         {
@@ -662,12 +660,39 @@ namespace Hiale.GTA2NET.Core.Helper
         public TextureAtlasDeltas(string imagePath, ZipStorer zipStore, SerializableDictionary<int, DeltaItem> deltaDictionary) : base(imagePath, zipStore)
         {
             DeltaDictionary = deltaDictionary;
+            _deltaIndexDictionary = new Dictionary<string, int[]>();
+            _cachedRectDictionary = new Dictionary<int, System.Drawing.Rectangle>();
         }
 
         public static void FillSpriteId(SerializableDictionary<int, DeltaItem> deltaDictionary)
         {
             foreach (var deltaItem in deltaDictionary)
                 deltaItem.Value.SpriteId = deltaItem.Key;
+        }
+
+        protected override Bitmap GetBitmapFromZip(ZipStorer zipStore, int zipFileEntryIndex)
+        {
+            var bmp = base.GetBitmapFromZip(zipStore, zipFileEntryIndex);
+            var bmpWidth = bmp.Width;
+            var bmpHeight = bmp.Height;
+            System.Drawing.Rectangle drawingRect;
+            if (_cachedRectDictionary.ContainsKey(zipFileEntryIndex))
+            {
+                drawingRect = _cachedRectDictionary[zipFileEntryIndex];
+            }
+            else
+            {
+                drawingRect = CalculateTrimRegion(bmp);
+                _cachedRectDictionary.Add(zipFileEntryIndex, drawingRect);
+            }
+            var area = drawingRect.Width*drawingRect.Height;
+            if (area < (bmpWidth*bmpHeight))
+            {
+                var trimmedBmp = area == 0 ? null : bmp.Clone(drawingRect, bmp.PixelFormat);
+                bmp.Dispose();
+                return trimmedBmp;
+            }
+            return bmp;
         }
 
         protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
@@ -705,78 +730,53 @@ namespace Hiale.GTA2NET.Core.Helper
                     return;
                 }
 
-                var useTrimmedImage = false;
-
-                var bmp = GetBitmapFromZip(ZipStore, ZipEntries[entry.ZipEntryIndex]);
-                var drawingRect = CalculateTrimRegion(bmp);
-                if ((drawingRect.Width*drawingRect.Height) < (entry.Width*entry.Height))
-                    useTrimmedImage = true;
-
                 CompactRectangle rect;
                 if (entry.SameImageIndex == 0)
                 {
-                    if (useTrimmedImage)
+                    if (entry.Width*entry.Height > 0)
                     {
-                        entry.Width = drawingRect.Width + 2*Padding;
-                        entry.Height = drawingRect.Height + 2*Padding;
-                    }
-
-                    //bmp.Dispose();
-                    var node = root.Insert(entry.Width, entry.Height); //ToDo: deltas are inserted at the wrong position sometimes.
-                    if (node == null)
-                    {
-                        bmp.Dispose();
-                        continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
-                    }
-                    entry.X = node.Rectangle.X;
-                    entry.Y = node.Rectangle.Y;
-
-                    if (useTrimmedImage)
-                    {
-                        if (drawingRect.Width*drawingRect.Height > 0)
-                        {
-                            var trimmedImage = TrimBitmap(bmp);
-                            rect = Place(entry, trimmedImage);
-                            trimmedImage.Dispose();
-                            //ToDo: Change Location relative to the top left position
-                        }
-                        else
-                        {
-                            rect = new CompactRectangle();
-                        }
+                        var node = root.Insert(entry.Width, entry.Height);
+                        if (node == null)
+                            continue; //ToDo: the picture could not be inserted because there were not enough space. Increase the output image?
+                        entry.X = node.Rectangle.X;
+                        entry.Y = node.Rectangle.Y;
+                        rect = Place(entry);
                     }
                     else
                     {
-                        rect = Place(entry);
+                        rect = new CompactRectangle();
                     }
-                    bmp.Dispose();
                 }
                 else
                 {
-                    bmp.Dispose();
                     var sameEntry = entries[entry.SameImageIndex];
-                    int sameSpriteId;
-                    int sameDeltaId;
-                    ParseFileName(sameEntry.FileName, out sameSpriteId, out sameDeltaId);
-                    rect = DeltaDictionary[sameSpriteId].SubItems[sameDeltaId].Rectangle;
+                    var sameSpriteDeltaId = _deltaIndexDictionary[sameEntry.FileName];
+                    var sameSpriteId = sameSpriteDeltaId[0];
+                    var sameDeltaIndex = sameSpriteDeltaId[1];
+                    rect = DeltaDictionary[sameSpriteId].SubItems[sameDeltaIndex].Rectangle;
                 }
 
-                int spriteId;
-                int deltaId;
-                ParseFileName(entry.FileName, out spriteId, out deltaId);
-                DeltaDictionary[spriteId].SubItems[deltaId].Rectangle = rect;
+                var spriteDeltaId = _deltaIndexDictionary[entry.FileName];
+                var spriteId = spriteDeltaId[0];
+                var deltaIndex = spriteDeltaId[1];
+                var subDeltaItem = DeltaDictionary[spriteId].SubItems[deltaIndex];
+                var cachedRect = _cachedRectDictionary[entry.ZipEntryIndex];
+                subDeltaItem.RelativePosition = new Point(cachedRect.X + Padding, cachedRect.Y + Padding);
+                subDeltaItem.Rectangle = rect;
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
         }
 
-        private static void ParseFileName(string fileName, out int spriteId, out int deltaId)
+        protected override string ParsePath(string path)
         {
+            var fileName = base.ParsePath(path);
             var parts = fileName.Split('_');
-            spriteId = int.Parse(parts[0]);
-            deltaId = int.Parse(parts[1]);
+            var spriteId = int.Parse(parts[0]);
+            var deltaId = int.Parse(parts[1]);
+            _deltaIndexDictionary.Add(fileName, new[] {spriteId, deltaId});
+            return fileName;
         }
-
     }
 }
 

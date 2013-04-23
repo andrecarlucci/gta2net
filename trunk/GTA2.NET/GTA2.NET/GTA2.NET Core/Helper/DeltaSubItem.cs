@@ -31,17 +31,20 @@ namespace Hiale.GTA2NET.Core.Helper
     [Serializable]
     public class DeltaSubItem
     {
+        public int Index { get; set; }
+
         public CompactRectangle Rectangle { get; set; }
 
-        public Point Location { get; set; }
+        public Point RelativePosition { get; set; }
 
         public DeltaSubItem()
         {
             //XML Serializer
         }
 
-        public DeltaSubItem(int width, int height)
+        public DeltaSubItem(int index, int width, int height)
         {
+            Index = index;
             Rectangle = new CompactRectangle(0, 0, width, height);
         }
 

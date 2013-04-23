@@ -89,13 +89,17 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.XmlFormat))) //Texture Atlas Tiles
                 return false;
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.SpritesSuffix + Globals.XmlFormat))) //Texture Atlas Sprites
+            if (!File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.XmlFormat)) //Texture Atlas Sprites
+                return false;
+            if (!File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.TextureImageFormat)) //Texture Sprites
                 return false;
             if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.TextureImageFormat))) //Texture Tiles
                 return false;
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.SpritesSuffix + Globals.TextureImageFormat))) //Texture Sprites
+            if (!File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.PaletteSuffix + Globals.TextureImageFormat)) //Palettes
                 return false;
-            if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.PaletteSuffix + Globals.TextureImageFormat))) //Palettes
+            if (!File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.XmlFormat)) //Texture Atlas Deltas
+                return false;
+            if (!File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.TextureImageFormat)) //Delta Texture
                 return false;
             if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MapsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.MapFileExtension))) //Main Maps
                 return false;
@@ -103,7 +107,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 return false;
             if (Globals.MiscFiles.Any(miscFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + miscFile))) //Special Files
                 return false;
-            if (Globals.StyleMapFiles.Any(carStyleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + carStyleFile + Globals.CarStyleSuffix + Globals.XmlFormat))) //Car Data
+            if (!File.Exists(path + Path.DirectorySeparatorChar + Globals.MiscSubDir + Path.DirectorySeparatorChar + Globals.CarStyleSuffix + Globals.XmlFormat)) //Car Data
                 return false;
             return true;
         }
@@ -137,8 +141,9 @@ namespace Hiale.GTA2NET.Core.Helper
             CreateSubDirectories(destinationPath);
 
             //convert style files
-            foreach (var styleFile in Globals.StyleMapFiles)
+            for (int i = 0; i < Globals.StyleMapFiles.Length; i++)
             {
+                var styleFile = Globals.StyleMapFiles[i];
                 if (asyncContext.IsCancelling)
                 {
                     cancelled = true;
@@ -151,7 +156,7 @@ namespace Hiale.GTA2NET.Core.Helper
                 if (!File.Exists(targetFile) || !Extensions.FilesAreEqual(sourceFile, targetFile))
                     File.Copy(sourceFile, targetFile, true);
                 style.ConvertStyleFileCompleted += StyleOnConvertStyleFileCompleted;
-                style.ReadFromFileAsync(targetFile);
+                style.ReadFromFileAsync(targetFile, i == 0);
                 _runningStyles.Add(style);
             }
 
