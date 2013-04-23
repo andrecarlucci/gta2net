@@ -24,9 +24,9 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using Microsoft.Xna.Framework;
-using Hiale.GTA2NET.Core.Helper;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Helper;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Map
@@ -67,8 +67,6 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
         #endregion
-
-        public static float PartialBlockScalar = 0.375f;
 
         protected Vector3 GlobalScalar = new Vector3(1, 1, 0.5f);
 
@@ -202,19 +200,7 @@ namespace Hiale.GTA2NET.Core.Map
                 return false;
             }
         }
-
-        public bool IsLidOnly
-        {
-            get
-            {
-                if (IsEmpty)
-                    return false;
-                if (Lid != null && Lid && (Left == null || !Left) && (Right == null || !Right) && (Top == null || !Top) && (Bottom == null || !Bottom))
-                    return true;
-                return false;
-            }
-        }               
-
+        
         //the player can walk on these
         public bool IsMovableSlope
         {
@@ -283,31 +269,7 @@ namespace Hiale.GTA2NET.Core.Map
                 return SlopeDirection.None;
             }
         }
-
-        public bool IsDiagonalSlope
-        {
-            get
-            {
-                byte slope = (byte)SlopeType;
-                return slope >= 45 && slope <= 48;
-            }
-        }
-
-        public byte SlopeSubTyp
-        {
-            get
-            {
-                byte slope = (byte)SlopeType;
-                if (slope > 0 && slope < 9)
-                    return 26;
-                if (slope > 8 && slope < 41)
-                    return 7;
-                if (slope > 40 && slope < 45)
-                    return 45;
-                return 0;
-            }
-        }        
-
+        
         public override string ToString()
         {
             if (IsEmpty)
@@ -316,9 +278,14 @@ namespace Hiale.GTA2NET.Core.Map
         }
 
         #region Coordinates
-
-        protected void PrepareCoordinates(Vector3 position, out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
+        /// <summary>
+        /// Based in the position of the BlockInfo calculate the positons of the verticies of that cube.
+        /// </summary>
+        /// <param name="frontCoords">The coordinates of the top face of the cube</param>
+        /// <param name="backCoords">The coordinates of the botton face of the cube</param>
+        protected void PrepareCoordinates(out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
         {
+            var position = Position;
             position.Y *= -1;
 
             //Coordinates of the cube
@@ -395,7 +362,111 @@ namespace Hiale.GTA2NET.Core.Map
             return texturePosition;
         }
 
-        #region slopes
+        #region Cube
+        /// <summary>
+        /// Creates the Lid vertices Coordinates.
+        /// </summary>
+        /// <param name="lidCoords">The lid coordinates.</param>
+        protected void CreateFrontVertices(FaceCoordinates lidCoords)
+        {
+            if (!Lid)
+                return;
+
+            var texPos = GetTexturePositions(tileAtlas[Lid.TileNumber], Lid.Rotation, Lid.Flip);
+            this.Coors.Add(new VertexPositionNormalTexture(lidCoords.TopRight, Vector3.Zero, texPos[2]));
+            this.Coors.Add(new VertexPositionNormalTexture(lidCoords.BottomRight, Vector3.Zero, texPos[1]));
+            this.Coors.Add(new VertexPositionNormalTexture(lidCoords.TopLeft, Vector3.Zero, texPos[3]));
+            this.Coors.Add(new VertexPositionNormalTexture(lidCoords.BottomLeft, Vector3.Zero, texPos[0]));
+
+            var startIndex = Coors.Count - 4;
+            this.IndexBufferCollection.Add(startIndex);
+            this.IndexBufferCollection.Add(startIndex + 1);
+            this.IndexBufferCollection.Add(startIndex + 2);
+            this.IndexBufferCollection.Add(startIndex + 1);
+            this.IndexBufferCollection.Add(startIndex + 3);
+            this.IndexBufferCollection.Add(startIndex + 2);
+        }
+
+        /// <summary>
+        /// Creates the Top vertices Coordinates.
+        /// </summary>
+        /// <param name="frontCoords"></param>
+        /// <param name="backCoords"></param>
+        protected void CreateTopVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords)
+        {
+            if (!Top)
+                return;
+
+            var texPos = GetTexturePositions(tileAtlas[this.Top.TileNumber], this.Top.Rotation, this.Top.Flip);
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[0]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[1]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[3]));
+
+            var startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 3);
+            IndexBufferCollection.Add(startIndex + 1);
+        }
+
+        protected void CreateBottomVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords)
+        {
+            if (!Bottom)
+                return;
+
+            var texPos = GetTexturePositions(tileAtlas[this.Bottom.TileNumber], this.Bottom.Rotation, this.Bottom.Flip);
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
+
+            var startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex + 3);
+        }
+
+        protected void CreateLeftVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Byte rotation)
+        {
+            if (!Left)
+                return;
+
+            var newFront = new FaceCoordinates();
+            var newBack = new FaceCoordinates();
+            if (rotation == 0)
+            {
+                newFront = CorrectLeftRightVertices(frontCoords, true);
+                newBack = CorrectLeftRightVertices(backCoords, true);
+            }
+            else if (rotation == 2)
+            {
+                newFront = CorrectLeftRightVertices(frontCoords, false);
+                newBack = CorrectLeftRightVertices(backCoords, false);
+            }
+            var texPos = GetTexturePositions(tileAtlas[this.Left.TileNumber], this.Left.Rotation, this.Left.Flip);
+            Coors.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
+            Coors.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
+
+            //Left also has a strange index buffer order...
+            var startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex + 3);
+            IndexBufferCollection.Add(startIndex);
+        }
+        #endregion
+
+        #region Low Slopes
         /// <summary>
         /// Creates a Low Slope.
         /// </summary>
@@ -406,7 +477,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(out frontCoordinates, out backCoordinates);
 
             float slopeScalar = 1f;
 
@@ -598,7 +669,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(out frontCoordinates, out backCoordinates);
 
             float middleSlopeScalar = 1f;
             float frontSlopeScalar = 0f;
@@ -777,7 +848,7 @@ namespace Hiale.GTA2NET.Core.Map
                     newBack = CorrectLeftRightVertices(backCoords, true);
                 }
                 //ToDo: Add more rotation codes...
-                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Right.TileNumber], this.Lid.Rotation, this.Lid.Flip);
+                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Right.TileNumber], this.Right.Rotation, this.Right.Flip);
                 Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
                 Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
                 Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
@@ -793,6 +864,7 @@ namespace Hiale.GTA2NET.Core.Map
                 IndexBufferCollection.Add(startIndex + 2);
             }
         }
+
         protected FaceCoordinates CorrectLeftRightVertices(FaceCoordinates coordinates, Boolean left)
         {
             FaceCoordinates newCoords = new FaceCoordinates();
@@ -822,13 +894,13 @@ namespace Hiale.GTA2NET.Core.Map
         }
         #endregion
 
-        #region DiagonalSlopes
+        #region Diagonal Slopes
 
         protected void SetUpSlopeDiagonal(byte rotation)
         {
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(out frontCoordinates, out backCoordinates);
 
             if (rotation > 0)
             {
@@ -902,143 +974,27 @@ namespace Hiale.GTA2NET.Core.Map
                 IndexBufferCollection.Add(startIndex);
             }
 
-            PrepareCoordinates(this.Position, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(out frontCoordinates, out backCoordinates);
             switch (rotation)
             {
                 case 0: //Facing up right
-                    CreateBottomVertices(ref frontCoordinates, ref backCoordinates, this);
-                    CreateLeftVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateBottomVertices(frontCoordinates, backCoordinates);
+                    CreateLeftVertices(frontCoordinates, backCoordinates, 0);
                     break;
                 case 1: //Facing up left
-                    CreateBottomVertices(ref frontCoordinates, ref backCoordinates, this);
-                    CreateRightVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateBottomVertices(frontCoordinates, backCoordinates);
+                    CreateRightVertices(frontCoordinates, backCoordinates, 0);
                     break;
                 case 2: //Facing down left --> BUG
-                    CreateTopVertices(ref frontCoordinates, ref backCoordinates, this);
-                    CreateRightVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateTopVertices(frontCoordinates, backCoordinates);
+                    CreateRightVertices(frontCoordinates, backCoordinates, 0);
                     break;
                 case 3: //Facing down right --> BUG
-                    CreateTopVertices(ref frontCoordinates, ref backCoordinates, this);
-                    CreateLeftVertices(ref frontCoordinates, ref backCoordinates, this);
+                    CreateTopVertices(frontCoordinates, backCoordinates);
+                    CreateLeftVertices(frontCoordinates, backCoordinates, 0);
                     break;
             }
         }
-
-        private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
-        {
-            if (!block.Bottom)
-                return;
-            var texPos = GetTexturePositions(tileAtlas[block.Bottom.TileNumber], block.Bottom.Rotation, block.Bottom.Flip);
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
-
-            var startIndex = Coors.Count - 4;
-            IndexBufferCollection.Add(startIndex);
-            IndexBufferCollection.Add(startIndex + 1);
-            IndexBufferCollection.Add(startIndex + 2);
-            IndexBufferCollection.Add(startIndex);
-            IndexBufferCollection.Add(startIndex + 2);
-            IndexBufferCollection.Add(startIndex + 3);
-        }
-
-        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
-        {
-            CreateLeftVertices(ref frontCoords, ref backCoords, block, block.Left, 0);
-        }
-
-        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block, BlockFace leftFace, byte rotation)
-        {
-            if (!leftFace)
-                return;
-            var newFront = new FaceCoordinates();
-            var newBack = new FaceCoordinates();
-            switch (rotation)
-            {
-                case 0:
-                    newFront = CorrectLeftRightVertices(frontCoords, true);
-                    newBack = CorrectLeftRightVertices(backCoords, true);
-                    break;
-                case 2:
-                    newFront = CorrectLeftRightVertices(frontCoords, false);
-                    newBack = CorrectLeftRightVertices(backCoords, false);
-                    break;
-            }
-            var texPos = GetTexturePositions(tileAtlas[leftFace.TileNumber], leftFace.Rotation, leftFace.Flip);
-            Coors.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
-            Coors.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
-
-            //Left also has a strange index buffer order...
-            var startIndex = Coors.Count - 4;
-            IndexBufferCollection.Add(startIndex + 2);
-            IndexBufferCollection.Add(startIndex + 1);
-            IndexBufferCollection.Add(startIndex);
-            IndexBufferCollection.Add(startIndex + 1);
-            IndexBufferCollection.Add(startIndex + 3);
-            IndexBufferCollection.Add(startIndex);
-        }
-
-        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
-        {
-            CreateRightVertices(ref frontCoords, ref backCoords, ref block, block.Right, 0);
-        }
-
-        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace rightFace, byte rotation)
-        {
-            if (!rightFace)
-                return;
-            var newFront = new FaceCoordinates();
-            var newBack = new FaceCoordinates();
-            switch (rotation)
-            {
-                case 0:
-                    newFront = CorrectLeftRightVertices(frontCoords, false);
-                    newBack = CorrectLeftRightVertices(backCoords, false);
-                    break;
-                case 2:
-                    newFront = CorrectLeftRightVertices(frontCoords, true);
-                    newBack = CorrectLeftRightVertices(backCoords, true);
-                    break;
-            }
-            //ToDo: Add more rotation codes...
-            var texPos = GetTexturePositions(tileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
-            Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
-
-            //...
-            var startIndex = Coors.Count - 4;
-            IndexBufferCollection.Add(startIndex + 2);
-            IndexBufferCollection.Add(startIndex + 1);
-            IndexBufferCollection.Add(startIndex);
-            IndexBufferCollection.Add(startIndex);
-            IndexBufferCollection.Add(startIndex + 3);
-            IndexBufferCollection.Add(startIndex + 2);
-        }
-
-        private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, BlockInfo block)
-        {
-            if (!block.Top)
-                return;
-            var texPos = GetTexturePositions(tileAtlas[block.Top.TileNumber], block.Top.Rotation, block.Top.Flip);
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[0]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[3]));
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[1]));
-
-            var startIndex = Coors.Count - 4;
-            IndexBufferCollection.Add(startIndex);
-            IndexBufferCollection.Add(startIndex + 1);
-            IndexBufferCollection.Add(startIndex + 2);
-            IndexBufferCollection.Add(startIndex);
-            IndexBufferCollection.Add(startIndex + 3);
-            IndexBufferCollection.Add(startIndex + 1);
-        }
-
         #endregion
 
         #region Not Implemented
@@ -1098,6 +1054,49 @@ namespace Hiale.GTA2NET.Core.Map
         //{
         //    return ((SlopeType & 1) == 1) && ((SlopeType & 2) == 2); //Bit 0 and Bit 1 are both 1
         //}
+
+        #endregion
+
+        #region Not Used
+        public static float PartialBlockScalar = 0.375f;
+
+        //Created but never used.
+        public byte SlopeSubTyp
+        {
+            get
+            {
+                byte slope = (byte)SlopeType;
+                if (slope > 0 && slope < 9)
+                    return 26;
+                if (slope > 8 && slope < 41)
+                    return 7;
+                if (slope > 40 && slope < 45)
+                    return 45;
+                return 0;
+            }
+        }
+
+        public bool IsDiagonalSlope
+        {
+            get
+            {
+                byte slope = (byte)SlopeType;
+                return slope >= 45 && slope <= 48;
+            }
+        }
+
+        public bool IsLidOnly
+        {
+            get
+            {
+                if (IsEmpty)
+                    return false;
+                if (Lid != null && Lid && (Left == null || !Left) && (Right == null || !Right) && (Top == null || !Top) && (Bottom == null || !Bottom))
+                    return true;
+                return false;
+            }
+        }
+
 
         #endregion
     }
