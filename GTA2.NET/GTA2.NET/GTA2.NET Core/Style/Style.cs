@@ -68,7 +68,7 @@ namespace Hiale.GTA2NET.Core.Style
         public event EventHandler<ProgressMessageChangedEventArgs> ConvertStyleFileProgressChanged;
         public event AsyncCompletedEventHandler ConvertStyleFileCompleted;
 
-        private delegate void ConvertStyleFileDelegate(string styleFile, CancellableContext context, out bool cancelled);
+        private delegate void ConvertStyleFileDelegate(string styleFile, bool saveSprites, CancellableContext context, out bool cancelled);
         private readonly object _sync = new object();
         public bool IsBusy { get; private set; }
         private CancellableContext _convertStyleFileContext;
@@ -77,7 +77,7 @@ namespace Hiale.GTA2NET.Core.Style
         private readonly Dictionary<TextureAtlas, MemoryStream> _memoryStreams = new Dictionary<TextureAtlas, MemoryStream>();
         private static readonly AutoResetEventValueExchange<bool> WaitHandle = new AutoResetEventValueExchange<bool>(false);
 
-        public IAsyncResult ReadFromFileAsync(string stylePath)
+        public IAsyncResult ReadFromFileAsync(string stylePath, bool saveSprites)
         {
             var worker = new ConvertStyleFileDelegate(ReadFromFile);
             var completedCallback = new AsyncCallback(BuildTextureAtlasCompletedCallback);
@@ -91,7 +91,7 @@ namespace Hiale.GTA2NET.Core.Style
                 var context = new CancellableContext(async);
                 bool cancelled;
 
-                var result = worker.BeginInvoke(stylePath, context, out cancelled, completedCallback, async);
+                var result = worker.BeginInvoke(stylePath, saveSprites, context, out cancelled, completedCallback, async);
 
                 IsBusy = true;
                 _convertStyleFileContext = context;
@@ -99,14 +99,14 @@ namespace Hiale.GTA2NET.Core.Style
             }
         }
 
-        public void ReadFromFile(string stylePath)
+        public void ReadFromFile(string stylePath, bool saveSprites)
         {
             var context = new CancellableContext(null);
             bool cancelled;
-            ReadFromFile(stylePath, context, out cancelled);
+            ReadFromFile(stylePath, saveSprites, context, out cancelled);
         }
 
-        private void ReadFromFile(string stylePath, CancellableContext context, out bool cancelled)
+        private void ReadFromFile(string stylePath, bool saveSprites, CancellableContext context, out bool cancelled)
         {
             cancelled = false;
 
@@ -213,14 +213,17 @@ namespace Hiale.GTA2NET.Core.Style
                     reader.Close();
             }
             
-            SaveData(styleData, context, out cancelled);
+            SaveData(styleData, saveSprites, context, out cancelled);
         }
 
-        private void SaveData(StyleData styleData, CancellableContext context, out bool cancelled)
+        private void SaveData(StyleData styleData, bool saveSprites, CancellableContext context, out bool cancelled)
         {
             var styleFile = Path.GetFileNameWithoutExtension(StylePath);
-            CarInfo.Serialize(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + styleFile + Globals.CarStyleSuffix + Globals.XmlFormat);
-            Palette.SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.PaletteSuffix + Globals.TextureImageFormat);
+            if (saveSprites)
+            {
+                CarInfo.Serialize(styleData.CarInfo, Globals.MiscSubDir + Path.DirectorySeparatorChar + Globals.CarStyleSuffix + Globals.XmlFormat);
+                Palette.SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.PaletteSuffix + Globals.TextureImageFormat);
+            }
 
             var memoryStreamTiles = new MemoryStream();
             using (var zip = ZipStorer.Create(memoryStreamTiles, string.Empty))
@@ -239,7 +242,7 @@ namespace Hiale.GTA2NET.Core.Style
 
             }
             memoryStreamTiles.Position = 0;
-            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_tiles.zip", FileMode.Create, FileAccess.Write))
+            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
             {
                 var bytes = new byte[memoryStreamTiles.Length];
                 memoryStreamTiles.Read(bytes, 0, (int)memoryStreamTiles.Length);
@@ -250,61 +253,7 @@ namespace Hiale.GTA2NET.Core.Style
                 cancelled = true;
                 return;
             }
-            var memoryStreamSprites = new MemoryStream();
-            using (var zip = ZipStorer.Create(memoryStreamSprites, string.Empty))
-            {
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-
-                }
-                SaveSprites(styleData, zip, context);
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-                }
-            }
-            memoryStreamSprites.Position = 0;
-            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_sprites.zip", FileMode.Create, FileAccess.Write))
-            {
-                var bytes = new byte[memoryStreamSprites.Length];
-                memoryStreamSprites.Read(bytes, 0, (int)memoryStreamSprites.Length);
-                stream.Write(bytes, 0, bytes.Length);
-            }
-            if (context.IsCancelling)
-            {
-                cancelled = true;
-                return;
-            }
-            var memoryStreamDeltas = new MemoryStream();
-            using (var zip = ZipStorer.Create(memoryStreamDeltas, string.Empty))
-            {
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-                }
-                SaveDeltas(styleData, zip, context);
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-                }
-            }
-            memoryStreamDeltas.Position = 0;
-            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + "_deltas.zip", FileMode.Create, FileAccess.Write))
-            {
-                var bytes = new byte[memoryStreamDeltas.Length];
-                memoryStreamDeltas.Read(bytes, 0, (int)memoryStreamDeltas.Length);
-                stream.Write(bytes, 0, bytes.Length);
-            }
-
             memoryStreamTiles.Position = 0;
-            memoryStreamSprites.Position = 0;
-            memoryStreamDeltas.Position = 0;
-
             TextureAtlas atlas = CreateTextureAtlas<TextureAtlasTiles>(ZipStorer.Open(memoryStreamTiles, FileAccess.Read), styleFile + Globals.TilesSuffix);
             _memoryStreams.Add(atlas, memoryStreamTiles);
             _runningAtlas.Add(atlas);
@@ -314,19 +263,73 @@ namespace Hiale.GTA2NET.Core.Style
                 return;
             }
 
-            atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), styleFile + Globals.SpritesSuffix, styleData.Sprites);
-            _memoryStreams.Add(atlas, memoryStreamSprites);
-            _runningAtlas.Add(atlas);
-            if (context.IsCancelling)
+            if (saveSprites)
             {
-                cancelled = true;
-                return;
-            }
+                var memoryStreamSprites = new MemoryStream();
+                using (var zip = ZipStorer.Create(memoryStreamSprites, string.Empty))
+                {
+                    if (context.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
 
-            atlas = CreateTextureAtlas<TextureAtlasDeltas>(ZipStorer.Open(memoryStreamDeltas, FileAccess.Read), styleFile + "_deltas", styleData.Deltas);
-            _memoryStreams.Add(atlas, memoryStreamDeltas);
-            _runningAtlas.Add(atlas);
-            //memoryStreamDeltas.Close();
+                    }
+                    SaveSprites(styleData, zip, context);
+                    if (context.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                }
+                memoryStreamSprites.Position = 0;
+                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+                {
+                    var bytes = new byte[memoryStreamSprites.Length];
+                    memoryStreamSprites.Read(bytes, 0, (int) memoryStreamSprites.Length);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+                memoryStreamSprites.Position = 0;
+                atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), Globals.SpritesSuffix, styleData.Sprites);
+                _memoryStreams.Add(atlas, memoryStreamSprites);
+                _runningAtlas.Add(atlas);
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+
+                var memoryStreamDeltas = new MemoryStream();
+                using (var zip = ZipStorer.Create(memoryStreamDeltas, string.Empty))
+                {
+                    if (context.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                    SaveDeltas(styleData, zip, context);
+                    if (context.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                }
+                memoryStreamDeltas.Position = 0;
+                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+                {
+                    var bytes = new byte[memoryStreamDeltas.Length];
+                    memoryStreamDeltas.Read(bytes, 0, (int) memoryStreamDeltas.Length);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
+                memoryStreamDeltas.Position = 0;
+                atlas = CreateTextureAtlas<TextureAtlasDeltas>(ZipStorer.Open(memoryStreamDeltas, FileAccess.Read), Globals.DeltasSuffix, styleData.Deltas);
+                _memoryStreams.Add(atlas, memoryStreamDeltas);
+                _runningAtlas.Add(atlas);
+            }
 
             WaitHandle.WaitOne();
             cancelled = WaitHandle.Value;
@@ -847,7 +850,7 @@ namespace Hiale.GTA2NET.Core.Style
                         return;
                     SaveDelta(styleData, styleData.DeltaIndexes[i].Sprite, basePalette, j, zip, styleData.DeltaIndexes[i].Sprite + "_" + j);
                     var spriteEntry = styleData.SpriteEntries[i];
-                    deltaItem.SubItems.Add(new DeltaSubItem(spriteEntry.Width, spriteEntry.Height));
+                    deltaItem.SubItems.Add(new DeltaSubItem((int) j, spriteEntry.Width, spriteEntry.Height));
                 }
             }
         }
