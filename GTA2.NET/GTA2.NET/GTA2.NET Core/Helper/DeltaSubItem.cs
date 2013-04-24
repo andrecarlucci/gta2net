@@ -24,6 +24,7 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
+using System.Globalization;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Helper
@@ -37,6 +38,8 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public Point RelativePosition { get; set; }
 
+        //DeltaType?
+
         public DeltaSubItem()
         {
             //XML Serializer
@@ -46,6 +49,11 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             Index = index;
             Rectangle = new CompactRectangle(0, 0, width, height);
+        }
+
+        public override string ToString()
+        {
+            return Index.ToString(CultureInfo.InvariantCulture);
         }
 
     }

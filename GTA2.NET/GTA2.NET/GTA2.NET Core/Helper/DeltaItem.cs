@@ -35,8 +35,6 @@ namespace Hiale.GTA2NET.Core.Helper
         [XmlIgnore] //this is the key of the dictionary
         public int SpriteId;
 
-        //public CompactRectangle Rectangle { get; set; }
-
         public DeltaItem()
         {
             //XML Serializer

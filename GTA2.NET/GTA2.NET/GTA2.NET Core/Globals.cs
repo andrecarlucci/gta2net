@@ -28,6 +28,8 @@ namespace Hiale.GTA2NET.Core
 {
     public static class Globals
     {
+        public const bool SaveZipFiles = true;
+
         public const string GraphicsSubDir = "gfx";
         public const string MapsSubDir = "maps";
         public const string MiscSubDir = "misc";

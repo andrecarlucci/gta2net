@@ -26,13 +26,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
@@ -87,29 +85,23 @@ namespace Hiale.GTA2NET.WinUI
         }
 
 
-        private Dictionary<int, SpriteItem> spriteAtlas;
+        private SerializableDictionary<int, SpriteItem> spriteAtlas;
         private Image spriteImage;
+        private Image deltaImage;
 
         public SpriteForm()
         {
             InitializeComponent();
+
+            //Thread
+            var currentDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            LoadSprites(Extensions.CheckDirectorySeparator(currentDir) + Globals.GraphicsSubDir + "\\" + Globals.SpritesSuffix + Globals.XmlFormat);
+            LoadDeltas(Extensions.CheckDirectorySeparator(currentDir) + Globals.GraphicsSubDir + "\\" + Globals.DeltasSuffix + Globals.XmlFormat);
         }
 
         private void MnuFileCloseClick(object sender, EventArgs e)
         {
             Close();
-        }
-
-        private void MnuFileOpenClick(object sender, EventArgs e)
-        {
-            var dlg = new OpenFileDialog {Filter = "Sprite Atlas (*_sprites.xml)|*_sprites.xml|All files (*.*)|*.*"};
-            var assembly = Assembly.GetExecutingAssembly();
-            var currentDir = Path.GetDirectoryName(assembly.Location);
-            dlg.InitialDirectory = Extensions.CheckDirectorySeparator(currentDir) + Globals.GraphicsSubDir;
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                LoadSprites(dlg.FileName);
-            }
         }
 
         private void LoadSprites(string fileName)
@@ -125,32 +117,76 @@ namespace Hiale.GTA2NET.WinUI
             {
                 listBoxSprites.Items.Add(sprite);
             }
-
         }
 
-        private void ListBoxSpritesSelectedIndexChanged(object sender, EventArgs e)
+        private void LoadDeltas(string fileName)
+        {
+            var dict = TextureAtlas.Deserialize<TextureAtlasDeltas>(fileName);
+            deltaImage = Image.FromFile(Extensions.CheckDirectorySeparator(Path.GetDirectoryName(fileName)) + dict.ImagePath);
+            TextureAtlasSprites.MergeDeltas(spriteAtlas, dict.DeltaDictionary);
+        }
+
+        private void PaintSprite(SpriteItem item, List<int> activeDeltas)
         {
             Image previousImage = null;
             if (pictureBoxCurrentSprite.Image != null)
                 previousImage = pictureBoxCurrentSprite.Image;
-            var currentItem = spriteAtlas[listBoxSprites.SelectedIndex];
-            //using (var bmp = new Bitmap(currentItem.Rectangle.Width, currentItem.Rectangle.Width))
-            var bmp = new Bitmap(currentItem.Rectangle.Width, currentItem.Rectangle.Height);
-            //{
-                using (var g = Graphics.FromImage(bmp))
+            var bmp = new Bitmap(item.Rectangle.Width, item.Rectangle.Height);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.DrawImage(spriteImage, new Rectangle(0, 0, item.Rectangle.Width, item.Rectangle.Height), item.Rectangle.X, item.Rectangle.Y, item.Rectangle.Width, item.Rectangle.Height, GraphicsUnit.Pixel);
+                foreach (var activeDelta in activeDeltas)
                 {
-                    g.DrawImage(spriteImage, new Rectangle(0, 0, currentItem.Rectangle.Width, currentItem.Rectangle.Height), currentItem.Rectangle.X, currentItem.Rectangle.Y, currentItem.Rectangle.Width, currentItem.Rectangle.Height, GraphicsUnit.Pixel);
-                    
+                    var delta = item.DeltaItems[activeDelta];
+                    g.DrawImage(deltaImage, new Rectangle(delta.RelativePosition.X, delta.RelativePosition.Y, delta.Rectangle.Width, delta.Rectangle.Height), delta.Rectangle.X, delta.Rectangle.Y, delta.Rectangle.Width, delta.Rectangle.Height, GraphicsUnit.Pixel);
                 }
-                pictureBoxCurrentSprite.Image = bmp;
-            //}
+            }
+            pictureBoxCurrentSprite.Image = bmp;
             if (previousImage != null)
                 previousImage.Dispose();
-
-            //pictureBoxCurrentSprite.Image = spriteAtlas[listBoxSprites.SelectedIndex].Rectangle;
-
         }
 
+        private void ListBoxSpritesSelectedIndexChanged(object sender, EventArgs e)
+        {
+            var currentItem = spriteAtlas[listBoxSprites.SelectedIndex];
+            PaintSprite(currentItem, new List<int>());
 
+            checkedListBoxDeltas.Items.Clear();
+            if (currentItem.DeltaItems != null)
+            {
+                foreach (var delta in currentItem.DeltaItems)
+                {
+                    checkedListBoxDeltas.Items.Add(delta);
+                }
+            }
+        }
+
+        private void CheckedListBoxDeltasSelectedIndexChanged(object sender, EventArgs e)
+        {
+            var activeDeltas = new List<int>();
+            for (int i = 0; i < checkedListBoxDeltas.Items.Count; i++)
+            {
+                if (checkedListBoxDeltas.GetItemChecked(i))
+                {
+                    activeDeltas.Add(i);
+                }
+            }
+            var currentItem = spriteAtlas[listBoxSprites.SelectedIndex];
+            PaintSprite(currentItem, activeDeltas);
+        }
+
+        private void MuFileSaveSpriteClick(object sender, EventArgs e)
+        {
+            using (var dlg = new SaveFileDialog())
+            {
+                dlg.Filter = "PNG Images (*.png)|*.png|All Files (*.*)|*.*";
+                dlg.FileName = listBoxSprites.SelectedIndex.ToString(CultureInfo.InvariantCulture);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    pictureBoxCurrentSprite.Image.Save(dlg.FileName, ImageFormat.Png);
+                }
+            }
+
+        }
     }
 }

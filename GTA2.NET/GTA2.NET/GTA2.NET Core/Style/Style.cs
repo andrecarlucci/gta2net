@@ -74,6 +74,7 @@ namespace Hiale.GTA2NET.Core.Style
         private CancellableContext _convertStyleFileContext;
         private readonly object _syncTextureAtlasFinished = new object();
         private readonly List<TextureAtlas> _runningAtlas = new List<TextureAtlas>();
+        private int _threadCount;
         private readonly Dictionary<TextureAtlas, MemoryStream> _memoryStreams = new Dictionary<TextureAtlas, MemoryStream>();
         private static readonly AutoResetEventValueExchange<bool> WaitHandle = new AutoResetEventValueExchange<bool>(false);
 
@@ -225,6 +226,8 @@ namespace Hiale.GTA2NET.Core.Style
                 Palette.SavePalettes(styleData.Palettes, Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.PaletteSuffix + Globals.TextureImageFormat);
             }
 
+            _threadCount = saveSprites ? 3 : 1;
+
             var memoryStreamTiles = new MemoryStream();
             using (var zip = ZipStorer.Create(memoryStreamTiles, string.Empty))
             {
@@ -242,18 +245,21 @@ namespace Hiale.GTA2NET.Core.Style
 
             }
             memoryStreamTiles.Position = 0;
-            using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+            if (Globals.SaveZipFiles)
             {
-                var bytes = new byte[memoryStreamTiles.Length];
-                memoryStreamTiles.Read(bytes, 0, (int)memoryStreamTiles.Length);
-                stream.Write(bytes, 0, bytes.Length);
+                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+                {
+                    var bytes = new byte[memoryStreamTiles.Length];
+                    memoryStreamTiles.Read(bytes, 0, (int) memoryStreamTiles.Length);
+                    stream.Write(bytes, 0, bytes.Length);
+                }
+                if (context.IsCancelling)
+                {
+                    cancelled = true;
+                    return;
+                }
+                memoryStreamTiles.Position = 0;
             }
-            if (context.IsCancelling)
-            {
-                cancelled = true;
-                return;
-            }
-            memoryStreamTiles.Position = 0;
             TextureAtlas atlas = CreateTextureAtlas<TextureAtlasTiles>(ZipStorer.Open(memoryStreamTiles, FileAccess.Read), styleFile + Globals.TilesSuffix);
             _memoryStreams.Add(atlas, memoryStreamTiles);
             _runningAtlas.Add(atlas);
@@ -282,18 +288,21 @@ namespace Hiale.GTA2NET.Core.Style
                     }
                 }
                 memoryStreamSprites.Position = 0;
-                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+                if (Globals.SaveZipFiles)
                 {
-                    var bytes = new byte[memoryStreamSprites.Length];
-                    memoryStreamSprites.Read(bytes, 0, (int) memoryStreamSprites.Length);
-                    stream.Write(bytes, 0, bytes.Length);
+                    using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+                    {
+                        var bytes = new byte[memoryStreamSprites.Length];
+                        memoryStreamSprites.Read(bytes, 0, (int) memoryStreamSprites.Length);
+                        stream.Write(bytes, 0, bytes.Length);
+                    }
+                    if (context.IsCancelling)
+                    {
+                        cancelled = true;
+                        return;
+                    }
+                    memoryStreamSprites.Position = 0;
                 }
-                if (context.IsCancelling)
-                {
-                    cancelled = true;
-                    return;
-                }
-                memoryStreamSprites.Position = 0;
                 atlas = CreateTextureAtlas<TextureAtlasSprites>(ZipStorer.Open(memoryStreamSprites, FileAccess.Read), Globals.SpritesSuffix, styleData.Sprites);
                 _memoryStreams.Add(atlas, memoryStreamSprites);
                 _runningAtlas.Add(atlas);
@@ -319,13 +328,16 @@ namespace Hiale.GTA2NET.Core.Style
                     }
                 }
                 memoryStreamDeltas.Position = 0;
-                using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+                if (Globals.SaveZipFiles)
                 {
-                    var bytes = new byte[memoryStreamDeltas.Length];
-                    memoryStreamDeltas.Read(bytes, 0, (int) memoryStreamDeltas.Length);
-                    stream.Write(bytes, 0, bytes.Length);
+                    using (var stream = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.ZipFormat, FileMode.Create, FileAccess.Write))
+                    {
+                        var bytes = new byte[memoryStreamDeltas.Length];
+                        memoryStreamDeltas.Read(bytes, 0, (int) memoryStreamDeltas.Length);
+                        stream.Write(bytes, 0, bytes.Length);
+                    }
+                    memoryStreamDeltas.Position = 0;
                 }
-                memoryStreamDeltas.Position = 0;
                 atlas = CreateTextureAtlas<TextureAtlasDeltas>(ZipStorer.Open(memoryStreamDeltas, FileAccess.Read), Globals.DeltasSuffix, styleData.Deltas);
                 _memoryStreams.Add(atlas, memoryStreamDeltas);
                 _runningAtlas.Add(atlas);
@@ -365,7 +377,8 @@ namespace Hiale.GTA2NET.Core.Style
                 if (_memoryStreams.ContainsKey(textureAtlas))
                     _memoryStreams[textureAtlas].Dispose();
                 _runningAtlas.Remove((TextureAtlas)sender);
-                if (_runningAtlas.Count > 0)
+                _threadCount--;
+                if (_threadCount > 0)
                     return;
                 WaitHandle.Value = e.Cancelled;
                 WaitHandle.Set();
@@ -759,7 +772,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "CodeObj/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.CodeObject, basePalette, remapPalette));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.CodeObject, basePalette, -1));
             }
 
             //Map obj
@@ -767,7 +780,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "MapObj/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.MapObject, basePalette, remapPalette));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.MapObject, basePalette, -1));
             }
 
             //User
@@ -775,15 +788,16 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "User/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.User, basePalette, remapPalette));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.User, basePalette, -1));
             }
 
-            ////Font
-            //for (var i = styleData.SpriteBase.Font; i < styleData.SpriteEntries.Length; i++)
-            //{
-            //    var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
-            //    SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Font/" + i);
-            //}
+            //Font //Some fonts looks wrong...
+            for (var i = styleData.SpriteBase.Font; i < styleData.SpriteEntries.Length; i++)
+            {
+                var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
+                SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Font/" + i);
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Font, basePalette, -1));
+            }
 
         }
 
