@@ -145,7 +145,7 @@ namespace Hiale.GTA2NET.Core.Helper
         private CancellableContext _buildTextureAtlasContext;
 
         /// <summary>
-        /// Image with all the tiles or sprites on it.
+        /// Image with all the tiles, sprites or deltas on it.
         /// </summary>
         [XmlIgnore]
         public Image Image { get; protected set; }
@@ -165,7 +165,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
         protected List<ZipStorer.ZipFileEntry> ZipEntries;
 
-        protected Dictionary<uint, int> CrcDictionary; //Helper list to find duplicate images.
+        protected Dictionary<uint, ImageEntry> CrcDictionary; //Helper list to find duplicate images.
 
         protected Graphics Graphics;
 
@@ -173,7 +173,7 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             //needed by xml serializer
             Padding = 1;
-            CrcDictionary = new Dictionary<uint, int>();
+            CrcDictionary = new Dictionary<uint, ImageEntry>();
         }
 
         protected TextureAtlas(string imagePath, ZipStorer zipStore)
@@ -196,27 +196,34 @@ namespace Hiale.GTA2NET.Core.Helper
                     cancelled = true;
                     return null;
                 }
-                var source = GetBitmapFromZip(ZipStore, i);
                 var entry = new ImageEntry();
                 if (!CrcDictionary.ContainsKey(ZipEntries[i].Crc32))
-                    CrcDictionary.Add(ZipEntries[i].Crc32, i);
+                {
+                    CrcDictionary.Add(ZipEntries[i].Crc32, entry);
+                    var source = GetBitmapFromZip(ZipStore, i);
+                    if (source != null)
+                    {
+                        entry.Width = source.Width + 2 * Padding; // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
+                        entry.Height = source.Height + 2 * Padding;
+                        source.Dispose();
+                    }
+                    else
+                    {
+                        entry.Width = 0; // + 2*Padding;
+                        entry.Height = 0; // +2 * Padding;
+                    }
+                }
                 else
-                    entry.SameImageIndex = CrcDictionary[ZipEntries[i].Crc32];
+                {
+                    var sameEntry = CrcDictionary[ZipEntries[i].Crc32];
+                    entry.SameImageIndex = sameEntry.Index;
+                    entry.Width = sameEntry.Width;
+                    entry.Height = sameEntry.Height;
+                }
                 entry.Index = i;
                 entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
                 entry.ZipEntryIndex = i;
                 entries.Add(entry);
-                if (source != null)
-                {
-                    entry.Width = source.Width + 2*Padding; // Include a single pixel padding around each sprite, to avoid filtering problems if the sprite is scaled or rotated.
-                    entry.Height = source.Height + 2*Padding;
-                    source.Dispose();
-                }
-                else
-                {
-                    entry.Width = 0; // + 2*Padding;
-                    entry.Height = 0; // +2 * Padding;
-                }
             }
             return entries;
         }
@@ -587,6 +594,23 @@ namespace Hiale.GTA2NET.Core.Helper
                 spriteItem.Value.SpriteId = spriteItem.Key;
         }
 
+        public void MergeDeltas(SerializableDictionary<int, DeltaItem> deltaDictionary)
+        {
+            MergeDeltas(SpriteDictionary, deltaDictionary);
+        }
+
+        public static void MergeDeltas(SerializableDictionary<int, SpriteItem> spriteDictionary, SerializableDictionary<int, DeltaItem> deltaDictionary)
+        {
+            foreach (var deltaItem in deltaDictionary)
+            {
+                SpriteItem spriteItem;
+                if (spriteDictionary.TryGetValue(deltaItem.Key, out spriteItem))
+                {
+                    spriteItem.DeltaItems = deltaItem.Value.SubItems;
+                }
+            }
+        }
+
         protected override void BuildTextureAtlas(CancellableContext context, out bool cancelled)
         {
             var entries = CreateImageEntries(context, out cancelled);
@@ -599,6 +623,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
             var outputWidth = GuessOutputWidth(entries);
             var outputHeight = GuessOutputHeight(entries, outputWidth);
+            outputWidth = 2048; //ToDo
 
             if (context.IsCancelling)
             {
@@ -669,6 +694,8 @@ namespace Hiale.GTA2NET.Core.Helper
             foreach (var deltaItem in deltaDictionary)
                 deltaItem.Value.SpriteId = deltaItem.Key;
         }
+
+
 
         protected override Bitmap GetBitmapFromZip(ZipStorer zipStore, int zipFileEntryIndex)
         {
@@ -760,8 +787,8 @@ namespace Hiale.GTA2NET.Core.Helper
                 var spriteId = spriteDeltaId[0];
                 var deltaIndex = spriteDeltaId[1];
                 var subDeltaItem = DeltaDictionary[spriteId].SubItems[deltaIndex];
-                var cachedRect = _cachedRectDictionary[entry.ZipEntryIndex];
-                subDeltaItem.RelativePosition = new Point(cachedRect.X + Padding, cachedRect.Y + Padding);
+                var cachedRect = _cachedRectDictionary[entry.SameImageIndex == 0 ? entry.ZipEntryIndex : entry.SameImageIndex];
+                subDeltaItem.RelativePosition = new Point(cachedRect.X, cachedRect.Y);
                 subDeltaItem.Rectangle = rect;
             }
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);

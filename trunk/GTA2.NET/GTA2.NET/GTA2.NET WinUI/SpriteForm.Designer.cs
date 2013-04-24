@@ -30,16 +30,17 @@
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.mnuFile = new System.Windows.Forms.ToolStripMenuItem();
-            this.mnuFileOpen = new System.Windows.Forms.ToolStripMenuItem();
+            this.muFileSaveSprite = new System.Windows.Forms.ToolStripMenuItem();
             this.mnuFileClose = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.listBoxSprites = new Hiale.GTA2NET.WinUI.SpriteForm.CustomListBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.pictureBoxCurrentSprite = new System.Windows.Forms.PictureBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.checkedListBoxDeltas = new System.Windows.Forms.CheckedListBox();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -47,8 +48,9 @@
             this.splitContainer1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCurrentSprite)).BeginInit();
             this.groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCurrentSprite)).BeginInit();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -64,23 +66,23 @@
             // mnuFile
             // 
             this.mnuFile.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.mnuFileOpen,
+            this.muFileSaveSprite,
             this.mnuFileClose});
             this.mnuFile.Name = "mnuFile";
             this.mnuFile.Size = new System.Drawing.Size(37, 20);
             this.mnuFile.Text = "&File";
             // 
-            // mnuFileOpen
+            // muFileSaveSprite
             // 
-            this.mnuFileOpen.Name = "mnuFileOpen";
-            this.mnuFileOpen.Size = new System.Drawing.Size(112, 22);
-            this.mnuFileOpen.Text = "&Open...";
-            this.mnuFileOpen.Click += new System.EventHandler(this.MnuFileOpenClick);
+            this.muFileSaveSprite.Name = "muFileSaveSprite";
+            this.muFileSaveSprite.Size = new System.Drawing.Size(152, 22);
+            this.muFileSaveSprite.Text = "Save Sprite...";
+            this.muFileSaveSprite.Click += new System.EventHandler(this.MuFileSaveSpriteClick);
             // 
             // mnuFileClose
             // 
             this.mnuFileClose.Name = "mnuFileClose";
-            this.mnuFileClose.Size = new System.Drawing.Size(112, 22);
+            this.mnuFileClose.Size = new System.Drawing.Size(152, 22);
             this.mnuFileClose.Text = "&Close";
             this.mnuFileClose.Click += new System.EventHandler(this.MnuFileCloseClick);
             // 
@@ -149,22 +151,14 @@
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Details";
             // 
-            // pictureBoxCurrentSprite
+            // groupBox5
             // 
-            this.pictureBoxCurrentSprite.Location = new System.Drawing.Point(6, 19);
-            this.pictureBoxCurrentSprite.Name = "pictureBoxCurrentSprite";
-            this.pictureBoxCurrentSprite.Size = new System.Drawing.Size(128, 128);
-            this.pictureBoxCurrentSprite.TabIndex = 0;
-            this.pictureBoxCurrentSprite.TabStop = false;
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Location = new System.Drawing.Point(152, 19);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(184, 156);
-            this.groupBox3.TabIndex = 1;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Delta";
+            this.groupBox5.Location = new System.Drawing.Point(6, 181);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(140, 100);
+            this.groupBox5.TabIndex = 3;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Remaps";
             // 
             // groupBox4
             // 
@@ -176,14 +170,36 @@
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Image";
             // 
-            // groupBox5
+            // pictureBoxCurrentSprite
             // 
-            this.groupBox5.Location = new System.Drawing.Point(6, 181);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(140, 100);
-            this.groupBox5.TabIndex = 3;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Remaps";
+            this.pictureBoxCurrentSprite.Location = new System.Drawing.Point(6, 19);
+            this.pictureBoxCurrentSprite.Name = "pictureBoxCurrentSprite";
+            this.pictureBoxCurrentSprite.Size = new System.Drawing.Size(128, 128);
+            this.pictureBoxCurrentSprite.TabIndex = 0;
+            this.pictureBoxCurrentSprite.TabStop = false;
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.checkedListBoxDeltas);
+            this.groupBox3.Location = new System.Drawing.Point(152, 19);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(184, 156);
+            this.groupBox3.TabIndex = 1;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Delta";
+            // 
+            // checkedListBoxDeltas
+            // 
+            this.checkedListBoxDeltas.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkedListBoxDeltas.CheckOnClick = true;
+            this.checkedListBoxDeltas.FormattingEnabled = true;
+            this.checkedListBoxDeltas.Location = new System.Drawing.Point(6, 19);
+            this.checkedListBoxDeltas.Name = "checkedListBoxDeltas";
+            this.checkedListBoxDeltas.Size = new System.Drawing.Size(172, 124);
+            this.checkedListBoxDeltas.TabIndex = 0;
+            this.checkedListBoxDeltas.SelectedIndexChanged += new System.EventHandler(this.CheckedListBoxDeltasSelectedIndexChanged);
             // 
             // SpriteForm
             // 
@@ -203,8 +219,9 @@
             this.splitContainer1.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCurrentSprite)).EndInit();
             this.groupBox4.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxCurrentSprite)).EndInit();
+            this.groupBox3.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -218,11 +235,12 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.ToolStripMenuItem mnuFileOpen;
         private CustomListBox listBoxSprites;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.PictureBox pictureBoxCurrentSprite;
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.CheckedListBox checkedListBoxDeltas;
+        private System.Windows.Forms.ToolStripMenuItem muFileSaveSprite;
     }
 }

@@ -43,12 +43,12 @@ namespace Hiale.GTA2NET.Core.Helper
         /// <summary>
         /// Default palette which this sprite uses
         /// </summary>
-        public ushort DefaultPalette { get; set; }
+        public int DefaultPalette { get; set; }
 
         /// <summary>
         /// Start index of the remap palettes. Add a RemapList item to this value to get the actual palette.
         /// </summary>
-        public ushort RemapPaletteBase { get; set; }
+        public int RemapPaletteBase { get; set; }
 
         /// <summary>
         /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this sprite.
@@ -57,6 +57,9 @@ namespace Hiale.GTA2NET.Core.Helper
         public List<byte> RemapList { get; set; }
 
         public CompactRectangle Rectangle { get; set; }
+
+        [XmlIgnore] //saved in separate file
+        public List<DeltaSubItem> DeltaItems { get; set; } 
 
         private SpriteItem()
         {
@@ -68,13 +71,13 @@ namespace Hiale.GTA2NET.Core.Helper
             Type = type;
         }
 
-        public SpriteItem(SpriteType type, ushort defaultPalette, ushort remapPaletteBase) : this(type)
+        public SpriteItem(SpriteType type, int defaultPalette, int remapPaletteBase) : this(type)
         {
             DefaultPalette = defaultPalette;
             RemapPaletteBase = remapPaletteBase;
         }
 
-        public SpriteItem(SpriteType type, ushort defaultPalette, ushort remapPaletteBase, List<byte> remapList) : this(type, defaultPalette, remapPaletteBase)
+        public SpriteItem(SpriteType type, int defaultPalette, int remapPaletteBase, List<byte> remapList) : this(type, defaultPalette, remapPaletteBase)
         {
             RemapList = remapList;
         }
