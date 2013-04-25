@@ -48,7 +48,7 @@ namespace Hiale.GTA2NET.Core.Style
             public byte[] SpriteData;
             public SpriteEntry[] SpriteEntries;
             public SpriteBase SpriteBase;
-            public FontBase FontBase;
+            public int[] FontBases;
             public DeltaIndex[] DeltaIndexes; 
             public byte[] DeltaData;
             
@@ -120,7 +120,7 @@ namespace Hiale.GTA2NET.Core.Style
                     SpriteData = new byte[] {},
                     SpriteEntries = new SpriteEntry[] {},
                     SpriteBase = new SpriteBase(),
-                    FontBase = new FontBase(),
+                    FontBases = new int[] {},
                     DeltaData = new byte[] {},
                     DeltaIndexes = new DeltaIndex[] {},
                     Sprites = new SerializableDictionary<int, SpriteItem>(),
@@ -174,7 +174,7 @@ namespace Hiale.GTA2NET.Core.Style
                             ReadMapObjects(reader, chunkSize);
                             break;
                         case "FONB": //Font Base
-                            styleData.FontBase = ReadFonts(reader, styleData.SpriteBase.Font);
+                            styleData.FontBases = ReadFonts(reader, styleData.SpriteBase.Font);
                             break;
                         case "DELX": //Delta Index
                             styleData.DeltaIndexes = ReadDeltaIndex(reader, chunkSize);
@@ -195,7 +195,11 @@ namespace Hiale.GTA2NET.Core.Style
                             styleData.PaletteBase = ReadPaletteBase(reader);
                             break;
                         case "SPEC": //Undocumented
+                            //Shows how tiles behave, for example in a physical way or what kind of sounds they make when somone walks on them
                             ReadSurfaces(reader, chunkSize);
+                            break;
+                        case "RECY":
+                            ReadRecyclingInfo(reader, chunkSize);
                             break;
                         default:
                             System.Diagnostics.Debug.WriteLine("Skipping chunk '" +  chunkType + "'...");
@@ -425,24 +429,29 @@ namespace Hiale.GTA2NET.Core.Style
             return tileData;
         }
 
-        private static FontBase ReadFonts(BinaryReader reader, ushort spriteBaseFont)
+        /// <summary>
+        /// Returns sprite index of the first letter of each font.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="spriteBaseFont"></param>
+        /// <returns></returns>
+        private static int[] ReadFonts(BinaryReader reader, ushort spriteBaseFont)
         {
             System.Diagnostics.Debug.WriteLine("Reading fonts...");
-            var fontBase = new FontBase
-                {
-                    FontCount = reader.ReadUInt16(),
-                    Base = new ushort[256],
-                    SpriteBase = new ushort[256]
-                };
-            fontBase.Base[0] = spriteBaseFont;
-            for (var i = 0; i < fontBase.FontCount; i++)
+
+            var fontCount = reader.ReadUInt16();
+            //var fonts = new FontBase[fontCount];
+            var fonts = new int[fontCount];
+
+            for (var i = 0; i < fontCount; i++)
             {
-                fontBase.Base[i] = reader.ReadUInt16();
-                if (i > 0)
-                    fontBase.SpriteBase[i] = (ushort)(fontBase.SpriteBase[i - 1] + fontBase.Base[i]);
-                System.Diagnostics.Debug.WriteLine("Font: " + i + " (" + fontBase.Base[i] + " characters, Spritebase: " + fontBase.SpriteBase[i]);
+                var fontBase = reader.ReadUInt16();
+                if (i == 0)
+                    fonts[i] = spriteBaseFont;
+                else
+                    fonts[i] = fonts[i - 1] + fontBase;
             }
-            return fontBase;
+            return fonts;
         }
 
         private static ushort[] ReadPaletteIndexes(BinaryReader reader, int chunkSize)
@@ -636,27 +645,34 @@ namespace Hiale.GTA2NET.Core.Style
             while (position < chunkSize)
             {
                 if (position == 0)
-                {
-                    //reader.ReadBytes(2); //Skip 2 bytes
-                    currentSurface = new Surface(currentType);
-                }
+                    currentSurface = new Surface(SurfaceType.Grass);
+
                 int value = reader.ReadUInt16();
-                if (value == 0)
+                position += 2;
+
+                if (value == 0) //go the next surface type
                 {
                     surfaces.Add(currentSurface);
-                    if (currentType != SurfaceType.GrassWall)
-                    {
-                        currentType++;
-                        currentSurface = new Surface(currentType);
-                    }
+                    currentType++;
+                    currentSurface = new Surface(currentType);
+                    continue;
                 }
-                else
-                {
-                    currentSurface.Tiles.Add(value);
-                }
-                position += 2;
+                currentSurface.Tiles.Add(value);
             }
             return surfaces;
+        }
+
+        private static byte[] ReadRecyclingInfo(BinaryReader reader, int chunkSize)
+        {
+            var modelList = new List<byte>();
+            for (var i = 0; i < chunkSize; i++)
+            {
+                var value = reader.ReadByte();
+                if (value == 255)
+                    break;
+                modelList.Add(value);
+            }
+            return modelList.ToArray();
         }
 
         private static void SaveTiles(StyleData styleData, ZipStorer zip, CancellableContext context)
@@ -864,7 +880,7 @@ namespace Hiale.GTA2NET.Core.Style
                         return;
                     SaveDelta(styleData, styleData.DeltaIndexes[i].Sprite, basePalette, j, zip, styleData.DeltaIndexes[i].Sprite + "_" + j);
                     var spriteEntry = styleData.SpriteEntries[i];
-                    deltaItem.SubItems.Add(new DeltaSubItem((int) j, spriteEntry.Width, spriteEntry.Height));
+                    deltaItem.SubItems.Add(new DeltaSubItem((DeltaType) j, spriteEntry.Width, spriteEntry.Height));
                 }
             }
         }

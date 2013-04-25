@@ -25,9 +25,11 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -63,6 +65,23 @@ namespace Hiale.GTA2NET.Core.Helper
         public static string CheckDirectorySeparator(string path)
         {
             return !path.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) ? path.Insert(path.Length, Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) : path;
+        }
+
+        public static string GetDescription(this Enum value)
+        {
+            var type = value.GetType();
+            var name = Enum.GetName(type, value);
+            if (name != null)
+            {
+                var field = type.GetField(name);
+                if (field != null)
+                {
+                    var attribute = Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                    if (attribute != null)
+                        return attribute.Description;
+                }
+            }
+            return value.ToString();
         }
 
         public static bool FilesAreEqual(string path1, string path2)

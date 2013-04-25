@@ -140,7 +140,6 @@
     <Compile Include="Style\DeltaIndex.cs" />
     <Compile Include="Style\DeltaType.cs" />
     <Compile Include="Style\DoorInfo.cs" />
-    <Compile Include="Style\FontBase.cs" />
     <Compile Include="Style\ObjectInfo.cs" />
     <Compile Include="Style\Palette.cs" />
     <Compile Include="Style\PaletteBase.cs" />
