@@ -72,7 +72,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             // Left face
             CreateLeftVertices(frontCoordinates, backCoordinates, 0);
             // Right face
-            CreateRightVertices( frontCoordinates,  backCoordinates, 0);
+            CreateRightVertices( frontCoordinates, backCoordinates, 0);
         }
     }
 }

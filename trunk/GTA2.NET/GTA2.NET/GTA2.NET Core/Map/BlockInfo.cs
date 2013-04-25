@@ -303,26 +303,35 @@ namespace Hiale.GTA2NET.Core.Map
         }
         #endregion
 
+        /// <summary>
+        /// Gets the coordinates for the texture acording to its rotation and flip.
+        /// </summary>
+        /// <param name="sourceRectangle">Represents the position and size of the texture.</param>
+        /// <param name="rotation">The rotation to aply to the texture.</param>
+        /// <param name="flip">If the Texture must be fliped.</param>
+        /// <returns>A array with 4 positions where each position represent one of the vertices od the texture.</returns>
         protected Vector2[] GetTexturePositions(CompactRectangle sourceRectangle, RotationType rotation, bool flip)
         {
-            double pixelPerWidth = 1f / 4096;   //TODO: this values must be equals to the tiles size.
-            double pixelPerHeight = 1f / 2048;
+            double pixelPerWidth = 1f / 2048;   //TODO: this values must be equals to the tiles size.
+            double pixelPerHeight = 1f / 4096;
             Vector2[] texturePosition = new Vector2[4];
 
             Vector2 texTopLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
-            Vector2 texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));
-            Vector2 texBottomRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
+            Vector2 texTopRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + 1) * pixelPerHeight));            
             Vector2 texBottomLeft = new Vector2((float)((sourceRectangle.X + 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
+            Vector2 texBottomRight = new Vector2((float)((sourceRectangle.X + sourceRectangle.Width - 1) * pixelPerWidth), (float)((sourceRectangle.Y + sourceRectangle.Height - 1) * pixelPerHeight));
 
             if (flip)
             {
                 Vector2 helper = texTopLeft;
                 texTopLeft = texTopRight;
                 texTopRight = helper;
+
                 helper = texBottomLeft;
                 texBottomLeft = texBottomRight;
                 texBottomRight = helper;
-                if (rotation == RotationType.Rotate90) //Hack
+
+                if (rotation == RotationType.Rotate90) //special cases.
                 {
                     rotation = RotationType.Rotate270;
                 }
@@ -464,6 +473,40 @@ namespace Hiale.GTA2NET.Core.Map
             IndexBufferCollection.Add(startIndex + 3);
             IndexBufferCollection.Add(startIndex);
         }
+
+        protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Byte rotation)
+        {
+            if (this.Right.TileNumber > 0)
+            {
+                FaceCoordinates newFront = new FaceCoordinates();
+                FaceCoordinates newBack = new FaceCoordinates();
+                if (rotation == 0)
+                {
+                    newFront = CorrectLeftRightVertices(frontCoords, false);
+                    newBack = CorrectLeftRightVertices(backCoords, false);
+                }
+                else if (rotation == 2)
+                {
+                    newFront = CorrectLeftRightVertices(frontCoords, true);
+                    newBack = CorrectLeftRightVertices(backCoords, true);
+                }
+                //ToDo: Add more rotation codes...
+                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Right.TileNumber], this.Right.Rotation, this.Right.Flip);
+                Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
+                Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
+                Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
+                Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+
+                //...
+                int startIndex = Coors.Count - 4;
+                IndexBufferCollection.Add(startIndex + 2);
+                IndexBufferCollection.Add(startIndex + 1);
+                IndexBufferCollection.Add(startIndex);
+                IndexBufferCollection.Add(startIndex);
+                IndexBufferCollection.Add(startIndex + 3);
+                IndexBufferCollection.Add(startIndex + 2);
+            }
+        }
         #endregion
 
         #region Low Slopes
@@ -516,7 +559,7 @@ namespace Hiale.GTA2NET.Core.Map
             if (this.Lid.TileNumber > 0)
             {
                 RotationType lidRotation = this.Lid.Rotation;
-                RotateEnum(ref lidRotation, rotation);
+                lidRotation = RotateEnum(lidRotation, rotation);
                 Vector2[] texPos = GetTexturePositions(tileAtlas[this.Lid.TileNumber], lidRotation, this.Lid.Flip);
                 this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, texPos[2]));
                 this.Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, texPos[1]));
@@ -640,7 +683,7 @@ namespace Hiale.GTA2NET.Core.Map
             return frontCoordinates;
         }
 
-        protected static void RotateEnum(ref RotationType type, byte rotation)
+        protected static RotationType RotateEnum(RotationType type, byte rotation)
         {
             for (int i = 0; i < rotation; i++)
             {
@@ -660,6 +703,7 @@ namespace Hiale.GTA2NET.Core.Map
                         break;
                 }
             }
+            return type;
         }
         #endregion
 
@@ -736,7 +780,7 @@ namespace Hiale.GTA2NET.Core.Map
             if (this.Lid.TileNumber > 0)
             {
                 RotationType lidRotation = this.Lid.Rotation;
-                RotateEnum(ref lidRotation, rotation);
+                lidRotation = RotateEnum(lidRotation, rotation);
                 Vector2[] texPos = GetTexturePositions(tileAtlas[this.Lid.TileNumber], lidRotation, this.Lid.Flip);
                 this.Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, texPos[2]));
                 this.Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
@@ -829,41 +873,7 @@ namespace Hiale.GTA2NET.Core.Map
 
             //Right face
             CreateRightVertices(frontCoordinates, backCoordinates, rotation);
-        }
-
-        protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Byte rotation)
-        {
-            if (this.Right.TileNumber > 0)
-            {
-                FaceCoordinates newFront = new FaceCoordinates();
-                FaceCoordinates newBack = new FaceCoordinates();
-                if (rotation == 0)
-                {
-                    newFront = CorrectLeftRightVertices(frontCoords, false);
-                    newBack = CorrectLeftRightVertices(backCoords, false);
-                }
-                else if (rotation == 2)
-                {
-                    newFront = CorrectLeftRightVertices(frontCoords, true);
-                    newBack = CorrectLeftRightVertices(backCoords, true);
-                }
-                //ToDo: Add more rotation codes...
-                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Right.TileNumber], this.Right.Rotation, this.Right.Flip);
-                Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
-                Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
-                Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
-                Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
-
-                //...
-                int startIndex = Coors.Count - 4;
-                IndexBufferCollection.Add(startIndex + 2);
-                IndexBufferCollection.Add(startIndex + 1);
-                IndexBufferCollection.Add(startIndex);
-                IndexBufferCollection.Add(startIndex);
-                IndexBufferCollection.Add(startIndex + 3);
-                IndexBufferCollection.Add(startIndex + 2);
-            }
-        }
+        }        
 
         protected FaceCoordinates CorrectLeftRightVertices(FaceCoordinates coordinates, Boolean left)
         {
@@ -908,22 +918,29 @@ namespace Hiale.GTA2NET.Core.Map
                 backCoordinates = RotateSlope(backCoordinates, rotation);
             }
 
-            //Front face (diagonal)
+            if (Position.X == 79 && Position.Y == 175 && Position.Z == 4)
+                Console.Read();
+            //
+            //LID
+            //
             if (this.Lid)
             {
                 RotationType lidRotation = this.Lid.Rotation;
-                RotateEnum(ref lidRotation, rotation);
+                lidRotation = RotateEnum(lidRotation, rotation);
 
                 if (this.Lid.Flip) //ToDo: This is just a dirty way! Problem: rotation Bug if flipped
                 {
-                    switch (lidRotation)
+                    if (rotation == 1 || rotation == 3)
                     {
-                        case RotationType.Rotate90:
-                            lidRotation = RotationType.Rotate270;
-                            break;
-                        case RotationType.Rotate270:
-                            lidRotation = RotationType.Rotate90;
-                            break;
+                        switch (lidRotation)
+                        {
+                            case RotationType.Rotate90:
+                                lidRotation = RotationType.Rotate270;
+                                break;
+                            case RotationType.Rotate270:
+                                lidRotation = RotationType.Rotate90;
+                                break;
+                        }
                     }
                 }
 
