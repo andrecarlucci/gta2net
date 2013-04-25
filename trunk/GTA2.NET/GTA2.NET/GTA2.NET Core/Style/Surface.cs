@@ -23,16 +23,24 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
+
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Style
 {
+    //Surface types found in gta2 sty tool by Delfi
     public enum SurfaceType : byte
     {
-        Grass, RoadSpecial, Water, Electrified, ElectrifiedPlatform, WoodFloor, MetalFloor, MetalWall, GrassWall
+        Grass = 0,
+        RoadSpecial = 1,
+        Water = 2,
+        Electrified = 3,
+        ElectrifiedPlatform = 4,
+        WoodFloor = 5,
+        MetalFloor = 6,
+        MetalWall = 7,
+        GrassWall = 8
     }
 
     public class Surface
@@ -43,8 +51,13 @@ namespace Hiale.GTA2NET.Core.Style
 
         public Surface(SurfaceType type)
         {
+            Type = type;
             Tiles = new List<int>();
         }
 
+        public override string ToString()
+        {
+            return Type.GetDescription() + " (" + Tiles.Count + ")";
+        }
     }
 }
