@@ -36,16 +36,49 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="WeifenLuo.WinFormsUI.Docking">
+      <HintPath>..\packages\DockPanelSuite.2.7.0.0\lib\net40\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\GTA2.NET Core\Properties\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Controls\CustomListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\RadioListBox.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="ConvertForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="ConvertForm.designer.cs">
       <DependentUpon>ConvertForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DockWindows\SpriteDeltasWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DockWindows\SpriteDeltasWindow.Designer.cs">
+      <DependentUpon>SpriteDeltasWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DockWindows\SpriteListWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DockWindows\SpriteListWindow.Designer.cs">
+      <DependentUpon>SpriteListWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DockWindows\SpritePreviewWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DockWindows\SpritePreviewWindow.Designer.cs">
+      <DependentUpon>SpritePreviewWindow.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DockWindows\SpriteRemapsWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DockWindows\SpriteRemapsWindow.Designer.cs">
+      <DependentUpon>SpriteRemapsWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="NativeWin32.cs" />
     <Compile Include="ProgressForm.cs">
@@ -67,6 +100,18 @@
     <EmbeddedResource Include="ConvertForm.resx">
       <DependentUpon>ConvertForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="DockWindows\SpriteDeltasWindow.resx">
+      <DependentUpon>SpriteDeltasWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DockWindows\SpriteListWindow.resx">
+      <DependentUpon>SpriteListWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DockWindows\SpritePreviewWindow.resx">
+      <DependentUpon>SpritePreviewWindow.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DockWindows\SpriteRemapsWindow.resx">
+      <DependentUpon>SpriteRemapsWindow.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ProgressForm.resx">
       <DependentUpon>ProgressForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -80,6 +125,14 @@
       <Name>GTA2.NET Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="license.txt" />
+    <EmbeddedResource Include="Resources\SpriteFormDefaultLayout.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

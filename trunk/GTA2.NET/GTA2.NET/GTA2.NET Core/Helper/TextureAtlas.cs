@@ -220,6 +220,9 @@ namespace Hiale.GTA2NET.Core.Helper
                     entry.Width = sameEntry.Width;
                     entry.Height = sameEntry.Height;
                 }
+
+                if (entry.Width*entry.Height == 0)
+                    continue;
                 entry.Index = i;
                 entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
                 entry.ZipEntryIndex = i;
@@ -771,7 +774,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     }
                     else
                     {
-                        rect = new CompactRectangle();
+                        rect = new CompactRectangle(); //should not happen, it's filtered out in CreateImageEntries()
                     }
                 }
                 else
