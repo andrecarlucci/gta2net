@@ -145,7 +145,7 @@ namespace Hiale.GTA2NET.Core.Helper
         private CancellableContext _buildTextureAtlasContext;
 
         /// <summary>
-        /// Image with all the tiles, sprites or deltas on it.
+        /// Image with all the tiles, sprites or deltas on it. Only used during creation. Use ImagePath to load the image at runtime.
         /// </summary>
         [XmlIgnore]
         public Image Image { get; protected set; }

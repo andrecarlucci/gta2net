@@ -72,6 +72,8 @@ namespace Hiale.GTA2NET.WinUI.DockWindows
             }
         }
 
+        public Image Image {get { return listBoxSprites.SpriteImage; }}
+
         public SpriteListWindow()
         {
             InitializeComponent();

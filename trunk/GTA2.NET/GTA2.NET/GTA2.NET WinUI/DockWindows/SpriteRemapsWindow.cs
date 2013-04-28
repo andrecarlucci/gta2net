@@ -24,13 +24,25 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
+using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Helper;
 using WeifenLuo.WinFormsUI.Docking;
 
 namespace Hiale.GTA2NET.WinUI.DockWindows
 {
     public partial class SpriteRemapsWindow : DockContent
     {
+        public class RemapEventArgs : EventArgs
+        {
+            public int Remap;
+
+            public RemapEventArgs(int remap)
+            {
+                Remap = remap;
+            }
+        }
+
         public IList<byte> Remaps
         {
             get
@@ -50,9 +62,46 @@ namespace Hiale.GTA2NET.WinUI.DockWindows
             }
         }
 
+        public event EventHandler<RemapEventArgs> RemapChanged; 
+
+        //-1 = Default
+        public int SelectedItem
+        {
+            get
+            {
+                if (radioListBoxRemaps.SelectedIndex == 0)
+                    return -1;
+                return (byte) radioListBoxRemaps.SelectedItem;
+            }
+            set
+            {
+                if (value == -1)
+                {
+                    radioListBoxRemaps.SelectedIndex = 0;
+                    return;
+                }
+                if (value > byte.MaxValue)
+                    throw new ArgumentException();
+                for (var i = 1; i < radioListBoxRemaps.Items.Count; i++)
+                {
+                    if ((int) radioListBoxRemaps.Items[i] != value)
+                        continue;
+                    radioListBoxRemaps.SelectedIndex = i;
+                    break;
+                }
+            }
+        }
+
         public SpriteRemapsWindow()
         {
             InitializeComponent();
+        }
+
+        private void RadioListBoxRemapsSelectedIndexChanged(object sender, System.EventArgs e)
+        {
+            if (RemapChanged != null)
+                RemapChanged(this, new RemapEventArgs(SelectedItem));
+
         }
     }
 }
