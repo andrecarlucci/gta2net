@@ -59,6 +59,7 @@
             this.radioListBoxRemaps.Name = "radioListBoxRemaps";
             this.radioListBoxRemaps.Size = new System.Drawing.Size(248, 211);
             this.radioListBoxRemaps.TabIndex = 0;
+            this.radioListBoxRemaps.SelectedIndexChanged += new System.EventHandler(this.RadioListBoxRemapsSelectedIndexChanged);
             // 
             // SpriteRemapsWindow
             // 

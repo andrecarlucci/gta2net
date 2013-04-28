@@ -44,11 +44,11 @@ namespace Hiale.GTA2NET.WinUI
         private readonly SpritePreviewWindow spritePreviewWindow;
         private readonly SpriteDeltasWindow spriteDeltasWindow;
         private readonly SpriteRemapsWindow spriteRemapsWindow;
-        private readonly DeserializeDockContent m_deserializeDockContent;
+        private readonly DeserializeDockContent deserializeDockContent;
         private const string LayoutFile = "SpriteFormLayout.xml";
 
 
-        private SerializableDictionary<int, SpriteItem> spriteAtlas;
+        //private SerializableDictionary<int, SpriteItem> spriteAtlas;
         private Image spriteImage;
         private Image deltaImage;
 
@@ -66,18 +66,19 @@ namespace Hiale.GTA2NET.WinUI
             spriteDeltasWindow = new SpriteDeltasWindow();
             spriteDeltasWindow.CheckedDeltaItemsChanged += SpriteDeltasWindowCheckedDeltaItemsChanged;
             spriteRemapsWindow = new SpriteRemapsWindow();
+            spriteRemapsWindow.RemapChanged += SpriteRemapsWindowRemapChanged;
 
-            m_deserializeDockContent += MDeserializeDockContent;
+            deserializeDockContent += DeserializeDockContent;
 
             var layoutFile = currentPath + LayoutFile;
             try
             {
-                dockPanel.LoadFromXml(layoutFile, m_deserializeDockContent);
+                dockPanel.LoadFromXml(layoutFile, deserializeDockContent);
             }
             catch (Exception)
             {
                 var stream = Assembly.GetAssembly(GetType()).GetManifestResourceStream(GetType().Namespace + ".Resources.SpriteFormDefaultLayout.xml");
-                dockPanel.LoadFromXml(stream, m_deserializeDockContent);
+                dockPanel.LoadFromXml(stream, deserializeDockContent);
                 if (stream != null)
                     stream.Close();
             }
@@ -85,6 +86,12 @@ namespace Hiale.GTA2NET.WinUI
             //Thread
             LoadSprites(currentPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.XmlFormat);
             LoadDeltas(currentPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.XmlFormat);
+        }
+
+        private void SpriteRemapsWindowRemapChanged(object sender, SpriteRemapsWindow.RemapEventArgs e)
+        {
+            int remap = e.Remap == -1 ? spriteListWindow.SelectedSprite.DefaultPalette : e.Remap;
+            System.Diagnostics.Debug.WriteLine("REMAP: " + remap);
         }
 
         private void SpriteDeltasWindowCheckedDeltaItemsChanged(object sender, SpriteDeltasWindow.CheckedDeltaItemsEventArgs e)
@@ -101,7 +108,7 @@ namespace Hiale.GTA2NET.WinUI
             spriteRemapsWindow.Remaps = currentItem.RemapList;
         }
 
-        private IDockContent MDeserializeDockContent(string persistString)
+        private IDockContent DeserializeDockContent(string persistString)
         {
             if (persistString == typeof(SpriteListWindow).ToString())
                 return spriteListWindow;
@@ -126,15 +133,15 @@ namespace Hiale.GTA2NET.WinUI
 
             spriteListWindow.TextureAltas = dict;
 
-            spriteAtlas = dict.SpriteDictionary;
-            spriteImage = Image.FromFile(Extensions.CheckDirectorySeparator(Path.GetDirectoryName(fileName)) + dict.ImagePath);
+
+            spriteImage = spriteListWindow.Image;
         }
 
         private void LoadDeltas(string fileName)
         {
             var dict = TextureAtlas.Deserialize<TextureAtlasDeltas>(fileName);
             deltaImage = Image.FromFile(Extensions.CheckDirectorySeparator(Path.GetDirectoryName(fileName)) + dict.ImagePath);
-            TextureAtlasSprites.MergeDeltas(spriteAtlas, dict.DeltaDictionary);
+            TextureAtlasSprites.MergeDeltas(spriteListWindow.TextureAltas.SpriteDictionary, dict.DeltaDictionary);
         }
 
         private void PaintSprite(SpriteItem item, IList<DeltaSubItem> activeDeltas)
