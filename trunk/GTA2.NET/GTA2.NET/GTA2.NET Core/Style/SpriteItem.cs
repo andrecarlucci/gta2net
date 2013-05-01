@@ -28,9 +28,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Xml.Serialization;
-using Hiale.GTA2NET.Core.Style;
+using Hiale.GTA2NET.Core.Helper;
 
-namespace Hiale.GTA2NET.Core.Helper
+namespace Hiale.GTA2NET.Core.Style
 {
     [Serializable]
     public class SpriteItem
@@ -46,15 +46,10 @@ namespace Hiale.GTA2NET.Core.Helper
         public int DefaultPalette { get; set; }
 
         /// <summary>
-        /// Start index of the remap palettes. Add a RemapList item to this value to get the actual palette.
-        /// </summary>
-        public int RemapPaletteBase { get; set; }
-
-        /// <summary>
         /// RemapList stores a list of virtual palette numbers, representing all of the alternative palettes which can sensibly be applied to this sprite.
         /// </summary>
-        [XmlArrayItem("Remap")]
-        public List<byte> RemapList { get; set; }
+        //[XmlArrayItem("Remap")]
+        public List<Remap> RemapList { get; set; }
 
         public CompactRectangle Rectangle { get; set; }
 
@@ -71,13 +66,12 @@ namespace Hiale.GTA2NET.Core.Helper
             Type = type;
         }
 
-        public SpriteItem(SpriteType type, int defaultPalette, int remapPaletteBase) : this(type)
+        public SpriteItem(SpriteType type, int defaultPalette) : this(type)
         {
             DefaultPalette = defaultPalette;
-            RemapPaletteBase = remapPaletteBase;
         }
 
-        public SpriteItem(SpriteType type, int defaultPalette, int remapPaletteBase, List<byte> remapList) : this(type, defaultPalette, remapPaletteBase)
+        public SpriteItem(SpriteType type, int defaultPalette, List<Remap> remapList) : this(type, defaultPalette)
         {
             RemapList = remapList;
         }

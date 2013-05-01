@@ -35,6 +35,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Xml.Serialization;
 using System.IO;
 using Hiale.GTA2NET.Core.Helper.Threading;
+using Hiale.GTA2NET.Core.Style;
 using Point = Microsoft.Xna.Framework.Point;
 using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
@@ -220,9 +221,6 @@ namespace Hiale.GTA2NET.Core.Helper
                     entry.Width = sameEntry.Width;
                     entry.Height = sameEntry.Height;
                 }
-
-                if (entry.Width*entry.Height == 0)
-                    continue;
                 entry.Index = i;
                 entry.FileName = ParsePath(ZipEntries[i].FilenameInZip);
                 entry.ZipEntryIndex = i;
@@ -674,6 +672,13 @@ namespace Hiale.GTA2NET.Core.Helper
 
     public class TextureAtlasDeltas : TextureAtlas
     {
+        private struct ItemToRemove
+        {
+            public int SpriteId;
+            public DeltaSubItem DeltaSubItem;
+        }
+
+
         public SerializableDictionary<int, DeltaItem> DeltaDictionary { get; set; } //Key = Sprite ID
 
         private readonly Dictionary<string, int[]> _deltaIndexDictionary; //Key = Filename, Value 0 = Sprite Id, Value 1 = Delta Index
@@ -697,8 +702,6 @@ namespace Hiale.GTA2NET.Core.Helper
             foreach (var deltaItem in deltaDictionary)
                 deltaItem.Value.SpriteId = deltaItem.Key;
         }
-
-
 
         protected override Bitmap GetBitmapFromZip(ZipStorer zipStore, int zipFileEntryIndex)
         {
@@ -752,6 +755,8 @@ namespace Hiale.GTA2NET.Core.Helper
 
             CreateOutputBitmap(outputWidth, outputHeight);
 
+            var itemsToRemove = new List<ItemToRemove>();
+
             foreach (var entry in entries)
             {
                 if (context.IsCancelling)
@@ -774,7 +779,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     }
                     else
                     {
-                        rect = new CompactRectangle(); //should not happen, it's filtered out in CreateImageEntries()
+                        rect = new CompactRectangle();
                     }
                 }
                 else
@@ -790,10 +795,33 @@ namespace Hiale.GTA2NET.Core.Helper
                 var spriteId = spriteDeltaId[0];
                 var deltaIndex = spriteDeltaId[1];
                 var subDeltaItem = DeltaDictionary[spriteId].SubItems[deltaIndex];
-                var cachedRect = _cachedRectDictionary[entry.SameImageIndex == 0 ? entry.ZipEntryIndex : entry.SameImageIndex];
-                subDeltaItem.RelativePosition = new Point(cachedRect.X, cachedRect.Y);
-                subDeltaItem.Rectangle = rect;
+                if (entry.Width*entry.Height > 0)
+                {
+                    var cachedRect = _cachedRectDictionary[entry.SameImageIndex == 0 ? entry.ZipEntryIndex : entry.SameImageIndex];
+                    subDeltaItem.RelativePosition = new Point(cachedRect.X, cachedRect.Y);
+                    subDeltaItem.Rectangle = rect;
+                }
+                else
+                {
+                    var itemToRemove = new ItemToRemove {SpriteId = spriteId, DeltaSubItem = subDeltaItem};
+                    itemsToRemove.Add(itemToRemove);
+                }
             }
+
+            foreach (var itemToRemove in itemsToRemove)
+            {
+                var deltaIndexToRemove = -1;
+                for (var i = 0; i < DeltaDictionary[itemToRemove.SpriteId].SubItems.Count; i++)
+                {
+                    if (DeltaDictionary[itemToRemove.SpriteId].SubItems[i].Type != itemToRemove.DeltaSubItem.Type)
+                        continue;
+                    deltaIndexToRemove = i;
+                    break;
+                }
+                if (deltaIndexToRemove > -1)
+                    DeltaDictionary[itemToRemove.SpriteId].SubItems.RemoveAt(deltaIndexToRemove);
+            }
+
             Image.Save(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + ImagePath, ImageFormat.Png);
             Serialize(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(ImagePath) + Globals.XmlFormat);
         }

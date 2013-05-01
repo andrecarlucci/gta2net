@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: SpriteEntry.cs
-// Created: 20.01.2010
+// File: Remap.cs
+// Created: 01.05.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,20 +23,27 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
+using System.Globalization;
 
 namespace Hiale.GTA2NET.Core.Style
 {
-    internal struct SpriteEntry
+    [Serializable]
+    public struct Remap
     {
-        public uint Ptr;
-        public byte Width;
-        public byte Height;
-        public ushort Pad; //Unused
+        public int Key;
+        public int Palette;
+
+        public Remap(int key, int palette)
+        {
+            Key = key;
+            Palette = palette;
+        }
 
         public override string ToString()
         {
-            return Width + " x " + Height;
+            return Key.ToString(CultureInfo.InvariantCulture);
         }
     }
 }

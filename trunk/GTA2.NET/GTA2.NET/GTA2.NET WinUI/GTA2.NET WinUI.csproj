@@ -80,6 +80,7 @@
     <Compile Include="DockWindows\SpriteRemapsWindow.Designer.cs">
       <DependentUpon>SpriteRemapsWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="LockBitmap.cs" />
     <Compile Include="NativeWin32.cs" />
     <Compile Include="ProgressForm.cs">
       <SubType>Form</SubType>

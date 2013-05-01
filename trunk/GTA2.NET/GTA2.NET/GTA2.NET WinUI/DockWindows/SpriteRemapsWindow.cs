@@ -26,7 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using Hiale.GTA2NET.Core.Helper;
+using Hiale.GTA2NET.Core.Style;
 using WeifenLuo.WinFormsUI.Docking;
 
 namespace Hiale.GTA2NET.WinUI.DockWindows
@@ -35,21 +35,21 @@ namespace Hiale.GTA2NET.WinUI.DockWindows
     {
         public class RemapEventArgs : EventArgs
         {
-            public int Remap;
+            public Remap Remap;
 
-            public RemapEventArgs(int remap)
+            public RemapEventArgs(Remap remap)
             {
                 Remap = remap;
             }
         }
 
-        public IList<byte> Remaps
+        public IList<Remap> Remaps
         {
             get
             {
-                var list = new List<byte>();
+                var list = new List<Remap>();
                 for (var i = 1; i < radioListBoxRemaps.Items.Count; i++)
-                    list.Add((byte)radioListBoxRemaps.Items[i]);
+                    list.Add((Remap)radioListBoxRemaps.Items[i]);
                 return list;
             }
             set
@@ -65,26 +65,26 @@ namespace Hiale.GTA2NET.WinUI.DockWindows
         public event EventHandler<RemapEventArgs> RemapChanged; 
 
         //-1 = Default
-        public int SelectedItem
+        public Remap SelectedItem
         {
             get
             {
                 if (radioListBoxRemaps.SelectedIndex == 0)
-                    return -1;
-                return (byte) radioListBoxRemaps.SelectedItem;
+                    return new Remap(-1, -1);
+                return (Remap) radioListBoxRemaps.SelectedItem;
             }
             set
             {
-                if (value == -1)
+                if (value.Key == -1)
                 {
                     radioListBoxRemaps.SelectedIndex = 0;
                     return;
                 }
-                if (value > byte.MaxValue)
+                if (value.Key > byte.MaxValue)
                     throw new ArgumentException();
                 for (var i = 1; i < radioListBoxRemaps.Items.Count; i++)
                 {
-                    if ((int) radioListBoxRemaps.Items[i] != value)
+                    if ((int) radioListBoxRemaps.Items[i] != value.Key)
                         continue;
                     radioListBoxRemaps.SelectedIndex = i;
                     break;
@@ -97,7 +97,7 @@ namespace Hiale.GTA2NET.WinUI.DockWindows
             InitializeComponent();
         }
 
-        private void RadioListBoxRemapsSelectedIndexChanged(object sender, System.EventArgs e)
+        private void RadioListBoxRemapsSelectedIndexChanged(object sender, EventArgs e)
         {
             if (RemapChanged != null)
                 RemapChanged(this, new RemapEventArgs(SelectedItem));

@@ -28,9 +28,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Globalization;
-using System.Text;
 using System.Windows.Forms;
-using Hiale.GTA2NET.Core.Helper;
+using Hiale.GTA2NET.Core.Style;
 
 namespace Hiale.GTA2NET.WinUI.Controls
 {

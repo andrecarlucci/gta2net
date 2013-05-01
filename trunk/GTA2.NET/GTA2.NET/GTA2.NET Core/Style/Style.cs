@@ -772,7 +772,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Peds/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Pedestrian, basePalette, remapPalette));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Pedestrian, basePalette));
                 //if (EXPORT_REMAPS)
                 //{
                 //    for (var j = 0; j < 53; j++)
@@ -788,7 +788,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "CodeObj/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.CodeObject, basePalette, -1));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.CodeObject, basePalette));
             }
 
             //Map obj
@@ -796,7 +796,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "MapObj/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.MapObject, basePalette, -1));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.MapObject, basePalette));
             }
 
             //User
@@ -804,7 +804,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "User/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.User, basePalette, -1));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.User, basePalette));
             }
 
             //Font //Some fonts looks wrong...
@@ -812,7 +812,7 @@ namespace Hiale.GTA2NET.Core.Style
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Font/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Font, basePalette, -1));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Font, basePalette));
             }
 
         }
@@ -820,13 +820,12 @@ namespace Hiale.GTA2NET.Core.Style
         private static void SaveCarSprite(StyleData styleData, ZipStorer zip, int spriteId)
         {
             var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + spriteId];
-            var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite]; //PaletteIndexes[paletteBase.Tile + paletteBase.Sprite + spriteID]; //the doc says, I have to add the spriteID, but it gives wrong results...
             var spriteEntry = styleData.SpriteEntries[spriteId];
             SaveSpriteRemap(styleData, spriteEntry, basePalette, zip, "Cars/" + spriteId);
-            var reMaplist = new List<byte>();
+            var reMaplist = new List<Remap>();
             for (var i = 0; i < styleData.CarSprites[spriteId].Count; i++)
-                reMaplist.AddRange(styleData.CarInfo[styleData.CarSprites[spriteId][i]].RemapList);
-            styleData.Sprites.Add(spriteId, new SpriteItem(SpriteType.Car, basePalette, remapPalette, reMaplist));
+                reMaplist.AddRange(styleData.CarInfo[styleData.CarSprites[spriteId][i]].RemapList.Select(remapKey => new Remap(remapKey, styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite + remapKey])));
+            styleData.Sprites.Add(spriteId, new SpriteItem(SpriteType.Car, basePalette, reMaplist));
         }
 
         private static void SaveSpriteRemap(StyleData styleData, SpriteEntry spriteEntry, uint palette, ZipStorer zip, string fileName)

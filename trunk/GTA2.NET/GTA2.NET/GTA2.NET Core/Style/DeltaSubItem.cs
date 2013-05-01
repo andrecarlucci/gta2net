@@ -23,12 +23,12 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
-using System.Globalization;
-using Hiale.GTA2NET.Core.Style;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
-namespace Hiale.GTA2NET.Core.Helper
+namespace Hiale.GTA2NET.Core.Style
 {
     [Serializable]
     public class DeltaSubItem
