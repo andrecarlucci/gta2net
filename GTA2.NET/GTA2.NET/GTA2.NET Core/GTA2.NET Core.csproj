@@ -55,10 +55,11 @@
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
-    <Compile Include="Helper\DeltaItem.cs" />
-    <Compile Include="Helper\DeltaSubItem.cs" />
+    <Compile Include="Style\DeltaItem.cs" />
+    <Compile Include="Style\DeltaSubItem.cs" />
+    <Compile Include="Style\Remap.cs" />
     <Compile Include="Helper\SerializableDictionary.cs" />
-    <Compile Include="Helper\SpriteItem.cs" />
+    <Compile Include="Style\SpriteItem.cs" />
     <Compile Include="Helper\TextureAtlas.cs" />
     <Compile Include="Helper\Threading\AutoResetEventValueExchange.cs" />
     <Compile Include="Helper\Threading\CancellableContext.cs" />

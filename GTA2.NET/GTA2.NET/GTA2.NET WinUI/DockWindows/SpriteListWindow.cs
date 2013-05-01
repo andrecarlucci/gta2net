@@ -30,6 +30,7 @@ using System.IO;
 using System.Reflection;
 using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.Core.Helper;
+using Hiale.GTA2NET.Core.Style;
 using WeifenLuo.WinFormsUI.Docking;
 
 namespace Hiale.GTA2NET.WinUI.DockWindows

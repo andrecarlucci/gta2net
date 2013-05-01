@@ -26,10 +26,10 @@
 using System;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core;
+using Hiale.GTA2NET.Core.Style;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Hiale.GTA2NET.Core.Helper;
-using Hiale.GTA2NET.Helper;
 using System.IO;
 using Hiale.GTA2NET.Logic;
 

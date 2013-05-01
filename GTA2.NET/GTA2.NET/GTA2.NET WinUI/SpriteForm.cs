@@ -40,84 +40,91 @@ namespace Hiale.GTA2NET.WinUI
 {
     public partial class SpriteForm : Form
     {
-        private readonly SpriteListWindow spriteListWindow;
-        private readonly SpritePreviewWindow spritePreviewWindow;
-        private readonly SpriteDeltasWindow spriteDeltasWindow;
-        private readonly SpriteRemapsWindow spriteRemapsWindow;
-        private readonly DeserializeDockContent deserializeDockContent;
+        private readonly SpriteListWindow _spriteListWindow;
+        private readonly SpritePreviewWindow _spritePreviewWindow;
+        private readonly SpriteDeltasWindow _spriteDeltasWindow;
+        private readonly SpriteRemapsWindow _spriteRemapsWindow;
+        private readonly DeserializeDockContent _deserializeDockContent;
         private const string LayoutFile = "SpriteFormLayout.xml";
 
+        private LockBitmap _spriteImage;
+        private LockBitmap _paletteImage;
+        private LockBitmap _deltaImage;
 
-        //private SerializableDictionary<int, SpriteItem> spriteAtlas;
-        private Image spriteImage;
-        private Image deltaImage;
+        private byte[,] _spriteData;
+        private byte[,] _deltaData;
 
-        private readonly string currentPath ;
+        private readonly string _currentPath ;
+
+        private bool _shouldPaint;
 
         public SpriteForm()
         {
             InitializeComponent();
 
-            currentPath = Extensions.CheckDirectorySeparator(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
+            _currentPath = Extensions.CheckDirectorySeparator(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
-            spriteListWindow = new SpriteListWindow();
-            spriteListWindow.SpriteChanged += SpriteListWindowSpriteChanged;
-            spritePreviewWindow = new SpritePreviewWindow();
-            spriteDeltasWindow = new SpriteDeltasWindow();
-            spriteDeltasWindow.CheckedDeltaItemsChanged += SpriteDeltasWindowCheckedDeltaItemsChanged;
-            spriteRemapsWindow = new SpriteRemapsWindow();
-            spriteRemapsWindow.RemapChanged += SpriteRemapsWindowRemapChanged;
+            _spriteListWindow = new SpriteListWindow();
+            _spriteListWindow.SpriteChanged += SpriteListWindowSpriteChanged;
+            _spritePreviewWindow = new SpritePreviewWindow();
+            _spriteDeltasWindow = new SpriteDeltasWindow();
+            _spriteDeltasWindow.CheckedDeltaItemsChanged += SpriteDeltasWindowCheckedDeltaItemsChanged;
+            _spriteRemapsWindow = new SpriteRemapsWindow();
+            _spriteRemapsWindow.RemapChanged += SpriteRemapsWindowRemapChanged;
 
-            deserializeDockContent += DeserializeDockContent;
+            _deserializeDockContent += DeserializeDockContent;
 
-            var layoutFile = currentPath + LayoutFile;
+            var layoutFile = _currentPath + LayoutFile;
             try
             {
-                dockPanel.LoadFromXml(layoutFile, deserializeDockContent);
+                dockPanel.LoadFromXml(layoutFile, _deserializeDockContent);
             }
             catch (Exception)
             {
                 var stream = Assembly.GetAssembly(GetType()).GetManifestResourceStream(GetType().Namespace + ".Resources.SpriteFormDefaultLayout.xml");
-                dockPanel.LoadFromXml(stream, deserializeDockContent);
+                dockPanel.LoadFromXml(stream, _deserializeDockContent);
                 if (stream != null)
                     stream.Close();
             }
 
             //Thread
-            LoadSprites(currentPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.XmlFormat);
-            LoadDeltas(currentPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.XmlFormat);
+            LoadPalette(_currentPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.PaletteSuffix + Globals.TextureImageFormat);
+            LoadSprites(_currentPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.XmlFormat);
+            LoadDeltas(_currentPath + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.DeltasSuffix + Globals.XmlFormat);
+            CreateSpriteData(_spriteListWindow.TextureAltas);
         }
 
         private void SpriteRemapsWindowRemapChanged(object sender, SpriteRemapsWindow.RemapEventArgs e)
         {
-            int remap = e.Remap == -1 ? spriteListWindow.SelectedSprite.DefaultPalette : e.Remap;
-            System.Diagnostics.Debug.WriteLine("REMAP: " + remap);
+            if (_shouldPaint)
+                PaintSprite();
         }
 
         private void SpriteDeltasWindowCheckedDeltaItemsChanged(object sender, SpriteDeltasWindow.CheckedDeltaItemsEventArgs e)
         {
-            PaintSprite(spriteListWindow.SelectedSprite, e.CheckedDeltaItems);
+            if (_shouldPaint)
+                PaintSprite();
         }
 
         private void SpriteListWindowSpriteChanged(object sender, SpriteListWindow.SpriteEventArgs e)
         {
-            var currentItem = e.Sprite;
-            PaintSprite(currentItem, new List<DeltaSubItem>());
-
-            spriteDeltasWindow.DeltaItems = currentItem.DeltaItems;
-            spriteRemapsWindow.Remaps = currentItem.RemapList;
+            _shouldPaint = false;
+            _spriteDeltasWindow.DeltaItems = e.Sprite.DeltaItems;
+            _spriteRemapsWindow.Remaps = e.Sprite.RemapList;
+            PaintSprite();
+            _shouldPaint = true;
         }
 
         private IDockContent DeserializeDockContent(string persistString)
         {
             if (persistString == typeof(SpriteListWindow).ToString())
-                return spriteListWindow;
+                return _spriteListWindow;
             if (persistString == typeof(SpritePreviewWindow).ToString())
-                return spritePreviewWindow;
+                return _spritePreviewWindow;
             if (persistString == typeof(SpriteDeltasWindow).ToString())
-                return spriteDeltasWindow;
+                return _spriteDeltasWindow;
             if (persistString == typeof(SpriteRemapsWindow).ToString())
-                return spriteRemapsWindow;
+                return _spriteRemapsWindow;
             return null;
         }
 
@@ -131,34 +138,171 @@ namespace Hiale.GTA2NET.WinUI
             var dict = TextureAtlas.Deserialize<TextureAtlasSprites>(fileName);
             TextureAtlasSprites.FillSpriteId(dict.SpriteDictionary);
 
-            spriteListWindow.TextureAltas = dict;
+            _spriteListWindow.TextureAltas = dict;
 
+            _spriteImage = new LockBitmap((Bitmap) _spriteListWindow.Image);
+        }
 
-            spriteImage = spriteListWindow.Image;
+        private void LoadPalette(string fileName)
+        {
+            var image = Image.FromFile(fileName);
+            _paletteImage = new LockBitmap((Bitmap) image);
+        }
+
+        private void CreateSpriteData(TextureAtlasSprites sprites)
+        {
+            _spriteImage.LockBits();
+            _spriteData = new byte[_spriteImage.Width,_spriteImage.Height];
+            _deltaImage.LockBits();
+            _deltaData = new byte[_deltaImage.Width,_deltaImage.Height];
+            var colorCache = new Dictionary<Color, byte>();
+            _paletteImage.LockBits();
+            foreach (var sprite in sprites.SpriteDictionary)
+            {
+                //actual Sprite
+                colorCache.Clear();
+                var palette = sprite.Value.DefaultPalette;
+                for (var x = sprite.Value.Rectangle.X; x < sprite.Value.Rectangle.X + sprite.Value.Rectangle.Width; x++)
+                {
+                    for (var y = sprite.Value.Rectangle.Y; y < sprite.Value.Rectangle.Y + sprite.Value.Rectangle.Height; y++)
+                    {
+                        var color = _spriteImage.GetPixel(x, y);
+                        if (color.ToArgb() == 0)
+                            continue;
+                        byte value;
+                        if (colorCache.TryGetValue(color, out value))
+                        {
+                            _spriteData[x, y] = value;
+                            continue;
+                        }
+                        for (byte i = 0; i < 256; i++)
+                        {
+                            if (color == _paletteImage.GetPixel(palette, i))
+                            {
+                                _spriteData[x,y] = i;
+                                colorCache.Add(color, i);
+                                break;
+                            }
+                        }
+                        
+                    }
+                }
+                //Deltas
+                if (sprite.Value.DeltaItems == null)
+                    continue;
+                foreach (var delta in sprite.Value.DeltaItems)
+                {
+                    for (var x = delta.Rectangle.X; x < delta.Rectangle.X + delta.Rectangle.Width; x++)
+                    {
+                        for (var y = delta.Rectangle.Y; y < delta.Rectangle.Y + delta.Rectangle.Height; y++)
+                        {
+                            var color = _deltaImage.GetPixel(x, y);
+                            if (color.ToArgb() == 0)
+                                continue;
+                            byte value;
+                            if (colorCache.TryGetValue(color, out value))
+                            {
+                                _deltaData[x, y] = value;
+                                continue;
+                            }
+                            for (byte i = 0; i < 256; i++)
+                            {
+                                if (color == _paletteImage.GetPixel(palette, i))
+                                {
+                                    _deltaData[x, y] = i;
+                                    colorCache.Add(color, i);
+                                    break;
+                                }
+                                if (i == 255)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Color not found!");
+                                    //DetectPalette(paletteImage, deltaImage, delta.Rectangle);
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+            }
+            _deltaImage.UnlockBits();
+            _spriteImage.UnlockBits();
+        }
+
+        private static int DetectPalette(LockBitmap palettes, LockBitmap lockBmp, CompactRectangle rect)
+        {
+            var max = 0;
+            var value = -1;
+            var dict = new Dictionary<int, List<Color>>();
+            for (var i = 0; i < palettes.Width; i++)
+            {
+                dict.Add(i, new List<Color>());
+                for (var x = rect.X; x < rect.X + rect.Width; x++)
+                {
+                    for (var y = rect.Y; y < rect.Y + rect.Height; y++)
+                    {
+                        var orgColor = lockBmp.GetPixel(x, y);
+                        for (var c = 0; c < 256; c++)
+                        {
+                            if (orgColor != palettes.GetPixel(i, c))
+                                continue;
+                            if (!dict[i].Contains(orgColor))
+                                dict[i].Add(orgColor);
+                            if (dict[i].Count <= max)
+                                continue;
+                            value = i;
+                            max = dict[i].Count;
+                        }
+                    }
+                }
+            }
+            return value;
         }
 
         private void LoadDeltas(string fileName)
         {
             var dict = TextureAtlas.Deserialize<TextureAtlasDeltas>(fileName);
-            deltaImage = Image.FromFile(Extensions.CheckDirectorySeparator(Path.GetDirectoryName(fileName)) + dict.ImagePath);
-            TextureAtlasSprites.MergeDeltas(spriteListWindow.TextureAltas.SpriteDictionary, dict.DeltaDictionary);
+            _deltaImage = new LockBitmap((Bitmap) Image.FromFile(Extensions.CheckDirectorySeparator(Path.GetDirectoryName(fileName)) + dict.ImagePath));
+            TextureAtlasSprites.MergeDeltas(_spriteListWindow.TextureAltas.SpriteDictionary, dict.DeltaDictionary);
         }
 
-        private void PaintSprite(SpriteItem item, IList<DeltaSubItem> activeDeltas)
+        private void PaintSprite()
         {
+            var item = _spriteListWindow.SelectedSprite;
+            var remap = _spriteRemapsWindow.SelectedItem;
+            int palette = remap.Key == -1 ? _spriteListWindow.SelectedSprite.DefaultPalette : remap.Palette;
+            var activeDeltas = _spriteDeltasWindow.CheckedDeltaItems;
+
             Image previousImage = null;
-            if (spritePreviewWindow.Image != null)
-                previousImage = spritePreviewWindow.Image;
-            var bmp = new Bitmap(item.Rectangle.Width, item.Rectangle.Height);
-            using (var g = Graphics.FromImage(bmp))
+            if (_spritePreviewWindow.Image != null)
+                previousImage = _spritePreviewWindow.Image;
+            var outputBitmap = new LockBitmap(new Bitmap(item.Rectangle.Width, item.Rectangle.Height));
+            outputBitmap.LockBits();
+            for (var x = 0; x < item.Rectangle.Width; x++)
             {
-                g.DrawImage(spriteImage, new Rectangle(0, 0, item.Rectangle.Width, item.Rectangle.Height), item.Rectangle.X, item.Rectangle.Y, item.Rectangle.Width, item.Rectangle.Height, GraphicsUnit.Pixel);
-                foreach (var delta in activeDeltas)
+                for (var y = 0; y < item.Rectangle.Height; y++)
                 {
-                    g.DrawImage(deltaImage, new Rectangle(delta.RelativePosition.X, delta.RelativePosition.Y, delta.Rectangle.Width, delta.Rectangle.Height), delta.Rectangle.X, delta.Rectangle.Y, delta.Rectangle.Width, delta.Rectangle.Height, GraphicsUnit.Pixel);
+                    var value = _spriteData[item.Rectangle.X + x, item.Rectangle.Y + y];
+                    if (value != 0)
+                        outputBitmap.SetPixel(x, y, _paletteImage.GetPixel(palette, value));
+                }
+
+            }
+            foreach (var delta in activeDeltas)
+            {
+                for (var x = 0; x < delta.Rectangle.Width; x++)
+                {
+                    for (var y = 0; y < delta.Rectangle.Height; y++)
+                    {
+                        var value = _deltaData[delta.Rectangle.X + x, delta.Rectangle.Y + y];
+                        if (value != 0)
+                            outputBitmap.SetPixel(delta.RelativePosition.X + x, delta.RelativePosition.Y + y, _paletteImage.GetPixel(palette, value));
+                    }
                 }
             }
-            spritePreviewWindow.Image = bmp;
+
+            outputBitmap.UnlockBits();
+            _spritePreviewWindow.Image = outputBitmap.Source;
             if (previousImage != null)
                 previousImage.Dispose();
         }
@@ -168,36 +312,38 @@ namespace Hiale.GTA2NET.WinUI
             using (var dlg = new SaveFileDialog())
             {
                 dlg.Filter = "PNG Images (*.png)|*.png|All Files (*.*)|*.*";
-                dlg.FileName = spriteListWindow.SelectedSprite.SpriteId.ToString(CultureInfo.InvariantCulture);
+                dlg.FileName = _spriteListWindow.SelectedSprite.SpriteId.ToString(CultureInfo.InvariantCulture);
                 if (dlg.ShowDialog() == DialogResult.OK)
-                    spritePreviewWindow.Image.Save(dlg.FileName, ImageFormat.Png);
+                    _spritePreviewWindow.Image.Save(dlg.FileName, ImageFormat.Png);
             }
         }
 
-
         private void SpriteFormFormClosing(object sender, FormClosingEventArgs e)
         {
-            dockPanel.SaveAsXml(currentPath + LayoutFile);
+            _deltaImage.Dispose();
+            _paletteImage.Dispose();
+            _spriteImage.Dispose();
+            dockPanel.SaveAsXml(_currentPath + LayoutFile);
         }
 
         private void MnuWindowSpriteListClick(object sender, EventArgs e)
         {
-            spriteListWindow.Show(dockPanel);
+            _spriteListWindow.Show(dockPanel);
         }
 
         private void MnuWindowPreviewClick(object sender, EventArgs e)
         {
-            spritePreviewWindow.Show(dockPanel);
+            _spritePreviewWindow.Show(dockPanel);
         }
 
         private void MnuWindowsDeltasClick(object sender, EventArgs e)
         {
-            spriteDeltasWindow.Show(dockPanel);
+            _spriteDeltasWindow.Show(dockPanel);
         }
 
         private void MnuWindowRemapsClick(object sender, EventArgs e)
         {
-            spriteRemapsWindow.Show(dockPanel);
+            _spriteRemapsWindow.Show(dockPanel);
         }
     }
 }
