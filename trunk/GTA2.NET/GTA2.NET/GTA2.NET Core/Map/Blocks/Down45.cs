@@ -56,7 +56,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             SetLowSlope(45, 3);
         }
 
-        public override List<IObstacle> GetColision()
+        public override List<IObstacle> GetCollision()
         {
             throw new System.NotImplementedException();
         }
