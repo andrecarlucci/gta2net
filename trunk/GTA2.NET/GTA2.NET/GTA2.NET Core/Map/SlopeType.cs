@@ -100,7 +100,6 @@ namespace Hiale.GTA2NET.Core.Map
         PartialBlockBottomLeft = 60, //24 pixels
         PartialCentreBlock = 61, //16 pixels
         //62 unused
-        SlopeAbove = 63,
-        Empty = 64
+        SlopeAbove = 63
     }
 }

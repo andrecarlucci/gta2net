@@ -77,7 +77,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             CreateRightVertices( frontCoordinates, backCoordinates, 0);
         }
 
-        public override List<IObstacle> GetColision()
+        public override List<IObstacle> GetCollision()
         {
             throw new System.NotImplementedException();
         }

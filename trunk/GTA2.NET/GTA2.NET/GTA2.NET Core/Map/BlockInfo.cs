@@ -1013,7 +1013,7 @@ namespace Hiale.GTA2NET.Core.Map
         #endregion
 
         #region Abstract Methods
-        public abstract List<IObstacle> GetColision();
+        public abstract List<IObstacle> GetCollision();
 
         #endregion
 
