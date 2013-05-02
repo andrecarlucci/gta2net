@@ -29,15 +29,10 @@ namespace Hiale.GTA2NET.Core.Style
 {
     internal class DeltaIndex
     {
-        private int _sprite;
         /// <summary>
         /// 
         /// </summary>
-        public int Sprite
-        {
-            get { return _sprite; }
-            set { _sprite = value; }
-        }
+        public int Sprite { get; set; }
 
         List<int> _deltaSize;
         /// <summary>
@@ -56,7 +51,7 @@ namespace Hiale.GTA2NET.Core.Style
 
         public override string ToString()
         {
-            return "Sprite: " + _sprite + " (" + _deltaSize.Count + ")";
+            return "Sprite: " + Sprite + " (" + _deltaSize.Count + ")";
         }
     }
 }

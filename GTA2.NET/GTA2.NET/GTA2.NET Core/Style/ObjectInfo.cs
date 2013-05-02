@@ -35,10 +35,10 @@ namespace Hiale.GTA2NET.Core.Style
         /// <summary>
         /// Model is the object model number. Every distinct type of object has a unique model number. Objects placed in the map using the editor are represented by a model number.
         /// </summary>
-        public byte Model;
+        public byte Model { get; set; }
         /// <summary>
         /// Sprites is the number of sprites stored for this model.
         /// </summary>
-        public byte Sprites;
+        public byte Sprites { get; set; }
     }
 }
