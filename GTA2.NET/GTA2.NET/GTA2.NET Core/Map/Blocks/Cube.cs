@@ -24,6 +24,8 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
@@ -73,6 +75,11 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             CreateLeftVertices(frontCoordinates, backCoordinates, 0);
             // Right face
             CreateRightVertices( frontCoordinates, backCoordinates, 0);
+        }
+
+        public override List<IObstacle> GetColision()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -1012,6 +1013,11 @@ namespace Hiale.GTA2NET.Core.Map
                     break;
             }
         }
+        #endregion
+
+        #region Abstract Methods
+        public abstract List<IObstacle> GetColision();
+
         #endregion
 
         #region Not Implemented
