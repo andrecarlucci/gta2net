@@ -34,7 +34,7 @@ namespace Hiale.GTA2NET.Core.Style
     public class DeltaItem
     {
         [XmlIgnore] //this is the key of the dictionary
-        public int SpriteId;
+        public int SpriteId { get; set; }
 
         public DeltaItem()
         {

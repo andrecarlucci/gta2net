@@ -32,7 +32,7 @@ namespace Hiale.GTA2NET.Core.Style
 {
     public class Palette
     {
-        public Color[] Colors;
+        public Color[] Colors { get; set; }
 
         public Palette()
         {

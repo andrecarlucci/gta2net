@@ -440,7 +440,6 @@ namespace Hiale.GTA2NET.Core.Style
             System.Diagnostics.Debug.WriteLine("Reading fonts...");
 
             var fontCount = reader.ReadUInt16();
-            //var fonts = new FontBase[fontCount];
             var fonts = new int[fontCount];
 
             for (var i = 0; i < fontCount; i++)
@@ -732,55 +731,18 @@ namespace Hiale.GTA2NET.Core.Style
                 SaveCarSprite(styleData, zip, i);
             }
 
-            //Peds
-            #region Peds Remap Info
-            /*             
-            Remaps
-            0 	Cop
-            1 	Green SWAT cop
-            2 	Red SWAT cop
-            3 	Yellow SWAT cop
-            4 	Soldier
-            5 	Redneck #1
-            6 	Redneck #2
-            7 	SRS Scientist
-            8 	Zaibatsu member
-            9 	Hare Krishna member
-            10 	Russian
-            11 	Loonie
-            12 	Elvis
-            13 	Yakuza
-            14 	Fire fighter
-            15 	Car jacker
-            16 	Medic
-            17 	Pickpocket
-            18 	Blue pedestrian
-            19 	Light blue pedestrian
-            20 	Red pedestrian
-            21 	Pedestrian
-            22 	Prisoner
-            23 	Poisened pedestrian
-            24 	Poisened pedestrian
-            25 	Claude Speed (default playerped)
-            26 	Naked pedestrian
-            27  t/m 52 	Other normal pedestrians 
-            */
-            #endregion Peds
-
-            var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite + styleData.PaletteBase.CarRemap];
             for (var i = styleData.SpriteBase.Ped; i < styleData.SpriteBase.CodeObj; i++)
             {
                 var basePalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + i];
                 SaveSpriteRemap(styleData, styleData.SpriteEntries[i], basePalette, zip, "Peds/" + i);
-                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Pedestrian, basePalette));
-                //if (EXPORT_REMAPS)
+                //var pedRemaps = new List<Remap>(53); //Ped Remaps are still broken...
+                //for (var j = 0; j < 53; j++)
                 //{
-                //    for (var j = 0; j < 53; j++)
-                //    {
-                //        //SaveSpriteRemap(path + j + "\\" + i + "_" + j + ".png", i, (UInt32)(remapPalette + j));
-                //        SaveSpriteRemap(styleData, styleData.SpriteEntries[i], (UInt32) (remapPalette + j), zip, "Peds/ " + j + i + "_" + j);
-                //    }
+                //    var remapPalette = styleData.PaletteIndexes[styleData.PaletteBase.Tile + styleData.PaletteBase.Sprite + styleData.PaletteBase.CarRemap + j]; //...probably the bug lays here
+                //    pedRemaps.Add(new PedestrianRemap(j, remapPalette));
                 //}
+                //styleData.Sprites.Add(i, new SpriteItem(SpriteType.Pedestrian, basePalette, pedRemaps));
+                styleData.Sprites.Add(i, new SpriteItem(SpriteType.Pedestrian, basePalette));
             }
 
             //Code Obj
