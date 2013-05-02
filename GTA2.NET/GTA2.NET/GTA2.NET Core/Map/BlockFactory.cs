@@ -34,7 +34,7 @@ namespace Hiale.GTA2NET.Core.Map
 
     public static class BlockFactory
     {
-        private static BlockInfo[] blocks = { new Empty(), new Cube(), new Up26Low(), new Up26High(), new Down26Low(), new Down26High(), new Left26Low(),
+        private static BlockInfo[] blocks = { new Cube(), new Up26Low(), new Up26High(), new Down26Low(), new Down26High(), new Left26Low(),
                                               new Left26High(), new Right26Low(), new Right26High(), new Up7Low(), new Up7High0(), new Up7High1(), new Up7High2(), 
                                               new Up7High3(), new Up7High4(), new Up7High5(), new Up7High6(), new Down7Low(), new Down7High0(), new Down7High1(), 
                                               new Down7High2(), new Down7High3(), new Down7High4(), new Down7High5(), new Down7High6(), new Left7Low(),
