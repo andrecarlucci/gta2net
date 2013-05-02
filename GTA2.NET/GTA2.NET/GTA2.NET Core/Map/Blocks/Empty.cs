@@ -29,27 +29,27 @@ using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    class Empty : BlockInfo
+    public class Empty : BlockInfo
     {
         public Empty() : base()
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
+            SlopeType = SlopeType.None;
         }
 
         public Empty(blockInfo blockInfo, Vector3 pos) : base(blockInfo, pos)
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
+            SlopeType = SlopeType.None;
         }
         
         public Empty(Vector3 pos) : base()
         {
-            this.SlopeType = Core.Map.SlopeType.Empty;
-            this.Position = pos;
+            SlopeType = SlopeType.None;
+            Position = pos;
         }
 
         public override BlockInfo DeepCopy()
         {
-            return new Empty(this.blockInfo, this.Position);
+            return new Empty(blockInfo, Position);
         }
 
         public override BlockInfo DeepCopy(blockInfo blockInfo, Vector3 pos)

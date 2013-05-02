@@ -74,7 +74,7 @@ namespace Hiale.GTA2NET.Core.Map
         ///// <summary>
         ///// Position of this block in a map.
         ///// </summary>
-        public Vector3 Position { get; set; }
+        public Vector3 Position { get; set; } //is it really needed? Or shall we save some memory?
 
         public BlockFaceEdge Left { get; set; }
 
@@ -101,17 +101,16 @@ namespace Hiale.GTA2NET.Core.Map
         protected BlockInfo(blockInfo blockInfo, Vector3 pos)
         {
             this.blockInfo = blockInfo;
-            this.Left = new BlockFaceEdge(blockInfo.Left);
-            this.Right = new BlockFaceEdge(blockInfo.Right);
-            this.Top = new BlockFaceEdge(blockInfo.Top);
-            this.Bottom = new BlockFaceEdge(blockInfo.Bottom);
-            this.Lid = new BlockFaceLid(blockInfo.Lid);
-            this.Arrows = (RoadTrafficType)blockInfo.Arrows; //ToDo: Check, don't know if this works...
-            this.ParseSlope(blockInfo.SlopeType);
-            this.Position = pos;
-
-            this.Coors = new List<VertexPositionNormalTexture>();
-            this.IndexBufferCollection = new List<int>();
+            Left = new BlockFaceEdge(blockInfo.Left);
+            Right = new BlockFaceEdge(blockInfo.Right);
+            Top = new BlockFaceEdge(blockInfo.Top);
+            Bottom = new BlockFaceEdge(blockInfo.Bottom);
+            Lid = new BlockFaceLid(blockInfo.Lid);
+            Arrows = (RoadTrafficType)blockInfo.Arrows;
+            ParseSlope(blockInfo.SlopeType);
+            Position = pos;
+            Coors = new List<VertexPositionNormalTexture>();
+            IndexBufferCollection = new List<int>();
         }
 
         public BlockInfo()
@@ -196,9 +195,7 @@ namespace Hiale.GTA2NET.Core.Map
         {
             get
             {
-                if ((Left == null && Right == null && Top == null && Bottom == null && Lid == null) || ((!Left && !Right && !Top && !Bottom && !Lid)))
-                    return true;
-                return false;
+                return (Left == null && Right == null && Top == null && Bottom == null && Lid == null) || ((!Left && !Right && !Top && !Bottom && !Lid));
             }
         }
         
@@ -477,36 +474,36 @@ namespace Hiale.GTA2NET.Core.Map
 
         protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Byte rotation)
         {
-            if (this.Right.TileNumber > 0)
-            {
-                FaceCoordinates newFront = new FaceCoordinates();
-                FaceCoordinates newBack = new FaceCoordinates();
-                if (rotation == 0)
-                {
-                    newFront = CorrectLeftRightVertices(frontCoords, false);
-                    newBack = CorrectLeftRightVertices(backCoords, false);
-                }
-                else if (rotation == 2)
-                {
-                    newFront = CorrectLeftRightVertices(frontCoords, true);
-                    newBack = CorrectLeftRightVertices(backCoords, true);
-                }
-                //ToDo: Add more rotation codes...
-                Vector2[] texPos = GetTexturePositions(tileAtlas[this.Right.TileNumber], this.Right.Rotation, this.Right.Flip);
-                Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
-                Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
-                Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
-                Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+            if (!Right)
+                return;
 
-                //...
-                int startIndex = Coors.Count - 4;
-                IndexBufferCollection.Add(startIndex + 2);
-                IndexBufferCollection.Add(startIndex + 1);
-                IndexBufferCollection.Add(startIndex);
-                IndexBufferCollection.Add(startIndex);
-                IndexBufferCollection.Add(startIndex + 3);
-                IndexBufferCollection.Add(startIndex + 2);
+            FaceCoordinates newFront = new FaceCoordinates();
+            FaceCoordinates newBack = new FaceCoordinates();
+            if (rotation == 0)
+            {
+                newFront = CorrectLeftRightVertices(frontCoords, false);
+                newBack = CorrectLeftRightVertices(backCoords, false);
             }
+            else if (rotation == 2)
+            {
+                newFront = CorrectLeftRightVertices(frontCoords, true);
+                newBack = CorrectLeftRightVertices(backCoords, true);
+            }
+            //ToDo: Add more rotation codes...
+            Vector2[] texPos = GetTexturePositions(tileAtlas[this.Right.TileNumber], this.Right.Rotation, this.Right.Flip);
+            Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
+            Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+
+            //...
+            int startIndex = Coors.Count - 4;
+            IndexBufferCollection.Add(startIndex + 2);
+            IndexBufferCollection.Add(startIndex + 1);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex);
+            IndexBufferCollection.Add(startIndex + 3);
+            IndexBufferCollection.Add(startIndex + 2);
         }
         #endregion
 
@@ -1088,7 +1085,7 @@ namespace Hiale.GTA2NET.Core.Map
         {
             get
             {
-                byte slope = (byte)SlopeType;
+                var slope = (byte)SlopeType;
                 if (slope > 0 && slope < 9)
                     return 26;
                 if (slope > 8 && slope < 41)
@@ -1114,9 +1111,7 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 if (IsEmpty)
                     return false;
-                if (Lid != null && Lid && (Left == null || !Left) && (Right == null || !Right) && (Top == null || !Top) && (Bottom == null || !Bottom))
-                    return true;
-                return false;
+                return Lid != null && Lid && (Left == null || !Left) && (Right == null || !Right) && (Top == null || !Top) && (Bottom == null || !Bottom);
             }
         }
 
