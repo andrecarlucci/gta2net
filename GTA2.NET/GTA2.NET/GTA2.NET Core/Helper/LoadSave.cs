@@ -42,13 +42,13 @@ namespace Hiale.GTA2NET.Core.Helper
             reader.ReadString(); //Version
             var count = reader.ReadInt32();
             var i = 0;
-            var blocks = new BlockInfo[Map.Map.MaxWidth , Map.Map.MaxLength, Map.Map.MaxHeight];
+            var blocks = new Block[Map.Map.MaxWidth , Map.Map.MaxLength, Map.Map.MaxHeight];
             while (i < count)
             {
                 var x = reader.ReadInt32();
                 var y = reader.ReadInt32();
                 var z = reader.ReadInt32();
-                blocks[x, y, z] = new Empty();
+                blocks[x, y, z] = new EmptyBlock();
                 blocks[x, y, z].Load(reader);
                 i++;
             }
@@ -60,7 +60,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     for (var y = 0; y < blocks.GetLength(1); y++)
                     {
                         if (blocks[x, y, z] == null)
-                            blocks[x, y, z] = new Empty();
+                            blocks[x, y, z] = new EmptyBlock();
                     }
                 }
             }
@@ -73,7 +73,7 @@ namespace Hiale.GTA2NET.Core.Helper
             var stream = new FileStream(filename, FileMode.Create);
             var writer = new BinaryWriter(stream);
             writer.Write("GTA2.NET");
-            writer.Write("0.1"); //we only save blocks at the moment
+            writer.Write("0.1"); //we only save _blocks at the moment
             var count = 0;
             for (var z = 0; z < map.CityBlocks.GetLength(2); z++)
             {
@@ -109,7 +109,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
 
         //Block save
-        public static void Save(this BlockInfo block, BinaryWriter writer)
+        public static void Save(this Block block, BinaryWriter writer)
         {
             block.Left.SaveBlockFaceEdge(writer);
             block.Right.SaveBlockFaceEdge(writer);
@@ -151,7 +151,7 @@ namespace Hiale.GTA2NET.Core.Helper
         }
 
         //Block load
-        public static void Load(this BlockInfo block, BinaryReader reader)
+        public static void Load(this Block block, BinaryReader reader)
         {
             block.Left = new BlockFaceEdge(reader.ReadUInt16());
             block.Right = new BlockFaceEdge(reader.ReadUInt16());

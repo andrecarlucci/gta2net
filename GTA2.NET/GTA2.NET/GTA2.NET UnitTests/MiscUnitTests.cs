@@ -47,7 +47,7 @@ namespace Hiale.GTA2NET.Test
         [TestMethod]
         public void TestBitHelper()
         {
-            //var block = new BlockInfo();
+            //var block = new Block();
             //block.ParseSlope(31);
             //block.Lid = new BlockFaceLid(16906);
             //var stream = new MemoryStream();

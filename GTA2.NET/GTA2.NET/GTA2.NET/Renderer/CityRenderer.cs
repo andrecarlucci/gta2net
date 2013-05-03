@@ -259,7 +259,7 @@ namespace Hiale.GTA2NET.Renderer
             }
         }
 
-        private void SetUpCube(BlockInfo block, Vector3 pos, bool lidLayer)
+        private void SetUpCube(Block block, Vector3 pos, bool lidLayer)
         {
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
@@ -326,7 +326,7 @@ namespace Hiale.GTA2NET.Renderer
             }
         }
 
-        private void SetUpSlopeDiagonal(BlockInfo block, Vector3 pos, byte rotation)
+        private void SetUpSlopeDiagonal(Block block, Vector3 pos, byte rotation)
         {
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
@@ -426,7 +426,7 @@ namespace Hiale.GTA2NET.Renderer
             }
         }
 
-        private void SetUpSlope_Low(BlockInfo block, Vector3 pos, byte subType, byte rotation)
+        private void SetUpSlope_Low(Block block, Vector3 pos, byte subType, byte rotation)
         {
             //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
             FaceCoordinates frontCoordinates;
@@ -563,7 +563,7 @@ namespace Hiale.GTA2NET.Renderer
             }           
         }
 
-        private void SetUpSlope_High(BlockInfo block, Vector3 pos, byte subType, byte rotation)
+        private void SetUpSlope_High(Block block, Vector3 pos, byte subType, byte rotation)
         {
             //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
             FaceCoordinates frontCoordinates;
@@ -732,7 +732,7 @@ namespace Hiale.GTA2NET.Renderer
 
         #endregion
 
-        private static bool SkipBlock(ref BlockInfo block)
+        private static bool SkipBlock(ref Block block)
         {
             if (block.Lid.TileNumber == 608 || block.Lid.TileNumber == 1023 || block.Lid.TileNumber == 6)
                 return true; //608 = Water, 1023 = dummy, 6 = crap?!
@@ -763,12 +763,12 @@ namespace Hiale.GTA2NET.Renderer
         }
 
 
-        private void CreateFrontVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
+        private void CreateFrontVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref Block block)
         {
             if (!block.Lid)
                 return;
             var texPos = GetTexturePositions(_tileAtlas[block.Lid.TileNumber], block.Lid.Rotation, block.Lid.Flip);
-            //Vector2[] TexPos = GetTexturePositions(tileAtlas[991], block.Lid.Rotation, block.Lid.Flip);
+            //Vector2[] TexPos = GetTexturePositions(tileAtlas[991], Block.Lid.Rotation, Block.Lid.Flip);
             _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
             _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[1]));
             _cityVerticesCollection.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[3]));
@@ -783,7 +783,7 @@ namespace Hiale.GTA2NET.Renderer
             _indexBufferCollection.Add(startIndex + 2);
         }
 
-        private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
+        private void CreateTopVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref Block block)
         {
             if (!block.Top)
                 return;
@@ -802,7 +802,7 @@ namespace Hiale.GTA2NET.Renderer
             _indexBufferCollection.Add(startIndex + 1);
         }
 
-        private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
+        private void CreateBottomVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref Block block)
         {
             if (!block.Bottom)
                 return;
@@ -821,12 +821,12 @@ namespace Hiale.GTA2NET.Renderer
             _indexBufferCollection.Add(startIndex + 3);
         }
 
-        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
+        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref Block block)
         {
             CreateLeftVertices(ref frontCoords, ref backCoords, ref block, block.Left, 0);
         }
 
-        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace leftFace, byte rotation)
+        private void CreateLeftVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref Block block, BlockFace leftFace, byte rotation)
         {
             if (!leftFace)
                 return;
@@ -859,12 +859,12 @@ namespace Hiale.GTA2NET.Renderer
             _indexBufferCollection.Add(startIndex);
         }
 
-        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block)
+        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref Block block)
         {
             CreateRightVertices(ref frontCoords, ref backCoords, ref block, block.Right, 0);
         }
 
-        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref BlockInfo block, BlockFace rightFace, byte rotation)
+        private void CreateRightVertices(ref FaceCoordinates frontCoords, ref FaceCoordinates backCoords, ref Block block, BlockFace rightFace, byte rotation)
         {
             if (!rightFace)
                 return;

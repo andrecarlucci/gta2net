@@ -57,7 +57,7 @@ namespace Hiale.GTA2NET.Logic
 
             if (x != savedX || y != savedY || z != savedZ)
             {
-                BlockInfo block = MainGame.Map.CityBlocks[x, y, z];
+                Block block = MainGame.Map.CityBlocks[x, y, z];
 
                 savedX = x;
                 savedY = y;

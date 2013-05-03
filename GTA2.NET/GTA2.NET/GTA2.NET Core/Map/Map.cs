@@ -41,7 +41,7 @@ namespace Hiale.GTA2NET.Core.Map
         public const int MaxHeight = 8;
 
         private bool _loaded;
-        private BlockInfo[, ,] _cityBlocks;
+        private Block[, ,] _cityBlocks;
 
         private readonly List<Zone> Zones;
         private List<MapObject> Objects;
@@ -65,7 +65,7 @@ namespace Hiale.GTA2NET.Core.Map
 
         public Map()
         {
-            _cityBlocks = new BlockInfo[MaxWidth, MaxLength, MaxHeight];
+            _cityBlocks = new Block[MaxWidth, MaxLength, MaxHeight];
 
             Zones = new List<Zone>();
             Objects = new List<MapObject>();
@@ -78,7 +78,7 @@ namespace Hiale.GTA2NET.Core.Map
                 {
                     for (var k = 0; k < _cityBlocks.GetLength(2); k++)
                     {
-                        _cityBlocks[i, j, k] = new Empty(new Vector3(i,j,k));
+                        _cityBlocks[i, j, k] = new EmptyBlock(new Vector3(i,j,k));
                     }
                 }
             }          
@@ -93,7 +93,7 @@ namespace Hiale.GTA2NET.Core.Map
         /// <summary>
         /// 
         /// </summary>
-        public BlockInfo[, ,] CityBlocks
+        public Block[, ,] CityBlocks
         {
             get
             {
@@ -162,19 +162,19 @@ namespace Hiale.GTA2NET.Core.Map
             for (var i = 0; i < columnCount; i++)
                 columns[i] = reader.ReadUInt32();
             var blockCount = reader.ReadUInt32();
-            var blocks = new BlockInfo[blockCount];
+            var blocks = new Block[blockCount];
             for (var i = 0; i < blockCount; i++)
             {
-                blockInfo blockInfo;
-                blockInfo.Left = reader.ReadUInt16();
-                blockInfo.Right = reader.ReadUInt16();
-                blockInfo.Top = reader.ReadUInt16();
-                blockInfo.Bottom = reader.ReadUInt16();
-                blockInfo.Lid = reader.ReadUInt16();
-                blockInfo.Arrows = reader.ReadByte();
-                blockInfo.SlopeType = reader.ReadByte();
-                BlockInfo block = BlockFactory.Build(blockInfo, Vector3.One);
-                block.tileAtlas = this.tileAtlas;
+                BlockStructure blockStructure;
+                blockStructure.Left = reader.ReadUInt16();
+                blockStructure.Right = reader.ReadUInt16();
+                blockStructure.Top = reader.ReadUInt16();
+                blockStructure.Bottom = reader.ReadUInt16();
+                blockStructure.Lid = reader.ReadUInt16();
+                blockStructure.Arrows = reader.ReadByte();
+                blockStructure.SlopeType = reader.ReadByte();
+                Block block = BlockFactory.Build(blockStructure, Vector3.One);
+                block.TileAtlas = this.tileAtlas;
                 blocks[i] = block;
             }
             CreateUncompressedMap(baseOffsets, columns, blocks);
@@ -248,7 +248,7 @@ namespace Hiale.GTA2NET.Core.Map
             }            
         }
 
-        private void CreateUncompressedMap(uint[,] baseOffsets, uint[] columns, BlockInfo[] blocks)
+        private void CreateUncompressedMap(uint[,] baseOffsets, uint[] columns, Block[] _blocks)
         {
             for (var i = 0; i < 256; i++)
             {
@@ -261,7 +261,7 @@ namespace Hiale.GTA2NET.Core.Map
                     {
                         if (k >= offset)
                         {
-                            _cityBlocks[i, j, k] = blocks[columns[columnIndex + k - offset + 1]].DeepCopy();
+                            _cityBlocks[i, j, k] = _blocks[columns[columnIndex + k - offset + 1]].DeepCopy();
                             _cityBlocks[i, j, k].Position = new Vector3(i, j, k);
                         }
                     }
@@ -294,9 +294,9 @@ namespace Hiale.GTA2NET.Core.Map
                     {
                         if (i == 72 && j == 182)
                             Console.Read();
-                        BlockInfo a = _cityBlocks[i, j, k];
+                        Block a = _cityBlocks[i, j, k];
                         //a.Position = new Vector3(i, j, k);
-                        a.tileAtlas = tileAtlas;
+                        a.TileAtlas = tileAtlas;
                         a.SetUpCube();
                         int idx = 0;
                         foreach (VertexPositionNormalTexture vx in a.Coors)

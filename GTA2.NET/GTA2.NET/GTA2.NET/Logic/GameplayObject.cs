@@ -366,10 +366,10 @@ namespace Hiale.GTA2NET.Logic
             float x = point.X;
             float y = point.Y;
             int z = (int)Math.Round(value, 0);
-            BlockInfo blockAbove = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z + 1];
+            Block blockAbove = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z + 1];
             if (blockAbove.IsMovableSlope)
                 z++;
-            BlockInfo blockBelow = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z - 1];
+            Block blockBelow = MainGame.Map.CityBlocks[(int)point.X, (int)point.Y, z - 1];
             if (blockBelow.IsMovableSlope)
                 z--;
             float newValue = MainGame.GetHeightF(ref x, ref y, ref z);

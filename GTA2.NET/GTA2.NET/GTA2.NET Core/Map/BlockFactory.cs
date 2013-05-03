@@ -34,30 +34,30 @@ namespace Hiale.GTA2NET.Core.Map
 
     public static class BlockFactory
     {
-        private static BlockInfo[] blocks = { new Cube(), new Up26Low(), new Up26High(), new Down26Low(), new Down26High(), new Left26Low(),
-                                              new Left26High(), new Right26Low(), new Right26High(), new Up7Low(), new Up7High0(), new Up7High1(), new Up7High2(), 
-                                              new Up7High3(), new Up7High4(), new Up7High5(), new Up7High6(), new Down7Low(), new Down7High0(), new Down7High1(), 
-                                              new Down7High2(), new Down7High3(), new Down7High4(), new Down7High5(), new Down7High6(), new Left7Low(),
-                                              new Left7High0(), new Left7High1(), new Left7High2(), new Left7High3(), new Left7High4(), new Left7High5(),
-                                              new Left7High6(), new Right7Low(), new Right7High0(), new Right7High1(), new Right7High2(), new Right7High3(), 
-                                              new Right7High4(), new Right7High5(), new Right7High6(), new Up45(), new Down45(), new Left45(), new Right45(),
-                                              new DiagonalFacingUpLeft(), new DiagonalFacingUpRight(), new DiagonalFacingDownLeft(), new DiagonalFacingDownRight()
+        private static Block[] _blocks = { new CubeBlock(), new Up26LowBlock(), new Up26HighBlock(), new Down26LowBlock(), new Down26HighBlock(), new Left26LowBlock(),
+                                              new Left26HighBlock(), new Right26LowBlock(), new Right26HighBlock(), new Up7LowBlock(), new Up7High0Block(), new Up7High1Block(), new Up7High2Block(), 
+                                              new Up7High3Block(), new Up7High4Block(), new Up7High5Block(), new Up7High6Block(), new Down7LowBlock(), new Down7High0Block(), new Down7High1Block(), 
+                                              new Down7High2Block(), new Down7High3Block(), new Down7High4Block(), new Down7High5Block(), new Down7High6Block(), new Left7LowBlock(),
+                                              new Left7High0Block(), new Left7High1Block(), new Left7High2Block(), new Left7High3Block(), new Left7High4Block(), new Left7High5Block(),
+                                              new Left7High6Block(), new Right7LowBlock(), new Right7High0Block(), new Right7High1Block(), new Right7High2Block(), new Right7High3Block(), 
+                                              new Right7High4Block(), new Right7High5Block(), new Right7High6Block(), new Up45Block(), new Down45Block(), new Left45Block(), new Right45Block(),
+                                              new DiagonalFacingUpLeftBlock(), new DiagonalFacingUpRightBlock(), new DiagonalFacingDownLeftBlock(), new DiagonalFacingDownRightBlock()
                                             };
 
-        public static BlockInfo Build(blockInfo blockInfo, Vector3 pos)
+        public static Block Build(BlockStructure blockStructure, Vector3 pos)
         {
             int slopeType = 0;
             for (int i = 2; i < 8; i++)
             {
-                if (BitHelper.CheckBit(blockInfo.SlopeType, i))
+                if (BitHelper.CheckBit(blockStructure.SlopeType, i))
                     slopeType += (int)Math.Pow(2, i - 2);
             }
 
-            foreach(BlockInfo b in blocks)
+            foreach(Block b in _blocks)
                 if (b.IsMe((SlopeType)slopeType))
-                    return b.DeepCopy(blockInfo, pos);
+                    return b.DeepCopy(blockStructure, pos);
 
-            return new Cube(blockInfo, pos);    //Hack until all the diferent blocks are implemented.
+            return new CubeBlock(blockStructure, pos);    //Hack until all the diferent _blocks are implemented.
             //throw new NotSupportedException(); <- Must be this.
         }
     }
