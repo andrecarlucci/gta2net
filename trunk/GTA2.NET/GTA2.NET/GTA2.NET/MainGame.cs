@@ -522,13 +522,13 @@ namespace Hiale.GTA2NET
 
         public static float GetHeightF(ref float x, ref float y, ref int z)
         {
-            BlockInfo block = Map.CityBlocks[(int)x, (int)y, z];
+            Block block = Map.CityBlocks[(int)x, (int)y, z];
             if (!block.IsEmpty)
                 return block.IsMovableSlope ? GetSlopeHeight(ref block, ref x, ref y, ref z) : z;
             return -1;
         }
 
-        private static float GetSlopeHeight(ref BlockInfo block, ref float x, ref float y, ref int z)
+        private static float GetSlopeHeight(ref Block block, ref float x, ref float y, ref int z)
         {
             float xy;
             int rounded;

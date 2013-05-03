@@ -43,11 +43,11 @@ namespace Hiale.GTA2NET.Core.Helper
             Right
         }
 
-        public static IList<Vector2> FindPolygonPoints(CollisionMapType[,,] blockCollisions, BlockInfo[,,] blocks,  Vector2 start, int z)
+        public static IList<Vector2> FindPolygonPoints(CollisionMapType[,,] blockCollisions, Block[,,] _blocks,  Vector2 start, int z)
         {
             var specialSlopes = new List<Vector2>();
-            var rawPolygon = IdentifyPerimeter(blockCollisions, blocks, start, z, specialSlopes);
-            ProcessSlopes(rawPolygon, specialSlopes, blocks, z);
+            var rawPolygon = IdentifyPerimeter(blockCollisions, _blocks, start, z, specialSlopes);
+            ProcessSlopes(rawPolygon, specialSlopes, _blocks, z);
             var polygon = OptimizePolygon(rawPolygon, start);
             return polygon;
             //return rawPolygon;
@@ -99,13 +99,13 @@ namespace Hiale.GTA2NET.Core.Helper
             return polygon;
         }
 
-        private static void ProcessSlopes(IList<Vector2> polygon, IEnumerable<Vector2> specialSlopes, BlockInfo[, ,] blocks, int z)
+        private static void ProcessSlopes(IList<Vector2> polygon, IEnumerable<Vector2> specialSlopes, Block[, ,] _blocks, int z)
         {
             foreach (var specialSlope in specialSlopes)
             {
                 var x = (int) specialSlope.X;
                 var y = (int) specialSlope.Y;
-                switch (blocks[x, y, z].SlopeType)
+                switch (_blocks[x, y, z].SlopeType)
                 {
                     case SlopeType.DiagonalFacingUpLeft:
                         RemovePoint(x + 1, y + 1, polygon);
@@ -139,7 +139,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
 
         // Performs the main while loop of the algorithm
-        private static IList<Vector2> IdentifyPerimeter(CollisionMapType[, ,] blockCollisions, BlockInfo[, ,] blocks, Vector2 start, int z, List<Vector2> specialSlopes)
+        private static IList<Vector2> IdentifyPerimeter(CollisionMapType[, ,] blockCollisions, Block[, ,] _blocks, Vector2 start, int z, List<Vector2> specialSlopes)
         {
             var startX = (int) start.X;
             var startY = (int) start.Y;
@@ -164,7 +164,7 @@ namespace Hiale.GTA2NET.Core.Helper
             do
             {
                 // Evaluate our state, and set up our next direction
-                Step(x, y, z, blockCollisions, blocks, ref nextStep, specialSlopes);
+                Step(x, y, z, blockCollisions, _blocks, ref nextStep, specialSlopes);
 
                 // If our current point is within our array bounds, add it to the list of points
                 if (x >= 0 && x < blockCollisions.GetLength(0) + 1 && y >= 0 && y < blockCollisions.GetLength(1) + 1)
@@ -191,14 +191,14 @@ namespace Hiale.GTA2NET.Core.Helper
 
         }
 
-        // Determines and sets the state of the 4 blocks that represent our current state, and sets our current and previous directions
-        private static void Step(int x, int y, int z, CollisionMapType[, ,] blockCollisions, BlockInfo[, ,] blocks, ref StepDirection nextStep, List<Vector2> specialSlopes)
+        // Determines and sets the state of the 4 _blocks that represent our current state, and sets our current and previous directions
+        private static void Step(int x, int y, int z, CollisionMapType[, ,] blockCollisions, Block[, ,] _blocks, ref StepDirection nextStep, List<Vector2> specialSlopes)
         {
             // Scan our 4 pixel area
-            var upLeft = IsBlockOccupied(x - 1, y - 1, z, blockCollisions, blocks, specialSlopes);
-            var upRight = IsBlockOccupied(x, y - 1, z, blockCollisions, blocks, specialSlopes);
-            var downLeft = IsBlockOccupied(x - 1, y, z, blockCollisions, blocks, specialSlopes);
-            var downRight = IsBlockOccupied(x, y, z, blockCollisions, blocks, specialSlopes);
+            var upLeft = IsBlockOccupied(x - 1, y - 1, z, blockCollisions, _blocks, specialSlopes);
+            var upRight = IsBlockOccupied(x, y - 1, z, blockCollisions, _blocks, specialSlopes);
+            var downLeft = IsBlockOccupied(x - 1, y, z, blockCollisions, _blocks, specialSlopes);
+            var downRight = IsBlockOccupied(x, y, z, blockCollisions, _blocks, specialSlopes);
 
             // Store our previous step
             var previousStep = nextStep;
@@ -286,12 +286,12 @@ namespace Hiale.GTA2NET.Core.Helper
             }
         }
 
-        private static bool IsBlockOccupied(int x, int y, int z, CollisionMapType[, ,] blockCollisions, BlockInfo[, ,] blocks, List<Vector2> specialSlopes)
+        private static bool IsBlockOccupied(int x, int y, int z, CollisionMapType[, ,] blockCollisions, Block[, ,] _blocks, List<Vector2> specialSlopes)
         {
             if (x < 0 || y < 0 || x >= blockCollisions.GetLength(0) || y >= blockCollisions.GetLength(1))
                 return false;
 
-            if (blocks[x, y, z].SlopeType.EqualsAnyOf(SlopeType.DiagonalFacingUpLeft,
+            if (_blocks[x, y, z].SlopeType.EqualsAnyOf(SlopeType.DiagonalFacingUpLeft,
                                                       SlopeType.DiagonalFacingUpRight,
                                                       SlopeType.DiagonalFacingDownLeft,
                                                       SlopeType.DiagonalFacingDownRight))
