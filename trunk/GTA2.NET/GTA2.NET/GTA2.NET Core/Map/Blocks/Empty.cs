@@ -70,7 +70,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             }
         }
 
-        public override List<IObstacle> GetCollision()
+        public override void GetCollision(List<IObstacle> obstacles)
         {
             throw new System.NotImplementedException();
         }
