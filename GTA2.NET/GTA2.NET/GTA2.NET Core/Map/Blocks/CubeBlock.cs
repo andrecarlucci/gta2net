@@ -29,7 +29,7 @@ using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    //I know CubeBlock sounds stupid, but I wanted it to have consistent
+    //I know CubeBlock sounds stupid, but I wanted it to have it consistent
     public class CubeBlock : Block
     {
         public CubeBlock() : base()

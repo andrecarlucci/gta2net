@@ -235,7 +235,7 @@ namespace Hiale.GTA2NET.Core.Map
         /// </summary>
         /// <param name="slopeType">SlopeType to test</param>
         /// <returns>True </returns>
-        public bool IsMe(SlopeType slopeType)
+        public virtual bool IsSlopeOf(SlopeType slopeType)
         {
             return (SlopeType == slopeType);
         }
@@ -1147,11 +1147,29 @@ namespace Hiale.GTA2NET.Core.Map
         #region Coordinates
 
         /// <summary>
-        ///     Based in the position of the Block calculate the positons of the verticies of that cube.
+        ///     Based in the position of the Block calculate the positons of the verticies of the block.
         /// </summary>
         /// <param name="frontCoords">The coordinates of the top face of the cube</param>
         /// <param name="backCoords">The coordinates of the botton face of the cube</param>
         protected void PrepareCoordinates(out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
+        {
+            float x = 0;
+            float y = 0;
+            float width = 1;
+            float height = 1;
+            PrepareCoordinates(ref x, ref y, ref width, ref height, out frontCoords, out backCoords);
+        }
+
+        /// <summary>
+        ///     Based in the position of the Block calculate the positons of the verticies of the block.
+        /// </summary>
+        /// <param name="frontCoords">The coordinates of the top face of the cube</param>
+        /// <param name="backCoords">The coordinates of the botton face of the cube</param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        protected void PrepareCoordinates(ref float x, ref float y, ref float width, ref float height, out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
         {
             Vector3 position = Position;
             position.Y *= -1;
