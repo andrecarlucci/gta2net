@@ -76,6 +76,8 @@ namespace Hiale.GTA2NET.Core.Map
 
         #endregion
 
+        protected float PartialScalar = 0.375f;
+
         protected Vector3 GlobalScalar = new Vector3(1, 1, 0.5f);
         protected BlockStructure BlockStructure;
 

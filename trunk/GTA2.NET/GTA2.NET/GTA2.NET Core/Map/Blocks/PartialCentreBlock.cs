@@ -25,20 +25,23 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Collision;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
     public class PartialCentreBlock : Block
     {
-        public override Block DeepCopy()
+        private const float CenctreBlockScalar = 0.3125f;
+
+        public PartialCentreBlock() : base()
         {
-            throw new NotImplementedException();
+            SlopeType = SlopeType.PartialCentreBlock;
         }
 
-        public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
+        public PartialCentreBlock(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos) 
         {
-            throw new NotImplementedException();
+            SlopeType = SlopeType.PartialCentreBlock;
         }
 
         public override void SetUpCube()
@@ -46,9 +49,21 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             throw new NotImplementedException();
         }
 
-        public override void GetCollision(List<Collision.IObstacle> obstacles)
+        public override void GetCollision(List<IObstacle> obstacles)
         {
-            throw new NotImplementedException();
+            if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
+            {
+                obstacles.Add(new RectangleObstacle(new Vector2(Position.X + CenctreBlockScalar, Position.Y + CenctreBlockScalar), (int)Position.Z, PartialBlockScalar, PartialBlockScalar));
+                return;
+            }
+            if (Left.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CenctreBlockScalar, Position.Y + CenctreBlockScalar), new Vector2(Position.X + CenctreBlockScalar, Position.Y + CenctreBlockScalar + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
+            if (Top.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CenctreBlockScalar, Position.Y + CenctreBlockScalar), new Vector2(Position.X + CenctreBlockScalar + PartialBlockScalar, Position.Y + CenctreBlockScalar), (int) Position.Z, LineObstacleType.Horizontal));
+            if (Right.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CenctreBlockScalar + PartialBlockScalar, Position.Y + CenctreBlockScalar), new Vector2(Position.X + CenctreBlockScalar + PartialBlockScalar, Position.Y + CenctreBlockScalar + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
+            if (Bottom.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CenctreBlockScalar + PartialBlockScalar, Position.Y + CenctreBlockScalar + PartialBlockScalar), new Vector2(Position.X + CenctreBlockScalar, Position.Y + CenctreBlockScalar + PartialBlockScalar), (int)Position.Z, LineObstacleType.Horizontal));
         }
     }
 }

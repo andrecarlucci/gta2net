@@ -25,13 +25,19 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Collision;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
     public class PartialBottomBlock : Block
     {
-        public PartialBottomBlock()
+        public PartialBottomBlock() : base()
+        {
+            SlopeType = SlopeType.PartialBlockBottom;
+        }
+
+        public PartialBottomBlock(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos)
         {
             SlopeType = SlopeType.PartialBlockBottom;
         }
@@ -43,7 +49,19 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void GetCollision(List<Collision.IObstacle> obstacles)
         {
-            throw new NotImplementedException();
+            if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
+            {
+                obstacles.Add(new RectangleObstacle(new Vector2(Position.X, Position.Y + 1 - PartialBlockScalar), (int) Position.Z, 1, PartialBlockScalar));
+                return;
+            }
+            if (Left.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X, Position.Y + 1 - PartialBlockScalar), new Vector2(Position.X, Position.Y + 1), (int) Position.Z, LineObstacleType.Vertical));
+            if (Top.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X, Position.Y + 1 - PartialBlockScalar), new Vector2(Position.X + 1, Position.Y + 1 - PartialBlockScalar), (int)Position.Z, LineObstacleType.Horizontal));
+            if (Right.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y + 1 - PartialBlockScalar), new Vector2(Position.X + 1, Position.Y + 1), (int)Position.Z, LineObstacleType.Vertical));
+            if (Bottom.Wall)
+                obstacles.Add(GetDefaultBottomCollison());
         }
     }
 }
