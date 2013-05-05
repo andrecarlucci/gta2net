@@ -1116,11 +1116,22 @@ namespace Hiale.GTA2NET.Core.Map
 
         #endregion
 
-        #region Abstract Methods
-
-        public abstract void GetCollision(List<IObstacle> obstacles);
-
-        #endregion
+        public virtual void GetCollision(List<IObstacle> obstacles)
+        {
+            if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
+            {
+                obstacles.Add(new RectangleObstacle(new Vector2(Position.X, Position.Y), (int) Position.Z, 1, 1));
+                return;
+            }
+            if (Left.Wall)
+                obstacles.Add(GetDefaultLeftCollison());
+            if (Top.Wall)
+                obstacles.Add(GetDefaultTopCollison());
+            if (Right.Wall)
+                obstacles.Add(GetDefaultRightCollison());
+            if (Bottom.Wall)
+                obstacles.Add(GetDefaultBottomCollison());
+        }
 
         #region Coordinates
 

@@ -43,7 +43,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override Block DeepCopy()
         {
-            return new DiagonalFacingUpLeftBlock(this.BlockStructure, this.Position);
+            return new DiagonalFacingUpLeftBlock(BlockStructure, Position);
         }
 
         public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)

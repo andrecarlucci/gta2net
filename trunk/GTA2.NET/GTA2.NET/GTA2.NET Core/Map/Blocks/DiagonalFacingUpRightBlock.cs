@@ -43,7 +43,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override Block DeepCopy()
         {
-            return new DiagonalFacingUpRightBlock(this.BlockStructure, this.Position);
+            return new DiagonalFacingUpRightBlock(BlockStructure, Position);
         }
 
         public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
@@ -58,7 +58,21 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void GetCollision(List<IObstacle> obstacles)
         {
-            throw new System.NotImplementedException();
+            if (Left.Wall && Right.Wall && Bottom.Wall)
+            {
+                var polygon = new PolygonObstacle((int)Position.Z);
+                polygon.Vertices.Add(new Vector2(Position.X, Position.Y));
+                polygon.Vertices.Add(new Vector2(Position.X + 1, Position.Y + 1));
+                polygon.Vertices.Add(new Vector2(Position.X, Position.Y));
+                obstacles.Add(polygon);
+                return;
+            }
+            if (Right.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X + 1, Position.Y + 1), (int)Position.Z, LineObstacleType.Other));
+            if (Bottom.Wall)
+                obstacles.Add(GetDefaultBottomCollison());
+            if (Left.Wall)
+                obstacles.Add(GetDefaultLeftCollison());
         }
     }
 }
