@@ -54,7 +54,7 @@ namespace Hiale.GTA2NET.Core.Map
             }
 
             foreach(Block b in Blocks)
-                if (b.IsMe((SlopeType)slopeType))
+                if (b.IsSlopeOf((SlopeType)slopeType))
                     return b.DeepCopy(blockStructure, pos);
 
             return new CubeBlock(blockStructure, pos);    //Hack until all the diferent _blocks are implemented.
