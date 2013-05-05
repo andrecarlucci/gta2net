@@ -34,23 +34,13 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
     {
         public CubeBlock() : base()
         {
-            this.SlopeType = SlopeType.None;
+            SlopeType = SlopeType.None;
         }
 
         public CubeBlock(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos)
         {
-            this.SlopeType = SlopeType.None;
-        }        
-
-        public override Block DeepCopy()
-        {
-            return new CubeBlock(BlockStructure,  Position);
-        }
-
-        public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
-        {
-            return new CubeBlock(blockStructure, pos);
-        }
+            SlopeType = SlopeType.None;
+        }  
         
         public override bool IsEmpty
         {

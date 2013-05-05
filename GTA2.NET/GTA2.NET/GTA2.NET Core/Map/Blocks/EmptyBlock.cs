@@ -47,19 +47,9 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             Position = pos;
         }
 
-        public override Block DeepCopy()
-        {
-            return new EmptyBlock(BlockStructure, Position);
-        }
-
-        public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
-        {
-            return new EmptyBlock(blockStructure, pos);
-        }
-
         public override void SetUpCube()
         {
-            return;
+            //nothing
         }
         
         public override bool IsEmpty
@@ -72,7 +62,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void GetCollision(List<IObstacle> obstacles)
         {
-            throw new System.NotImplementedException();
+            //nothing
         }
     }
 }

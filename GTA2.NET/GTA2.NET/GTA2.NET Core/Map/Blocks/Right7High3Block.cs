@@ -29,7 +29,7 @@ using System.Collections.Generic;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    class Right7High3Block : Block
+    public class Right7High3Block : Block
     {
         public Right7High3Block() : base()
         {
@@ -39,16 +39,6 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         public Right7High3Block(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos) 
         {
             SlopeType = SlopeType.Right7High3;
-        }
-        
-        public override Block DeepCopy()
-        {
-            return new Right7High3Block(this.BlockStructure, this.Position);
-        }
-
-        public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
-        {
-            return new Right7High3Block(blockStructure, pos);
         }
 
         public override void SetUpCube()
