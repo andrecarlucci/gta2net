@@ -206,18 +206,27 @@ namespace Hiale.GTA2NET.Core.Map
         }
 
         /// <summary>
-        ///     Makes a new copy of this object.
+        ///     Makes a copy of this object.
         /// </summary>
         /// <returns>The new copy.</returns>
-        public abstract Block DeepCopy();
+        public virtual Block DeepCopy()
+        {
+            return DeepCopy(BlockStructure, Position);
+        }
 
         /// <summary>
-        ///     Makes a new copy of this object.
+        ///     Makes a copy of this object.
         /// </summary>
         /// <param name="blockStructure">The BlockStructure</param>
         /// <param name="pos">The position</param>
         /// <returns>The new copy</returns>
-        public abstract Block DeepCopy(BlockStructure blockStructure, Vector3 pos);
+        public virtual Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
+        {
+            var arguments = new object[2];
+            arguments[0] = blockStructure;
+            arguments[1] = pos;
+            return (Block) Activator.CreateInstance(GetType(), arguments);
+        }
 
         /// <summary>
         ///     Test if this instance represents the slopeType

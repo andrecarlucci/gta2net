@@ -29,7 +29,7 @@ using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    class Left7High1Block : Block
+    public class Left7High1Block : Block
     {
         public Left7High1Block() : base() 
         {
@@ -39,16 +39,6 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         public Left7High1Block(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos) 
         {
             SlopeType = SlopeType.Left7High1;
-        }
-
-        public override Block DeepCopy()
-        {
-            return new Left7High1Block(this.BlockStructure, this.Position);
-        }
-
-        public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
-        {
-            return new Left7High1Block(blockStructure, pos);
         }
 
         public override void SetUpCube()

@@ -34,7 +34,7 @@ namespace Hiale.GTA2NET.Core.Map
 
     public static class BlockFactory
     {
-        private static Block[] _blocks = { new CubeBlock(), new Up26LowBlock(), new Up26HighBlock(), new Down26LowBlock(), new Down26HighBlock(), new Left26LowBlock(),
+        private static readonly Block[] Blocks = { new CubeBlock(), new Up26LowBlock(), new Up26HighBlock(), new Down26LowBlock(), new Down26HighBlock(), new Left26LowBlock(),
                                               new Left26HighBlock(), new Right26LowBlock(), new Right26HighBlock(), new Up7LowBlock(), new Up7High0Block(), new Up7High1Block(), new Up7High2Block(), 
                                               new Up7High3Block(), new Up7High4Block(), new Up7High5Block(), new Up7High6Block(), new Down7LowBlock(), new Down7High0Block(), new Down7High1Block(), 
                                               new Down7High2Block(), new Down7High3Block(), new Down7High4Block(), new Down7High5Block(), new Down7High6Block(), new Left7LowBlock(),
@@ -46,14 +46,14 @@ namespace Hiale.GTA2NET.Core.Map
 
         public static Block Build(BlockStructure blockStructure, Vector3 pos)
         {
-            int slopeType = 0;
-            for (int i = 2; i < 8; i++)
+            var slopeType = 0;
+            for (var i = 2; i < 8; i++)
             {
                 if (BitHelper.CheckBit(blockStructure.SlopeType, i))
                     slopeType += (int)Math.Pow(2, i - 2);
             }
 
-            foreach(Block b in _blocks)
+            foreach(Block b in Blocks)
                 if (b.IsMe((SlopeType)slopeType))
                     return b.DeepCopy(blockStructure, pos);
 

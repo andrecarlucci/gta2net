@@ -29,7 +29,7 @@ using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    class Left7High0Block : Block
+    public class Left7High0Block : Block
     {
         public Left7High0Block() : base() 
         {

@@ -1,8 +1,8 @@
 ﻿// GTA2.NET
 // 
-// File: Left7High4.cs
-// Created: 22.04.2013
-// Created by: João Pires
+// File: PartialLeftBlock.cs
+// Created: 05.05.2013
+// 
 // 
 // Copyright (C) 2010-2013 Hiale
 // 
@@ -23,32 +23,32 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using Hiale.GTA2NET.Core.Collision;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    public class Left7High4Block : Block
+    public class PartialLeftBlock : Block
     {
-        public Left7High4Block() : base() 
+        public override Block DeepCopy()
         {
-            SlopeType = SlopeType.Left7High4;
+            throw new NotImplementedException();
         }
 
-        public Left7High4Block(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos) 
+        public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
         {
-            SlopeType = SlopeType.Left7High4;
+            throw new NotImplementedException();
         }
 
         public override void SetUpCube()
         {
-            SetUpSlope_High(11, 2);
+            throw new NotImplementedException();
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<Collision.IObstacle> obstacles)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

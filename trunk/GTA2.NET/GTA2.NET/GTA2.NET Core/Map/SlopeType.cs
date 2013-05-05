@@ -86,7 +86,7 @@ namespace Hiale.GTA2NET.Core.Map
         DiagonalFacingUpRight = 46,
         DiagonalFacingDownLeft = 47,
         DiagonalFacingDownRight = 48,
-        DiagonalSlopeFacingUpLeft = 49, //there 2 versions of these, see documentation, check if they require a different behaviour.
+        DiagonalSlopeFacingUpLeft = 49, //there 2 versions of these, see documentation, ToDo: Add Class, check if they require a different behaviour.
         DiagonalSlopeFacingUpRight = 50, //as above
         DiagonalSlopeFacingDownLeft = 51, //as above
         DiagonalSlopeFacingDownRight = 52, //as above
