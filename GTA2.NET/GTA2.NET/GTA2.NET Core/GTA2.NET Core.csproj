@@ -55,6 +55,15 @@
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
+    <Compile Include="Map\Blocks\PartialBottomBlock.cs" />
+    <Compile Include="Map\Blocks\PartialBottomLeftBlock.cs" />
+    <Compile Include="Map\Blocks\PartialBottomRightBlock.cs" />
+    <Compile Include="Map\Blocks\PartialCentreBlock.cs" />
+    <Compile Include="Map\Blocks\PartialLeftBlock.cs" />
+    <Compile Include="Map\Blocks\PartialRightBlock.cs" />
+    <Compile Include="Map\Blocks\PartialTopBlock.cs" />
+    <Compile Include="Map\Blocks\PartialTopLeftBlock.cs" />
+    <Compile Include="Map\Blocks\PartialTopRightBlock.cs" />
     <Compile Include="Style\DeltaItem.cs" />
     <Compile Include="Style\DeltaSubItem.cs" />
     <Compile Include="Style\Remap.cs" />

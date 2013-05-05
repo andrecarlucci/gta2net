@@ -63,11 +63,11 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public Vector2 Position;
 
-        public int Width;
+        public float Width;
 
-        public int Length;
+        public float Length;
 
-        public RectangleObstacle(Vector2 position, int z, int width, int length) : this()
+        public RectangleObstacle(Vector2 position, int z, float width, float length) : this()
         {
             Z = z;
             Position = position;

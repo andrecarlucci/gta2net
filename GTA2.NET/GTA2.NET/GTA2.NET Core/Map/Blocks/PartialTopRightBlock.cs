@@ -25,20 +25,21 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Collision;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
     public class PartialTopRightBlock : Block
     {
-        public override Block DeepCopy()
+        public PartialTopRightBlock() : base()
         {
-            throw new NotImplementedException();
+            SlopeType = SlopeType.PartialBlockTopRight;
         }
 
-        public override Block DeepCopy(BlockStructure blockStructure, Vector3 pos)
+        public PartialTopRightBlock(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos) 
         {
-            throw new NotImplementedException();
+            SlopeType = SlopeType.PartialBlockTopRight;
         }
 
         public override void SetUpCube()
@@ -46,9 +47,21 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             throw new NotImplementedException();
         }
 
-        public override void GetCollision(List<Collision.IObstacle> obstacles)
+        public override void GetCollision(List<IObstacle> obstacles)
         {
-            throw new NotImplementedException();
+            if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
+            {
+                obstacles.Add(new RectangleObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), (int)Position.Z, PartialBlockScalar, PartialBlockScalar));
+                return;
+            }
+            if (Left.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
+            if (Top.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), new Vector2(Position.X + 1, Position.Y), (int)Position.Z, LineObstacleType.Horizontal));
+            if (Right.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X + 1, Position.Y + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
+            if (Bottom.Wall)
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y + PartialBlockScalar), new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y + PartialBlockScalar), (int)Position.Z, LineObstacleType.Horizontal));
         }
     }
 }
