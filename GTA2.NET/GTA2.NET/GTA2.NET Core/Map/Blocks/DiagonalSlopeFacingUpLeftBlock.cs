@@ -1,8 +1,8 @@
 ﻿// GTA2.NET
 // 
-// File: DiagonalFacingDownLeft.cs
-// Created: 22.04.2013
-// Created by: João Pires
+// File: DiagonalSlopeFacingUpLeftBlock.cs
+// Created: 06.05.2013
+// 
 // 
 // Copyright (C) 2010-2013 Hiale
 // 
@@ -23,32 +23,29 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using Hiale.GTA2NET.Core.Collision;
+using System.Linq;
+using System.Text;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    public class Right7High6Block : Block
+    public class DiagonalSlopeFacingUpLeftBlock : Block
     {
-        public Right7High6Block() : base()
+        public DiagonalSlopeFacingUpLeftBlock() : base()
         {
-            SlopeType = SlopeType.Right7High6;
+            SlopeType = SlopeType.DiagonalSlopeFacingUpLeft;
         }
 
-        public Right7High6Block(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos) 
+        public DiagonalSlopeFacingUpLeftBlock(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos)
         {
-            SlopeType = SlopeType.Right7High6;
+            SlopeType = SlopeType.DiagonalSlopeFacingUpLeft;
         }
-        
+
         public override void SetUpCube()
         {
-            SetUpSlopeHigh(13, 0);
-        }
-
-        public override void GetCollision(List<IObstacle> obstacles)
-        {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }
