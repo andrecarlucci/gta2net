@@ -31,20 +31,35 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map
 {
-
     public static class BlockFactory
     {
-        private static readonly Block[] Blocks = { new CubeBlock(), new Up26LowBlock(), new Up26HighBlock(), new Down26LowBlock(), new Down26HighBlock(), new Left26LowBlock(),
-                                              new Left26HighBlock(), new Right26LowBlock(), new Right26HighBlock(), new Up7LowBlock(), new Up7High0Block(), new Up7High1Block(), new Up7High2Block(), 
-                                              new Up7High3Block(), new Up7High4Block(), new Up7High5Block(), new Up7High6Block(), new Down7LowBlock(), new Down7High0Block(), new Down7High1Block(), 
-                                              new Down7High2Block(), new Down7High3Block(), new Down7High4Block(), new Down7High5Block(), new Down7High6Block(), new Left7LowBlock(),
-                                              new Left7High0Block(), new Left7High1Block(), new Left7High2Block(), new Left7High3Block(), new Left7High4Block(), new Left7High5Block(),
-                                              new Left7High6Block(), new Right7LowBlock(), new Right7High0Block(), new Right7High1Block(), new Right7High2Block(), new Right7High3Block(), 
-                                              new Right7High4Block(), new Right7High5Block(), new Right7High6Block(), new Up45Block(), new Down45Block(), new Left45Block(), new Right45Block(),
-                                              new DiagonalFacingUpLeftBlock(), new DiagonalFacingUpRightBlock(), new DiagonalFacingDownLeftBlock(), new DiagonalFacingDownRightBlock()
-                                            };
+        private static Block[] _blocks;
 
-        public static Block Build(BlockStructure blockStructure, Vector3 pos)
+        static BlockFactory()
+        {
+            InitializeBlocks();
+        }
+
+        //this way, the blocks can be changed not to Load directly at the start
+        private static void InitializeBlocks()
+        {
+            _blocks = new Block[]
+                {
+                    new CubeBlock(), new Up26LowBlock(), new Up26HighBlock(), new Down26LowBlock(), new Down26HighBlock(), new Left26LowBlock(),
+                    new Left26HighBlock(), new Right26LowBlock(), new Right26HighBlock(), new Up7LowBlock(), new Up7High0Block(), new Up7High1Block(), new Up7High2Block(),
+                    new Up7High3Block(), new Up7High4Block(), new Up7High5Block(), new Up7High6Block(), new Down7LowBlock(), new Down7High0Block(), new Down7High1Block(),
+                    new Down7High2Block(), new Down7High3Block(), new Down7High4Block(), new Down7High5Block(), new Down7High6Block(), new Left7LowBlock(),
+                    new Left7High0Block(), new Left7High1Block(), new Left7High2Block(), new Left7High3Block(), new Left7High4Block(), new Left7High5Block(),
+                    new Left7High6Block(), new Right7LowBlock(), new Right7High0Block(), new Right7High1Block(), new Right7High2Block(), new Right7High3Block(),
+                    new Right7High4Block(), new Right7High5Block(), new Right7High6Block(), new Up45Block(), new Down45Block(), new Left45Block(), new Right45Block(),
+                    new DiagonalFacingUpLeftBlock(), new DiagonalFacingUpRightBlock(), new DiagonalFacingDownLeftBlock(), new DiagonalFacingDownRightBlock(),
+                    new DiagonalSlopeFacingDownLeftBlock(), new DiagonalSlopeFacingDownRightBlock(), new DiagonalSlopeFacingUpLeftBlock(), new DiagonalSlopeFacingUpRightBlock(),    
+                    new PartialBottomBlock(), new PartialBottomLeftBlock(), new PartialBottomRightBlock(), new PartialCenterBlock(), new PartialLeftBlock(),
+                    new PartialRightBlock(), new PartialTopBlock(), new PartialTopLeftBlock(), new PartialTopRightBlock(), new CubeBlock(SlopeType.SlopeAbove), 
+                };
+        }
+
+        public static Block Build(BlockStructure blockStructure, Vector3 position)
         {
             var slopeType = 0;
             for (var i = 2; i < 8; i++)
@@ -53,12 +68,12 @@ namespace Hiale.GTA2NET.Core.Map
                     slopeType += (int)Math.Pow(2, i - 2);
             }
 
-            foreach(Block b in Blocks)
-                if (b.IsSlopeOf((SlopeType)slopeType))
-                    return b.DeepCopy(blockStructure, pos);
+            foreach(var block in _blocks)
+                if (block.IsSlopeOf((SlopeType)slopeType))
+                    return block.DeepCopy(blockStructure, position);
 
-            return new CubeBlock(blockStructure, pos);    //Hack until all the diferent _blocks are implemented.
-            //throw new NotSupportedException(); <- Must be this.
+            //return new CubeBlock(blockStructure, position);    //Hack until all the different _blocks are implemented.
+            throw new NotSupportedException("Slope Type " + slopeType + " not implemented!"); // <- Must be this.
         }
     }
 }

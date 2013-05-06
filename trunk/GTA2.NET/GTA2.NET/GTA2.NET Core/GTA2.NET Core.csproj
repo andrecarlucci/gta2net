@@ -55,10 +55,14 @@
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
+    <Compile Include="Map\Blocks\DiagonalSlopeFacingDownLeftBlock.cs" />
+    <Compile Include="Map\Blocks\DiagonalSlopeFacingDownRightBlock.cs" />
+    <Compile Include="Map\Blocks\DiagonalSlopeFacingUpLeftBlock.cs" />
+    <Compile Include="Map\Blocks\DiagonalSlopeFacingUpRightBlock.cs" />
     <Compile Include="Map\Blocks\PartialBottomBlock.cs" />
     <Compile Include="Map\Blocks\PartialBottomLeftBlock.cs" />
     <Compile Include="Map\Blocks\PartialBottomRightBlock.cs" />
-    <Compile Include="Map\Blocks\PartialCentreBlock.cs" />
+    <Compile Include="Map\Blocks\PartialCenterBlock.cs" />
     <Compile Include="Map\Blocks\PartialLeftBlock.cs" />
     <Compile Include="Map\Blocks\PartialRightBlock.cs" />
     <Compile Include="Map\Blocks\PartialTopBlock.cs" />

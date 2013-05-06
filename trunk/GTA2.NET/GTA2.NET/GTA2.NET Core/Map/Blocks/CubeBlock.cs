@@ -40,7 +40,12 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         public CubeBlock(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos)
         {
             SlopeType = SlopeType.None;
-        }  
+        }
+
+        public CubeBlock(SlopeType slopeType) : base()
+        {
+            SlopeType = slopeType;
+        }
         
         public override bool IsEmpty
         {

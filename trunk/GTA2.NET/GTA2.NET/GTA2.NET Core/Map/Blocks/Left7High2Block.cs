@@ -43,7 +43,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void SetUpCube()
         {
-            SetUpSlope_High(9, 2);
+            SetUpSlopeHigh(9, 2);
         }
 
         public override void GetCollision(List<IObstacle> obstacles)

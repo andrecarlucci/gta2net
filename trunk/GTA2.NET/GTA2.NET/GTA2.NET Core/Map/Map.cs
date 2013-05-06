@@ -248,7 +248,7 @@ namespace Hiale.GTA2NET.Core.Map
             }            
         }
 
-        private void CreateUncompressedMap(uint[,] baseOffsets, uint[] columns, Block[] _blocks)
+        private void CreateUncompressedMap(uint[,] baseOffsets, uint[] columns, Block[] blocks)
         {
             for (var i = 0; i < 256; i++)
             {
@@ -261,7 +261,7 @@ namespace Hiale.GTA2NET.Core.Map
                     {
                         if (k >= offset)
                         {
-                            _cityBlocks[i, j, k] = _blocks[columns[columnIndex + k - offset + 1]].DeepCopy();
+                            _cityBlocks[i, j, k] = blocks[columns[columnIndex + k - offset + 1]].DeepCopy();
                             _cityBlocks[i, j, k].Position = new Vector3(i, j, k);
                         }
                     }

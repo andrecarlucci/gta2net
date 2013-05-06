@@ -113,7 +113,7 @@ namespace Hiale.GTA2NET.Core.Map
         ///// <summary>
         ///// Position of this block in a map.
         ///// </summary>
-        public Vector3 Position { get; set; } //is it really needed? Or shall we save some memory?
+        public Vector3 Position { get; set; }
 
         public BlockFaceEdge Left { get; set; }
 
@@ -819,7 +819,7 @@ namespace Hiale.GTA2NET.Core.Map
 
         #region High Slopes
 
-        protected void SetUpSlope_High(byte subType, byte rotation)
+        protected void SetUpSlopeHigh(byte subType, byte rotation)
         {
             //Sample is a right slope, use it for orientation, it gets rotated to fit all other directions
             FaceCoordinates frontCoordinates;
@@ -1175,16 +1175,16 @@ namespace Hiale.GTA2NET.Core.Map
             position.Y *= -1;
 
             //Coordinates of the cube
-            Vector3 topLeftFront = (new Vector3(0.0f, 0.0f, 1f) + position)*GlobalScalar;
-            Vector3 topRightFront = (new Vector3(1f, 0.0f, 1f) + position)*GlobalScalar;
-            Vector3 bottomLeftFront = (new Vector3(0.0f, -1f, 1f) + position)*GlobalScalar;
-            Vector3 bottomRightFront = (new Vector3(1f, -1f, 1f) + position)*GlobalScalar;
+            Vector3 topLeftFront = (new Vector3(x, y, 1f) + position)*GlobalScalar;
+            Vector3 topRightFront = (new Vector3(width, y, 1f) + position)*GlobalScalar;
+            Vector3 bottomLeftFront = (new Vector3(x, -height, 1f) + position)*GlobalScalar;
+            Vector3 bottomRightFront = (new Vector3(width, -height, 1f) + position)*GlobalScalar;
             frontCoords = new FaceCoordinates(topLeftFront, topRightFront, bottomRightFront, bottomLeftFront);
 
-            Vector3 topLeftBack = (new Vector3(0.0f, 0.0f, 0.0f) + position)*GlobalScalar;
-            Vector3 topRightBack = (new Vector3(1f, 0.0f, 0.0f) + position)*GlobalScalar;
-            Vector3 bottomLeftBack = (new Vector3(0.0f, -1f, 0.0f) + position)*GlobalScalar;
-            Vector3 bottomRightBack = (new Vector3(1f, -1f, 0.0f) + position)*GlobalScalar;
+            Vector3 topLeftBack = (new Vector3(x, y, 0.0f) + position)*GlobalScalar;
+            Vector3 topRightBack = (new Vector3(width, y, 0.0f) + position)*GlobalScalar;
+            Vector3 bottomLeftBack = (new Vector3(x, -height, 0.0f) + position)*GlobalScalar;
+            Vector3 bottomRightBack = (new Vector3(width, -height, 0.0f) + position)*GlobalScalar;
             backCoords = new FaceCoordinates(topLeftBack, topRightBack, bottomRightBack, bottomLeftBack);
         }
 
