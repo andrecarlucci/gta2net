@@ -50,6 +50,7 @@
     <Compile Include="CarPhysicReader.cs" />
     <Compile Include="CarPhysics.cs" />
     <Compile Include="Collision\FallEdge.cs" />
+    <Compile Include="Collision\MapCollision.cs" />
     <Compile Include="Collision\Submatrix.cs" />
     <Compile Include="Collision\ObstacleType.cs" />
     <Compile Include="Direction.cs" />
@@ -141,7 +142,7 @@
     <Compile Include="Map\Blocks\Up7LowBlock.cs" />
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
-    <Compile Include="Collision\MapCollision.cs" />
+    <Compile Include="Collision\MapCollisionOld.cs" />
     <Compile Include="Map\MapObject.cs" />
     <Compile Include="Collision\Obstacle.cs" />
     <Compile Include="Map\RoadTrafficType.cs" />

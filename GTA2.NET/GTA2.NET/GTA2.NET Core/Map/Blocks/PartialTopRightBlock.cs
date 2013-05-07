@@ -49,11 +49,11 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void GetCollision(List<IObstacle> obstacles)
         {
-            if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
-            {
-                obstacles.Add(new RectangleObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), (int)Position.Z, PartialBlockScalar, PartialBlockScalar));
-                return;
-            }
+            //if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
+            //{
+            //    obstacles.Add(new RectangleObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), (int)Position.Z, PartialBlockScalar, PartialBlockScalar));
+            //    return;
+            //}
             if (Left.Wall)
                 obstacles.Add(new LineObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
             if (Top.Wall)

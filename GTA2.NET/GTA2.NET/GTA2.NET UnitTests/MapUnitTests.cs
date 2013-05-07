@@ -50,7 +50,9 @@ namespace Hiale.GTA2NET.Test
         {
             var map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
             var collision = new MapCollision(map);
-            var obstacles = collision.CollisionMap(new Vector2(73,192));
+            var obstacles = collision.GetObstacles();
+            //var collision = new MapCollisionOld(map);
+            //var obstacles = collision.CollisionMap(new Vector2(73,192));
             DisplayCollision(obstacles);
             Assert.AreEqual(true, true);
         }
@@ -59,7 +61,7 @@ namespace Hiale.GTA2NET.Test
         public void LoadMapBil()
         {
             var map = new Map(Globals.MapsSubDir + "\\bil.gmp");
-            var collision = new MapCollision(map);
+            var collision = new MapCollisionOld(map);
             var obstacles = collision.CollisionMap(new Vector2(239, 192));
             DisplayCollision(obstacles);
             Assert.AreEqual(true, true);

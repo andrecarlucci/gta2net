@@ -1129,18 +1129,18 @@ namespace Hiale.GTA2NET.Core.Map
 
         public virtual void GetCollision(List<IObstacle> obstacles)
         {
-            if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
-            {
-                obstacles.Add(new RectangleObstacle(new Vector2(Position.X, Position.Y), (int) Position.Z, 1, 1));
-                return;
-            }
-            if (Left.Wall)
+            //if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
+            //{
+            //    obstacles.Add(new RectangleObstacle(new Vector2(Position.X, Position.Y), (int) Position.Z, 1, 1));
+            //    return;
+            //}
+            if (Left && Left.Wall)
                 obstacles.Add(GetDefaultLeftCollison());
-            if (Top.Wall)
+            if (Top && Top.Wall)
                 obstacles.Add(GetDefaultTopCollison());
-            if (Right.Wall)
+            if (Right && Right.Wall)
                 obstacles.Add(GetDefaultRightCollison());
-            if (Bottom.Wall)
+            if (Bottom && Bottom.Wall)
                 obstacles.Add(GetDefaultBottomCollison());
         }
 

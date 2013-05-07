@@ -48,7 +48,10 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void GetCollision(List<IObstacle> obstacles)
         {
-            throw new System.NotImplementedException();
+            obstacles.Add(GetDefaultLeftCollison());
+            obstacles.Add(GetDefaultTopCollison());
+            obstacles.Add(GetDefaultRightCollison());
+            obstacles.Add(GetDefaultBottomCollison());
         }
     }
 }
