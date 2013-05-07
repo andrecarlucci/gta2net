@@ -234,7 +234,7 @@ namespace Hiale.GTA2NET
             else
                 _world.Clear();
             
-            var collision = new MapCollision(Map);
+            var collision = new MapCollisionOld(Map);
             var obstacles = collision.CollisionMap(new Vector2(73, 192));
             foreach (var obstacle in obstacles)
             {

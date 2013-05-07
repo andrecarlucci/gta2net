@@ -48,20 +48,20 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void GetCollision(List<IObstacle> obstacles)
         {
-            if (Left.Wall && Top.Wall && Right.Wall)
-            {
-                var polygon = new PolygonObstacle((int)Position.Z);
-                polygon.Vertices.Add(new Vector2(Position.X, Position.Y));
-                polygon.Vertices.Add(new Vector2(Position.X + 1, Position.Y));
-                polygon.Vertices.Add(new Vector2(Position.X, Position.Y + 1));
-                obstacles.Add(polygon);
-                return;
-            }
+            //if (Left.Wall && Top.Wall && Right.Wall)
+            //{
+            //    var polygon = new PolygonObstacle((int)Position.Z);
+            //    polygon.Vertices.Add(new Vector2(Position.X, Position.Y));
+            //    polygon.Vertices.Add(new Vector2(Position.X + 1, Position.Y));
+            //    polygon.Vertices.Add(new Vector2(Position.X, Position.Y + 1));
+            //    obstacles.Add(polygon);
+            //    return;
+            //}
             if (Right.Wall)
                 obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X, Position.Y + 1), (int)Position.Z, LineObstacleType.Other));
-            if (Left.Wall)
+            if (Left)
                 obstacles.Add(GetDefaultLeftCollison());
-            if (Top.Wall)
+            if (Top)
                 obstacles.Add(GetDefaultTopCollison());
         }
     }
