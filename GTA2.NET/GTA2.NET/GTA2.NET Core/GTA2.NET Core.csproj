@@ -56,6 +56,7 @@
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
+    <Compile Include="Helper\Geometry.cs" />
     <Compile Include="Map\Blocks\DiagonalSlopeFacingDownLeftBlock.cs" />
     <Compile Include="Map\Blocks\DiagonalSlopeFacingDownRightBlock.cs" />
     <Compile Include="Map\Blocks\DiagonalSlopeFacingUpLeftBlock.cs" />

@@ -25,15 +25,88 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
+using FarseerPhysics.Common;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
     public class MapCollision
     {
+        private struct LineSegment
+        {
+            public Vector2 StartPoint;
+            public Vector2 EndPoint;
+            public LineDirection Direction;
+
+            public LineSegment(Vector2 startPoint, Vector2 endPoint)
+            {
+                StartPoint = startPoint;
+                EndPoint = endPoint;
+                Direction = LineDirection.Other;
+                Direction = CalculateDirection(startPoint, endPoint);
+            }
+
+            private static LineDirection CalculateDirection(Vector2 startPoint, Vector2 endPoint)
+            {
+                // ReSharper disable CompareOfFloatsByEqualityOperator
+                if (startPoint.X == endPoint.X)
+                {
+                    if (startPoint.Y == endPoint.Y)
+                        return LineDirection.Other;
+                    if (startPoint.Y < endPoint.Y)
+                        return LineDirection.Down;
+                    if (startPoint.Y > endPoint.Y)
+                        return LineDirection.Up;
+                }
+                if (startPoint.X < endPoint.X)
+                {
+                    if (startPoint.Y == endPoint.Y)
+                        return LineDirection.Right;
+                    if (startPoint.Y < endPoint.Y)
+                        return LineDirection.DownRight;
+                    if (startPoint.Y >  endPoint.Y)
+                        return LineDirection.UpRight;
+                }
+                if (startPoint.X > endPoint.X)
+                {
+                    if (startPoint.Y == endPoint.Y)
+                        return LineDirection.Left;
+                    if (startPoint.Y < endPoint.Y)
+                        return LineDirection.DownLeft;
+                    if (startPoint.Y > endPoint.Y)
+                        return LineDirection.UpLeft;
+                }
+                return LineDirection.Other;
+                // ReSharper restore CompareOfFloatsByEqualityOperator
+            }
+
+            public override string ToString()
+            {
+                return StartPoint + " - " + EndPoint;
+            }
+        }
+
+        private enum LineDirection
+        {
+            Other,
+            Left,
+            Up,
+            Right,
+            Down,
+            UpLeft,
+            UpRight,
+            DownLeft,
+            DownRight,
+        }
+
+
         private readonly Map.Map _map;
 
         public MapCollision(Map.Map map)
@@ -56,7 +129,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
             }
 
-            var coordDict = new Dictionary<Vector2, List<LineObstacle>>();
+            var nodes = new Dictionary<Vector2, List<LineObstacle>>();
             foreach (var obstacle in obstacles)
             {
                 if (obstacle.Z == 2)
@@ -64,59 +137,188 @@ namespace Hiale.GTA2NET.Core.Collision
                     if (obstacle is LineObstacle)
                     {
                         var lineObstacle = (LineObstacle) obstacle;
-                        if (lineObstacle.Start.X == 58 && lineObstacle.Start.Y == 170 || lineObstacle.End.X == 58 && lineObstacle.End.Y == 170)
-                            Console.WriteLine();
                         List<LineObstacle> vectorList;
-                        if (coordDict.TryGetValue(lineObstacle.Start, out vectorList))
+                        if (nodes.TryGetValue(lineObstacle.Start, out vectorList))
                         {
                             vectorList.Add(lineObstacle);
                         }
                         else
                         {
-                            vectorList = new List<LineObstacle>();
-                            vectorList.Add(lineObstacle);
-                            coordDict.Add(lineObstacle.Start, vectorList);
+                            vectorList = new List<LineObstacle> {lineObstacle};
+                            nodes.Add(lineObstacle.Start, vectorList);
                         }
 
-                        if (coordDict.TryGetValue(lineObstacle.End, out vectorList))
+                        if (nodes.TryGetValue(lineObstacle.End, out vectorList))
                         {
                             vectorList.Add(lineObstacle);
                         }
                         else
                         {
-                            vectorList = new List<LineObstacle>();
-                            vectorList.Add(lineObstacle);
-                            coordDict.Add(lineObstacle.End, vectorList);
+                            vectorList = new List<LineObstacle> {lineObstacle};
+                            nodes.Add(lineObstacle.End, vectorList);
                         }
                     }
                 }
             }
 
-            int zero = 0;
-            int one = 0;
-            int two = 0;
-            int three = 0;
-            int four = 0;
-            int more = 0;
-            foreach (var VARIABLE in coordDict)
+            Console.WriteLine();
+            while (nodes.Count > 0)
             {
-                if (VARIABLE.Value.Count == 1)
-                    one++;
-                if (VARIABLE.Value.Count == 2)
-                    two++;
-                if (VARIABLE.Value.Count == 3)
-                    three++;
-                if (VARIABLE.Value.Count == 4)
-                    four++;
-                if (VARIABLE.Value.Count > 4)
-                    more++;
-                if (VARIABLE.Value.Count == 0)
-                    zero++;
+                var origin = nodes.Keys.First();
+                var lineSegment = new LineSegment(origin, origin);
+                var visitedItems = new List<Vector2>();
+                var currentFigure = new List<LineSegment>();
+                var forlornNodesStart = new List<Vector2>(); //sometimes several 'branches' sprout out of the obstacle, they can be removed if they are inside an obstacle figure.
 
+                var nodesToVisit = new Stack<LineSegment>();
+                nodesToVisit.Push(lineSegment);
+                while (nodesToVisit.Count > 0)
+                {
+                    var currentItem = nodesToVisit.Pop();
+                    var connectedNodes = GetConnectedNodes(currentItem.EndPoint, nodes);
+                    if (connectedNodes.Count == 1)
+                        forlornNodesStart.Add(currentItem.EndPoint);
+                    foreach (var connectedNode in connectedNodes)
+                    {
+                        if (connectedNode == currentItem.StartPoint)
+                            continue;
+                        if (visitedItems.Contains(connectedNode))
+                            continue;
+                        lineSegment = new LineSegment(currentItem.EndPoint, connectedNode);
+                        nodesToVisit.Push(lineSegment);
+                        currentFigure.Add(lineSegment);
+                    }
+                    visitedItems.Add(currentItem.EndPoint);
+                }
+
+                var forlornNodes = new List<Vector2>();
+                foreach (var forlornNodeStart in forlornNodesStart)
+                {
+                    forlornNodes.Add(forlornNodeStart);
+                    var currentItem = forlornNodeStart;
+                    var previousItem = currentItem;
+                    List<Vector2> connectedNodes;
+                    do
+                    {
+                        //go through the nodes until a node with more than 2 connections are found
+                        connectedNodes = GetConnectedNodes(currentItem, nodes);
+                        if (connectedNodes.Count == 2)
+                        {
+                            foreach (var connectedNode in connectedNodes)
+                            {
+                                if (connectedNode == previousItem)
+                                {
+                                    previousItem = currentItem;
+                                    currentItem = connectedNodes[1];
+                                    break;
+                                }
+                            }
+                        }
+                        else if (connectedNodes.Count == 1)
+                        {
+                            previousItem = currentItem;
+                            currentItem = connectedNodes[0];
+                        }
+                        if (connectedNodes.Count < 3)
+                            forlornNodes.Add(currentItem);
+                    } while (connectedNodes.Count < 3);
+                }
+
+
+                foreach (var segment in currentFigure)
+                {
+                    nodes.Remove(segment.EndPoint);
+                }
+
+                using (Bitmap bmp = new Bitmap(2560, 2560))
+                {
+                    using (Graphics g = Graphics.FromImage(bmp))
+                    {
+                        foreach (var segment in currentFigure)
+                        {
+                            g.DrawLine(new Pen(new SolidBrush(System.Drawing.Color.Red), 1), segment.StartPoint.X * 10, segment.StartPoint.Y * 10, segment.EndPoint.X * 10, segment.EndPoint.Y * 10);
+                        }
+                    }
+                    bmp.Save("Test.png", ImageFormat.Png);
+                }
             }
+
+            //using (Bitmap bmp = new Bitmap(2560, 2560))
+            //{
+            //    using (Graphics g = Graphics.FromImage(bmp))
+            //    {
+            //        foreach (var obstacle in obstacleList)
+            //        {
+            //            var points = new PointF[obstacle.Count];
+            //            for (var i = 0; i < obstacle.Count; i++)
+            //                points[i] = new PointF(obstacle[i].X*10, obstacle[i].Y*10);
+            //            //g.DrawLines(new Pen(System.Drawing.Color.Red), points);
+            //            foreach (var pointF in points)
+            //            {
+            //                g.DrawRectangle(new Pen(System.Drawing.Color.Red), pointF.X, pointF.Y, 1, 1);
+            //            }
+                        
+            //        }
+            //    }
+            //    bmp.Save("Test.png", ImageFormat.Png);
+            //}
+
 
             return obstacles;
         }
+
+        private void OptimizeFigure(List<LineSegment> segments)
+        {
+            
+        }
+
+
+        private List<Vector2> GetConnectedNodes(Vector2 origin, IDictionary<Vector2, List<LineObstacle>> nodes)
+        {
+            List<LineObstacle> lineObstacles;
+            if (nodes.TryGetValue(origin, out lineObstacles))
+            {
+                var vectorList = new List<Vector2>();
+                foreach (var lineObstacle in lineObstacles)
+                {
+                    Vector2? currentItem = null;
+                    if (lineObstacle.Start == origin)
+                        currentItem = lineObstacle.End;
+                    if (lineObstacle.End == origin)
+                        currentItem = lineObstacle.Start;
+                    if (currentItem == null)
+                        continue;
+                    if (currentItem == origin)
+                        continue;
+                    vectorList.Add(currentItem.Value);
+                }
+                return vectorList;
+            }
+            return new List<Vector2>();
+        }
+
+        //private List<Vector2> GetConnectedNodes(Vector2 origin, IDictionary<Vector2, List<LineObstacle>> coordDict, List<Vector2> visitedItems)
+        //{
+        //    List<LineObstacle> lineObstacles;
+        //    if (coordDict.TryGetValue(origin, out lineObstacles))
+        //    {
+        //        var vectorList = new List<Vector2>();
+        //        foreach (var lineObstacle in lineObstacles)
+        //        {
+        //            Vector2? currentItem = null;
+        //            if (lineObstacle.Start == origin)
+        //                currentItem = lineObstacle.End;
+        //            if (lineObstacle.End == origin)
+        //                currentItem = lineObstacle.Start;
+        //            if (currentItem == null || visitedItems.Contains(currentItem.Value))
+        //                continue;
+        //            vectorList.Add(currentItem.Value);
+        //            visitedItems.Add(currentItem.Value);
+        //        }
+        //        return vectorList;
+        //    }
+        //    return new List<Vector2>();
+        //}
 
     }
 }
