@@ -169,6 +169,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 var visitedItems = new List<Vector2>();
                 var currentFigure = new List<LineSegment>();
                 var forlornNodesStart = new List<Vector2>(); //sometimes several 'branches' sprout out of the obstacle, they can be removed if they are inside an obstacle figure.
+                var switchPoints = new List<Vector2>();
 
                 var nodesToVisit = new Stack<LineSegment>();
                 nodesToVisit.Push(lineSegment);
@@ -176,12 +177,15 @@ namespace Hiale.GTA2NET.Core.Collision
                 {
                     var currentItem = nodesToVisit.Pop();
                     var connectedNodes = GetConnectedNodes(currentItem.EndPoint, nodes);
-                    if (connectedNodes.Count == 1)
+                    connectedNodes.Remove(currentItem.StartPoint);
+                    if (connectedNodes.Count == 0)
                         forlornNodesStart.Add(currentItem.EndPoint);
+                    if (connectedNodes.Count > 1 && !switchPoints.Contains(currentItem.EndPoint))
+                        switchPoints.Add(currentItem.EndPoint);
                     foreach (var connectedNode in connectedNodes)
                     {
-                        if (connectedNode == currentItem.StartPoint)
-                            continue;
+                        //if (connectedNode == currentItem.StartPoint)
+                        //    continue;
                         if (visitedItems.Contains(connectedNode))
                             continue;
                         lineSegment = new LineSegment(currentItem.EndPoint, connectedNode);
@@ -191,37 +195,13 @@ namespace Hiale.GTA2NET.Core.Collision
                     visitedItems.Add(currentItem.EndPoint);
                 }
 
+                if (GetConnectedNodes(origin, nodes).Count <= 2)
+                    switchPoints.RemoveAt(0); //remove start point, it's not really a switch point
+
                 var forlornNodes = new List<Vector2>();
                 foreach (var forlornNodeStart in forlornNodesStart)
                 {
-                    forlornNodes.Add(forlornNodeStart);
-                    var currentItem = forlornNodeStart;
-                    var previousItem = currentItem;
-                    List<Vector2> connectedNodes;
-                    do
-                    {
-                        //go through the nodes until a node with more than 2 connections are found
-                        connectedNodes = GetConnectedNodes(currentItem, nodes);
-                        if (connectedNodes.Count == 2)
-                        {
-                            foreach (var connectedNode in connectedNodes)
-                            {
-                                if (connectedNode == previousItem)
-                                {
-                                    previousItem = currentItem;
-                                    currentItem = connectedNodes[1];
-                                    break;
-                                }
-                            }
-                        }
-                        else if (connectedNodes.Count == 1)
-                        {
-                            previousItem = currentItem;
-                            currentItem = connectedNodes[0];
-                        }
-                        if (connectedNodes.Count < 3)
-                            forlornNodes.Add(currentItem);
-                    } while (connectedNodes.Count < 3);
+                    var forlormRoot = GetForlormRoot(forlornNodeStart, nodes);
                 }
 
 
@@ -267,6 +247,30 @@ namespace Hiale.GTA2NET.Core.Collision
             return obstacles;
         }
 
+        private Vector2 GetForlormRoot(Vector2 forlormStart, IDictionary<Vector2, List<LineObstacle>> nodes)
+        {
+            var currentItem = forlormStart;
+            var previousItem = currentItem;
+            List<Vector2> connectedNodes;
+            do
+            {
+                //go through the nodes until a node with more than 2 connections are found
+                connectedNodes = GetConnectedNodes(currentItem, nodes);
+                if (connectedNodes.Count == 2)
+                {
+                    connectedNodes.Remove(previousItem);
+                    previousItem = currentItem;
+                    currentItem = connectedNodes[0];
+                }
+                else if (connectedNodes.Count == 1)
+                {
+                    previousItem = currentItem;
+                    currentItem = connectedNodes[0];
+                }
+            } while (connectedNodes.Count < 3);
+            return currentItem;
+        }
+
         private void OptimizeFigure(List<LineSegment> segments)
         {
             
@@ -290,7 +294,8 @@ namespace Hiale.GTA2NET.Core.Collision
                         continue;
                     if (currentItem == origin)
                         continue;
-                    vectorList.Add(currentItem.Value);
+                    if (!vectorList.Contains(currentItem.Value))
+                        vectorList.Add(currentItem.Value);
                 }
                 return vectorList;
             }
