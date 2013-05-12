@@ -227,55 +227,55 @@ namespace Hiale.GTA2NET
             GameScreens.Push(new InGameScreen());
         }
 
-        private void SetupPhysics()
-        {
-            if (_world == null)
-                _world = new World(new Vector2(0, 10f));
-            else
-                _world.Clear();
+        //private void SetupPhysics()
+        //{
+        //    if (_world == null)
+        //        _world = new World(new Vector2(0, 10f));
+        //    else
+        //        _world.Clear();
             
-            var collision = new MapCollisionOld(Map);
-            var obstacles = collision.CollisionMap(new Vector2(73, 192));
-            foreach (var obstacle in obstacles)
-            {
-                Body body = null;
-                if (obstacle is RectangleObstacle)
-                {
-                    var rectObstacle = (RectangleObstacle)obstacle;
-                    //BIG HACK....
-                    if (rectObstacle.Position.X == 49 && rectObstacle.Position.Y == 181)
-                    {
-                        continue;
-                    }
-                    //END BIG HACK
-                    body = BodyFactory.CreateRectangle(_world, rectObstacle.Width, rectObstacle.Length, 1,
-                                                       new Vector2(
-                                                           rectObstacle.Position.X + ((float) rectObstacle.Width/2),
-                                                           rectObstacle.Position.Y + (float) rectObstacle.Length/2));
-                }
-                else if (obstacle is PolygonObstacle)
-                {
-                    var polygonObstacle = (PolygonObstacle) obstacle;
-                    try
-                    {
-                        var verticesList = BayazitDecomposer.ConvexPartition(new Vertices(polygonObstacle.Vertices));
-                        body = BodyFactory.CreateCompoundPolygon(_world, verticesList, 1f);
-                    }
-                    catch (Exception e)
-                    {
-                        System.Diagnostics.Debug.WriteLine(e.StackTrace);
-                    }
-                }
-                else if (obstacle is LineObstacle)
-                {
-                    var lineObstacle = (LineObstacle) obstacle;
-                    body = BodyFactory.CreateEdge(_world, lineObstacle.Start, lineObstacle.End);
+        //    var collision = new MapCollisionOld(Map);
+        //    var obstacles = collision.CollisionMap(new Vector2(73, 192));
+        //    foreach (var obstacle in obstacles)
+        //    {
+        //        Body body = null;
+        //        if (obstacle is RectangleObstacle)
+        //        {
+        //            var rectObstacle = (RectangleObstacle)obstacle;
+        //            //BIG HACK....
+        //            if (rectObstacle.Position.X == 49 && rectObstacle.Position.Y == 181)
+        //            {
+        //                continue;
+        //            }
+        //            //END BIG HACK
+        //            body = BodyFactory.CreateRectangle(_world, rectObstacle.Width, rectObstacle.Length, 1,
+        //                                               new Vector2(
+        //                                                   rectObstacle.Position.X + ((float) rectObstacle.Width/2),
+        //                                                   rectObstacle.Position.Y + (float) rectObstacle.Length/2));
+        //        }
+        //        else if (obstacle is PolygonObstacle)
+        //        {
+        //            var polygonObstacle = (PolygonObstacle) obstacle;
+        //            try
+        //            {
+        //                var verticesList = BayazitDecomposer.ConvexPartition(new Vertices(polygonObstacle.Vertices));
+        //                body = BodyFactory.CreateCompoundPolygon(_world, verticesList, 1f);
+        //            }
+        //            catch (Exception e)
+        //            {
+        //                System.Diagnostics.Debug.WriteLine(e.StackTrace);
+        //            }
+        //        }
+        //        else if (obstacle is LineObstacle)
+        //        {
+        //            var lineObstacle = (LineObstacle) obstacle;
+        //            body = BodyFactory.CreateEdge(_world, lineObstacle.Start, lineObstacle.End);
 
-                }
-                if (body != null)
-                    body.BodyType = BodyType.Static;
-            }
-        }
+        //        }
+        //        if (body != null)
+        //            body.BodyType = BodyType.Static;
+        //    }
+        //}
 
 
         private bool leftClicked;

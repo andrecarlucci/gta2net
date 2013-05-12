@@ -29,7 +29,7 @@ using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    public class Right7High2Block : Block
+    public class Right7High2Block : SlopeBlock
     {
         public Right7High2Block() : base()
         {
@@ -45,10 +45,5 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         {
             SetUpSlopeHigh(9, 0);
         }
-
-        //public override void GetCollision(List<IObstacle> obstacles)
-        //{
-        //    throw new System.NotImplementedException();
-        //}
     }
 }

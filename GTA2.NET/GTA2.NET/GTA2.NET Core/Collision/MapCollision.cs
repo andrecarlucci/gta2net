@@ -39,7 +39,7 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class MapCollision
     {
-        private struct LineSegment
+        private class LineSegment
         {
             public Vector2 StartPoint;
             public Vector2 EndPoint;
@@ -106,6 +106,34 @@ namespace Hiale.GTA2NET.Core.Collision
             DownRight,
         }
 
+        private class SwitchPoint : LineSegment
+        {
+            public List<Vector2> EndPoints { get; set; }
+
+            private new Vector2 EndPoint
+            {
+                get { return EndPoints[0]; }
+                set
+                {
+                    if (EndPoints.Count > 0)
+                        EndPoints[0] = value;
+                    else
+                        EndPoints.Add(value);
+                }
+            }
+
+            public SwitchPoint(Vector2 startPoint, List<Vector2> endPoints) : base(startPoint, endPoints.Count > 0 ? endPoints[0] : Vector2.Zero)
+            {
+                EndPoints = endPoints;
+            }
+
+            public override string ToString()
+            {
+                return EndPoint + " - " + EndPoints.Count + " Endpoints";
+            }
+
+        }
+
 
         private readonly Map.Map _map;
 
@@ -129,37 +157,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
             }
 
-            var nodes = new Dictionary<Vector2, List<LineObstacle>>();
-            foreach (var obstacle in obstacles)
-            {
-                if (obstacle.Z == 2)
-                {
-                    if (obstacle is LineObstacle)
-                    {
-                        var lineObstacle = (LineObstacle) obstacle;
-                        List<LineObstacle> vectorList;
-                        if (nodes.TryGetValue(lineObstacle.Start, out vectorList))
-                        {
-                            vectorList.Add(lineObstacle);
-                        }
-                        else
-                        {
-                            vectorList = new List<LineObstacle> {lineObstacle};
-                            nodes.Add(lineObstacle.Start, vectorList);
-                        }
-
-                        if (nodes.TryGetValue(lineObstacle.End, out vectorList))
-                        {
-                            vectorList.Add(lineObstacle);
-                        }
-                        else
-                        {
-                            vectorList = new List<LineObstacle> {lineObstacle};
-                            nodes.Add(lineObstacle.End, vectorList);
-                        }
-                    }
-                }
-            }
+            var nodes = GetAllObstacleNodes(obstacles, 2);
 
             Console.WriteLine();
             while (nodes.Count > 0)
@@ -169,7 +167,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 var visitedItems = new List<Vector2>();
                 var currentFigure = new List<LineSegment>();
                 var forlornNodesStart = new List<Vector2>(); //sometimes several 'branches' sprout out of the obstacle, they can be removed if they are inside an obstacle figure.
-                var switchPoints = new List<Vector2>();
+                var switchPoints = new Dictionary<Vector2, SwitchPoint>();
 
                 var nodesToVisit = new Stack<LineSegment>();
                 nodesToVisit.Push(lineSegment);
@@ -180,12 +178,12 @@ namespace Hiale.GTA2NET.Core.Collision
                     connectedNodes.Remove(currentItem.StartPoint);
                     if (connectedNodes.Count == 0)
                         forlornNodesStart.Add(currentItem.EndPoint);
-                    if (connectedNodes.Count > 1 && !switchPoints.Contains(currentItem.EndPoint))
-                        switchPoints.Add(currentItem.EndPoint);
+                    if (connectedNodes.Count > 1 && !switchPoints.ContainsKey(currentItem.EndPoint))
+                    {
+                        switchPoints.Add(currentItem.EndPoint, new SwitchPoint(currentItem.EndPoint, new List<Vector2>(connectedNodes)));
+                    }
                     foreach (var connectedNode in connectedNodes)
                     {
-                        //if (connectedNode == currentItem.StartPoint)
-                        //    continue;
                         if (visitedItems.Contains(connectedNode))
                             continue;
                         lineSegment = new LineSegment(currentItem.EndPoint, connectedNode);
@@ -196,23 +194,39 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
 
                 if (GetConnectedNodes(origin, nodes).Count <= 2)
-                    switchPoints.RemoveAt(0); //remove start point, it's not really a switch point
+                    switchPoints.Remove(origin); //remove start point, it's not really a switch point
 
-                var forlornNodes = new List<Vector2>();
+                var forlornNodes = new Queue<Vector2>();
                 foreach (var forlornNodeStart in forlornNodesStart)
+                    forlornNodes.Enqueue(forlornNodeStart);
+                while (forlornNodes.Count > 0)
                 {
-                    var forlormRoot = GetForlormRoot(forlornNodeStart, nodes);
-                }
+                    var currentItem = forlornNodes.Dequeue();
+                    List<LineSegment> forlormLines;
+                    var forlormRoot = GetForlormRoot(currentItem, nodes, currentFigure, out forlormLines);
+                    
+                    foreach (var forlormLine in forlormLines)
+                        currentFigure.Remove(forlormLine);
 
+                    SwitchPoint switchPoint;
+                    if (switchPoints.TryGetValue(forlormRoot, out switchPoint))
+                    {
+                        if (switchPoint.EndPoints.Count > 0)
+                            //switchPoint.EndPoints.RemoveAt(0); //ToDo: Actually, I should remove the proper item, not "just the first one"
+                            switchPoint.EndPoints.Remove(forlormLines.Last().EndPoint);
+                        if (switchPoint.EndPoints.Count == 0)
+                            forlornNodes.Enqueue(forlormRoot);
+                    }
+                }
 
                 foreach (var segment in currentFigure)
                 {
                     nodes.Remove(segment.EndPoint);
                 }
 
-                using (Bitmap bmp = new Bitmap(2560, 2560))
+                using (var bmp = new Bitmap(2560, 2560))
                 {
-                    using (Graphics g = Graphics.FromImage(bmp))
+                    using (var g = Graphics.FromImage(bmp))
                     {
                         foreach (var segment in currentFigure)
                         {
@@ -247,29 +261,77 @@ namespace Hiale.GTA2NET.Core.Collision
             return obstacles;
         }
 
-        private Vector2 GetForlormRoot(Vector2 forlormStart, IDictionary<Vector2, List<LineObstacle>> nodes)
+        private static Dictionary<Vector2, List<ILineObstacle>> GetAllObstacleNodes(List<IObstacle> obstacles, int layer)
         {
+            var nodes = new Dictionary<Vector2, List<ILineObstacle>>();
+            foreach (var obstacle in obstacles)
+            {
+                if (obstacle.Z == layer)
+                {
+                    if (obstacle is LineObstacle)
+                    {
+                        ILineObstacle lineObstacle;
+                        if (obstacle is SlopeLineObstacle)
+                            continue;
+                        //lineObstacle = (SlopeLineObstacle) obstacle;
+                        else
+                            lineObstacle = (LineObstacle)obstacle;
+                        List<ILineObstacle> vectorList;
+                        if (nodes.TryGetValue(lineObstacle.Start, out vectorList))
+                        {
+                            vectorList.Add(lineObstacle);
+                        }
+                        else
+                        {
+                            vectorList = new List<ILineObstacle> { lineObstacle };
+                            nodes.Add(lineObstacle.Start, vectorList);
+                        }
+
+                        if (nodes.TryGetValue(lineObstacle.End, out vectorList))
+                        {
+                            vectorList.Add(lineObstacle);
+                        }
+                        else
+                        {
+                            vectorList = new List<ILineObstacle> { lineObstacle };
+                            nodes.Add(lineObstacle.End, vectorList);
+                        }
+                    }
+                }
+            }
+            return nodes;
+        }
+
+        private Vector2 GetForlormRoot(Vector2 forlormStart, IDictionary<Vector2, List<ILineObstacle>> nodes, List<LineSegment> lineSegments, out List<LineSegment> forlormLines)
+        {
+            forlormLines = new List<LineSegment>();
             var currentItem = forlormStart;
             var previousItem = currentItem;
-            List<Vector2> connectedNodes;
             do
             {
                 //go through the nodes until a node with more than 2 connections are found
-                connectedNodes = GetConnectedNodes(currentItem, nodes);
+                var connectedNodes = GetConnectedNodes(currentItem, nodes);
+                if (connectedNodes.Count >= 3)
+                    break;
                 if (connectedNodes.Count == 2)
-                {
                     connectedNodes.Remove(previousItem);
-                    previousItem = currentItem;
-                    currentItem = connectedNodes[0];
-                }
-                else if (connectedNodes.Count == 1)
+                previousItem = currentItem;
+                currentItem = connectedNodes[0];
+                foreach (var lineSegment in lineSegments)
                 {
-                    previousItem = currentItem;
-                    currentItem = connectedNodes[0];
+                    if (lineSegment.StartPoint != currentItem)
+                        continue;
+                    forlormLines.Add(lineSegment);
+                    break;
                 }
-            } while (connectedNodes.Count < 3);
+            } while (true);
             return currentItem;
         }
+
+        //private LineSegment GetLineSegment(Vector2 endPoint, List<LineSegment> lineSegments)
+        //{
+        //    return lineSegments.FirstOrDefault(lineSegment => lineSegment.EndPoint == endPoint);
+        //}
 
         private void OptimizeFigure(List<LineSegment> segments)
         {
@@ -277,9 +339,9 @@ namespace Hiale.GTA2NET.Core.Collision
         }
 
 
-        private List<Vector2> GetConnectedNodes(Vector2 origin, IDictionary<Vector2, List<LineObstacle>> nodes)
+        private List<Vector2> GetConnectedNodes(Vector2 origin, IDictionary<Vector2, List<ILineObstacle>> nodes)
         {
-            List<LineObstacle> lineObstacles;
+            List<ILineObstacle> lineObstacles;
             if (nodes.TryGetValue(origin, out lineObstacles))
             {
                 var vectorList = new List<Vector2>();
