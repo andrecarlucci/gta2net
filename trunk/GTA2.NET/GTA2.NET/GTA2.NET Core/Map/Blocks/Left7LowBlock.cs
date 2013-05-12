@@ -29,7 +29,7 @@ using System.Collections.Generic;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    public class Left7LowBlock : Block
+    public class Left7LowBlock : SlopeBlock
     {
         public Left7LowBlock() : base()
         {
@@ -45,10 +45,5 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         {
             SetLowSlope(7, 2);
         }
-
-        //public override void GetCollision(List<IObstacle> obstacles)
-        //{
-        //    throw new System.NotImplementedException();
-        //}
     }
 }

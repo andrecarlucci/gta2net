@@ -41,23 +41,23 @@ namespace Hiale.GTA2NET.Core.Collision
         LineObstacleType Type { get; set; }
     }
 
-    public struct SlopeObstacle : IObstacle
-    {
-        public int Z { get; set; }
+    //public class SlopeObstacle : IObstacle
+    //{
+    //    public int Z { get; set; }
 
-        public Vector2 Position;
+    //    public Vector2 Position;
 
-        public SlopeType SlopeType;
+    //    public SlopeType SlopeType;
 
-        public SlopeObstacle(Vector2 position, int z, SlopeType slopeType) : this()
-        {
-            Z = z;
-            Position = position;
-            SlopeType = slopeType;
-        }
-    }
+    //    public SlopeObstacle(Vector2 position, int z, SlopeType slopeType) : this()
+    //    {
+    //        Z = z;
+    //        Position = position;
+    //        SlopeType = slopeType;
+    //    }
+    //}
 
-    public struct RectangleObstacle : IObstacle
+    public class RectangleObstacle : IObstacle
     {
         public int Z { get; set; }
 
@@ -67,7 +67,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public float Length;
 
-        public RectangleObstacle(Vector2 position, int z, float width, float length) : this()
+        public RectangleObstacle(Vector2 position, int z, float width, float length)
         {
             Z = z;
             Position = position;
@@ -76,13 +76,13 @@ namespace Hiale.GTA2NET.Core.Collision
         }
     }
 
-    public struct PolygonObstacle : IObstacle
+    public class PolygonObstacle : IObstacle
     {
         public int Z { get; set; }
 
         public List<Vector2> Vertices { get; set; }
  
-        public PolygonObstacle(int z) : this()
+        public PolygonObstacle(int z)
         {
             Z = z;
             Vertices = new List<Vector2>();
@@ -93,7 +93,9 @@ namespace Hiale.GTA2NET.Core.Collision
             var isInside = false;
             for (int i = 0, j = Vertices.Count - 1; i < Vertices.Count; j = i++)
             {
+                // ReSharper disable CompareOfFloatsByEqualityOperator
                 if ((point.X == Vertices[i].X && point.Y == Vertices[i].Y) || (point.X == Vertices[j].X && point.Y == Vertices[j].Y)) //point IS one of the edges
+                // ReSharper restore CompareOfFloatsByEqualityOperator
                     return true;
                 if (((Vertices[i].Y > point.Y) != (Vertices[j].Y > point.Y)) && (point.X < (Vertices[j].X - Vertices[i].X) * (point.Y - Vertices[i].Y) / (Vertices[j].Y - Vertices[i].Y) + Vertices[i].X))
                     isInside = !isInside;
@@ -109,14 +111,14 @@ namespace Hiale.GTA2NET.Core.Collision
         Other
     }
 
-    public struct LineObstacle : ILineObstacle
+    public class LineObstacle : ILineObstacle
     {
         public int Z { get; set; }
         public Vector2 Start { get; set; }
         public Vector2 End { get; set; }
         public LineObstacleType Type { get; set; }
 
-        public LineObstacle(Vector2 start, Vector2 end, int z, LineObstacleType type) : this()
+        public LineObstacle(Vector2 start, Vector2 end, int z, LineObstacleType type)
         {
             Z = z;
             Start = start;
@@ -141,14 +143,20 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public static LineObstacle DefaultBottom(int x, int y, int z)
         {
-            return new LineObstacle(new Vector2(x, y + 1), new Vector2(x + 1, y + 1), z, LineObstacleType.Horizontal);
+            return new LineObstacle(new Vector2(x + 1, y + 1), new Vector2(x, y + 1), z, LineObstacleType.Horizontal);
         }
 
         public override string ToString()
         {
             return Start + " - " + End;
         }
-
-        
     }
+
+    public class SlopeLineObstacle : LineObstacle
+    {
+        public SlopeLineObstacle(Vector2 start, Vector2 end, int z, LineObstacleType type) : base(start, end, z, type)
+        {
+        }
+    }
+
 }

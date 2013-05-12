@@ -61,9 +61,9 @@ namespace Hiale.GTA2NET.Test
         public void LoadMapBil()
         {
             var map = new Map(Globals.MapsSubDir + "\\bil.gmp");
-            var collision = new MapCollisionOld(map);
-            var obstacles = collision.CollisionMap(new Vector2(239, 192));
-            DisplayCollision(obstacles);
+            //var collision = new MapCollisionOld(map);
+            //var obstacles = collision.CollisionMap(new Vector2(239, 192));
+            //DisplayCollision(obstacles);
             Assert.AreEqual(true, true);
         }
 
@@ -120,11 +120,11 @@ namespace Hiale.GTA2NET.Test
                          var fallEdge = (FallEdge)obstacle;
                          g.DrawLine(new Pen(System.Drawing.Color.Turquoise), new System.Drawing.Point((int)fallEdge.Start.X * 10, (int)fallEdge.Start.Y * 10), new System.Drawing.Point((int)fallEdge.End.X * 10, (int)fallEdge.End.Y * 10));
                      }
-                     else if (obstacle is SlopeObstacle)
-                     {
-                         var slopeObstacle = (SlopeObstacle)obstacle;
-                         g.FillRectangle(new SolidBrush(System.Drawing.Color.Blue), slopeObstacle.Position.X * 10, slopeObstacle.Position.Y * 10, 10, 10);
-                     }
+                     //else if (obstacle is SlopeObstacle)
+                     //{
+                     //    var slopeObstacle = (SlopeObstacle)obstacle;
+                     //    g.FillRectangle(new SolidBrush(System.Drawing.Color.Blue), slopeObstacle.Position.X * 10, slopeObstacle.Position.Y * 10, 10, 10);
+                     //}
                      else if (obstacle is PolygonObstacle)
                      {
                          var polygonObstacle = (PolygonObstacle)obstacle;
