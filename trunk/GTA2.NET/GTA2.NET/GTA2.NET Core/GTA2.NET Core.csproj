@@ -49,14 +49,12 @@
     <Compile Include="CarInfo.cs" />
     <Compile Include="CarPhysicReader.cs" />
     <Compile Include="CarPhysics.cs" />
-    <Compile Include="Collision\FallEdge.cs" />
+    <Compile Include="Collision\LineSegment.cs" />
     <Compile Include="Collision\MapCollision.cs" />
-    <Compile Include="Collision\Submatrix.cs" />
-    <Compile Include="Collision\ObstacleType.cs" />
+    <Compile Include="Collision\SwitchPoint.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
-    <Compile Include="Helper\Geometry.cs" />
     <Compile Include="Map\Blocks\DiagonalSlopeFacingDownLeftBlock.cs" />
     <Compile Include="Map\Blocks\DiagonalSlopeFacingDownRightBlock.cs" />
     <Compile Include="Map\Blocks\DiagonalSlopeFacingUpLeftBlock.cs" />
@@ -83,7 +81,6 @@
     <Compile Include="Helper\BitHelper.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Helper\LoadSave.cs" />
-    <Compile Include="Helper\MarchingSquares.cs" />
     <Compile Include="Helper\Threading\ProgressMessageChangedEventArgs.cs" />
     <Compile Include="Helper\ZipStorer.cs" />
     <Compile Include="Map\BlockFace.cs" />
@@ -91,7 +88,6 @@
     <Compile Include="Map\BlockFaceLid.cs" />
     <Compile Include="Map\BlockFactory.cs" />
     <Compile Include="Map\Block.cs" />
-    <Compile Include="Collision\CollisionMapType.cs" />
     <Compile Include="Map\Blocks\CubeBlock.cs" />
     <Compile Include="Map\Blocks\DiagonalFacingDownLeftBlock.cs" />
     <Compile Include="Map\Blocks\DiagonalFacingDownRightBlock.cs" />
@@ -144,7 +140,6 @@
     <Compile Include="Map\Blocks\Up7LowBlock.cs" />
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
-    <Compile Include="Collision\MapCollisionOld.cs" />
     <Compile Include="Map\MapObject.cs" />
     <Compile Include="Collision\Obstacle.cs" />
     <Compile Include="Map\RoadTrafficType.cs" />
