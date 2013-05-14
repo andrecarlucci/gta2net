@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Geometry.cs
-// Created: 09.05.2013
+// File: SwitchPoint.cs
+// Created: 14.05.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -29,38 +29,26 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 
-namespace Hiale.GTA2NET.Core.Helper
+namespace Hiale.GTA2NET.Core.Collision
 {
-    public static class Geometry
+    public class SwitchPoint
     {
-        public static bool PointInPolygon(Vector2 p, Vector2[] poly)
+        public List<Vector2> EndPoints { get; private set; }
+
+        private new Vector2 EndPoint
         {
-            var inside = false;
-            if (poly.Length < 3)
-                return false;
-
-            var oldPoint = new Vector2(poly[poly.Length - 1].X, poly[poly.Length - 1].Y);
-            for (var i = 0; i < poly.Length; i++)
-            {
-                var newPoint = new Vector2(poly[i].X, poly[i].Y);
-                Vector2 p1;
-                Vector2 p2;
-                if (newPoint.X > oldPoint.X)
-                {
-                    p1 = oldPoint;
-                    p2 = newPoint;
-                }
-                else
-                {
-                    p1 = newPoint;
-                    p2 = oldPoint;
-                }
-
-                if ((newPoint.X < p.X) == (p.X <= oldPoint.X) && ((long) p.Y - (long) p1.Y)*(long) (p2.X - p1.X) < ((long) p2.Y - (long) p1.Y)*(long) (p.X - p1.X))
-                    inside = !inside;
-                oldPoint = newPoint;
-            }
-            return inside;
+            get { return EndPoints[0]; }
         }
+
+        public SwitchPoint(List<Vector2> endPoints)
+        {
+            EndPoints = endPoints;
+        }
+
+        public override string ToString()
+        {
+            return EndPoint + " - " + EndPoints.Count + " Endpoints";
+        }
+
     }
 }
