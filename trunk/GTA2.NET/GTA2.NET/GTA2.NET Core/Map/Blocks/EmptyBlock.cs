@@ -60,7 +60,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             }
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
             //nothing
         }

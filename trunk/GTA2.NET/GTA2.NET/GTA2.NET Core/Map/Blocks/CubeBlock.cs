@@ -72,10 +72,5 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             // Right face
             CreateRightVertices( frontCoordinates, backCoordinates, 0);
         }
-
-        public override void GetCollision(List<IObstacle> obstacles)
-        {
-            base.GetCollision(obstacles);
-        }
     }
 }

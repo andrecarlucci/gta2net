@@ -699,127 +699,22 @@ namespace Hiale.GTA2NET.Core.Map
             return newCoords;
         }
 
-        #region Diagonal Slopes
-
-        protected void SetUpSlopeDiagonal(byte rotation)
+        public virtual void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
-            FaceCoordinates frontCoordinates;
-            FaceCoordinates backCoordinates;
-            PrepareCoordinates(out frontCoordinates, out backCoordinates);
+            if (DoesWallCollide(Left, bulletWall))
+                obstacles.Add(GetDefaultLeftCollison());
+            if (DoesWallCollide(Top, bulletWall))
+                obstacles.Add(GetDefaultTopCollison());
+            if (DoesWallCollide(Right, bulletWall))
+                obstacles.Add(GetDefaultRightCollison());
+            if (DoesWallCollide(Bottom, bulletWall))
+                obstacles.Add(GetDefaultBottomCollison());
 
-            if (rotation > 0)
-            {
-                frontCoordinates = RotateSlope(frontCoordinates, rotation);
-                backCoordinates = RotateSlope(backCoordinates, rotation);
-            }
-
-            if (Position.X == 79 && Position.Y == 175 && Position.Z == 4)
-                Console.Read();
-            //
-            //LID
-            //
-            if (Lid)
-            {
-                RotationType lidRotation = Lid.Rotation;
-                lidRotation = RotateEnum(lidRotation, rotation);
-
-                if (Lid.Flip) //ToDo: This is just a dirty way! Problem: rotation Bug if flipped
-                {
-                    if (rotation == 1 || rotation == 3)
-                    {
-                        switch (lidRotation)
-                        {
-                            case RotationType.Rotate90:
-                                lidRotation = RotationType.Rotate270;
-                                break;
-                            case RotationType.Rotate270:
-                                lidRotation = RotationType.Rotate90;
-                                break;
-                        }
-                    }
-                }
-
-                Vector2[] texPos = GetTexturePositions(TileAtlas[Lid.TileNumber], lidRotation, Lid.Flip);
-                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
-                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
-                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
-
-                int startIndex = Coors.Count - 3;
-                IndexBufferCollection.Add(startIndex);
-                IndexBufferCollection.Add(startIndex + 1);
-                IndexBufferCollection.Add(startIndex + 2);
-            }
-
-            //int TileNumber = 0;
-            BlockFace diagonalFace = null;
-            switch (rotation)
-            {
-                case 0:
-                    diagonalFace = Right;
-                    break;
-                case 1:
-                    diagonalFace = Left;
-                    break;
-                case 2:
-                    diagonalFace = Left;
-                    break;
-                case 3:
-                    diagonalFace = Right;
-                    break;
-            }
-
-            //Diagonal face
-            if (diagonalFace)
-            {
-                Vector2[] texPos = GetTexturePositions(TileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
-                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
-                Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[2]));
-                Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
-                Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[0]));
-
-                int startIndex = Coors.Count - 4;
-                IndexBufferCollection.Add(startIndex + 2);
-                IndexBufferCollection.Add(startIndex + 1);
-                IndexBufferCollection.Add(startIndex);
-                IndexBufferCollection.Add(startIndex + 3);
-                IndexBufferCollection.Add(startIndex + 2);
-                IndexBufferCollection.Add(startIndex);
-            }
-
-            PrepareCoordinates(out frontCoordinates, out backCoordinates);
-            switch (rotation)
-            {
-                case 0: //Facing up right
-                    CreateBottomVertices(frontCoordinates, backCoordinates);
-                    CreateLeftVertices(frontCoordinates, backCoordinates, 0);
-                    break;
-                case 1: //Facing up left
-                    CreateBottomVertices(frontCoordinates, backCoordinates);
-                    CreateRightVertices(frontCoordinates, backCoordinates, 0);
-                    break;
-                case 2: //Facing down left --> BUG
-                    CreateTopVertices(frontCoordinates, backCoordinates);
-                    CreateRightVertices(frontCoordinates, backCoordinates, 0);
-                    break;
-                case 3: //Facing down right --> BUG
-                    CreateTopVertices(frontCoordinates, backCoordinates);
-                    CreateLeftVertices(frontCoordinates, backCoordinates, 0);
-                    break;
-            }
         }
 
-        #endregion
-
-        public virtual void GetCollision(List<IObstacle> obstacles)
+        protected virtual bool DoesWallCollide(BlockFaceEdge blockFace, bool bulletWall)
         {
-            if (Left && Left.Wall)
-                obstacles.Add(GetDefaultLeftCollison());
-            if (Top && Top.Wall)
-                obstacles.Add(GetDefaultTopCollison());
-            if (Right && Right.Wall)
-                obstacles.Add(GetDefaultRightCollison());
-            if (Bottom && Bottom.Wall)
-                obstacles.Add(GetDefaultBottomCollison());
+            return blockFace && (bulletWall ? blockFace.BulletWall : blockFace.Wall);
         }
 
         #region Coordinates

@@ -46,9 +46,9 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             SetUpSlopeHigh(26, 1);
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
-            base.GetCollision(obstacles);
+            base.GetCollision(obstacles, bulletWall);
             obstacles.Add(LineObstacle.DefaultTop((int)Position.X, (int)Position.Y, (int)Position.Z));
         }
     }

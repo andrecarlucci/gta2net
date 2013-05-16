@@ -47,21 +47,16 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             throw new NotImplementedException();
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
-            //if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
-            //{
-            //    obstacles.Add(new RectangleObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), (int)Position.Z, PartialBlockScalar, 1));
-            //    return;
-            //}
-            if (Left.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y + 1), (int)Position.Z, LineObstacleType.Vertical));
-            if (Top.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), new Vector2(Position.X + 1, Position.Y), (int)Position.Z, LineObstacleType.Horizontal));
-            if (Right.Wall)
+            if (DoesWallCollide(Left, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y + 1), (int)Position.Z));
+            if (DoesWallCollide(Top, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y), new Vector2(Position.X + 1, Position.Y), (int)Position.Z));
+            if (DoesWallCollide(Right, bulletWall))
                 obstacles.Add(GetDefaultRightCollison());
-            if (Bottom.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y + 1), new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y + 1), (int)Position.Z, LineObstacleType.Horizontal));
+            if (DoesWallCollide(Bottom, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y + 1), new Vector2(Position.X + 1 - PartialBlockScalar, Position.Y + 1), (int)Position.Z));
         }
     }
 }

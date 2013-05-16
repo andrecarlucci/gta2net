@@ -29,7 +29,7 @@ using Hiale.GTA2NET.Core.Collision;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    public class DiagonalFacingDownRightBlock : Block
+    public class DiagonalFacingDownRightBlock : DiagonalBlock
     {
         public DiagonalFacingDownRightBlock() : base() 
         {
@@ -46,22 +46,13 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             SetUpSlopeDiagonal(3);
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
-            //if (Left.Wall && Top.Wall && Right.Wall)
-            //{
-            //    var polygon = new PolygonObstacle((int)Position.Z);
-            //    polygon.Vertices.Add(new Vector2(Position.X, Position.Y));
-            //    polygon.Vertices.Add(new Vector2(Position.X + 1, Position.Y));
-            //    polygon.Vertices.Add(new Vector2(Position.X, Position.Y + 1));
-            //    obstacles.Add(polygon);
-            //    return;
-            //}
-            if (Right.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X, Position.Y + 1), (int)Position.Z, LineObstacleType.Other));
-            if (Left)
+            if (DoesWallCollide(Right, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X, Position.Y + 1), (int)Position.Z));
+            if (DoesWallCollide(Left, bulletWall))
                 obstacles.Add(GetDefaultLeftCollison());
-            if (Top)
+            if (DoesWallCollide(Top, bulletWall))
                 obstacles.Add(GetDefaultTopCollison());
         }
     }

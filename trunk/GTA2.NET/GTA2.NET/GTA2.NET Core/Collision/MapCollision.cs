@@ -24,42 +24,38 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
-using System.Text;
-using FarseerPhysics.Common;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
     public class MapCollision
     {
-        private static Dictionary<Direction, int> _directionPriority;
+        private static Dictionary<Direction, int> _baseDirectionPriority;
 
         private readonly Map.Map _map;
 
         public MapCollision(Map.Map map)
         {
             _map = map;
-            PreparePriorityTable();
+            PrepareBasePriorityTable();
         }
 
-        private static void PreparePriorityTable()
+        private static void PrepareBasePriorityTable()
         {
-            if (_directionPriority != null)
+            if (_baseDirectionPriority != null)
                 return;
-            _directionPriority = new Dictionary<Direction, int> {{Direction.UpLeft, 1}, {Direction.Left, 2}, {Direction.DownLeft, 3}, {Direction.Down, 4}, {Direction.DownRight, 5}, {Direction.Right, 6}, {Direction.UpRight, 7}, {Direction.Up, 8}};
+            _baseDirectionPriority = new Dictionary<Direction, int> {{Direction.UpLeft, 1}, {Direction.Left, 2}, {Direction.DownLeft, 3}, {Direction.Down, 4}, {Direction.DownRight, 5}, {Direction.Right, 6}, {Direction.UpRight, 7}, {Direction.Up, 8}};
         }
 
         public List<IObstacle> GetObstacles()
         {
+            int currentLayer = 2;
             var obstacles = new List<IObstacle>();
-            var rawObstacles = GetBlockObstacles(2);
+            var rawObstacles = GetBlockObstacles(currentLayer);
             var nodes = GetAllObstacleNodes(rawObstacles);
 
             while (nodes.Count > 0)
@@ -75,6 +71,11 @@ namespace Hiale.GTA2NET.Core.Collision
                     switchPoints.Remove(origin); //remove start point, it's not really a switch point
 
                 var lines = CreateLines(forlornNodesStart, origin, nodes, currentFigure, switchPoints, currentFigureForlorn);
+                foreach (var lineObstacle in lines)
+                {
+                    lineObstacle.Z = currentLayer;
+                    obstacles.Add(lineObstacle);
+                }
 
                 foreach (var segment in currentFigure)
                 {
@@ -87,7 +88,7 @@ namespace Hiale.GTA2NET.Core.Collision
                     nodes.Remove(segment.EndPoint);
                 }
 
-                var polygonVertices = CreatePolygon(currentFigure);
+                var polygonVertices = CreatePolygon(currentFigure, switchPoints);
                 if (polygonVertices.Count > 3)
                 {
                     var polygon = new PolygonObstacle(2) {Vertices = polygonVertices};
@@ -97,27 +98,24 @@ namespace Hiale.GTA2NET.Core.Collision
                 {
                     System.Diagnostics.Debug.WriteLine("DEBUG");
                 }
-
-                //SaveSegmentsPicture(currentFigure);
-                //SavePolygonPicture(polygon);
             }
             return obstacles;
         }
 
-        private List<IObstacle> GetBlockObstacles(int z)
+        private List<ILineObstacle> GetBlockObstacles(int z)
         {
-            var obstacles = new List<IObstacle>();
+            var obstacles = new List<ILineObstacle>();
             for (var x = 0; x < _map.Width; x++)
             {
                 for (var y = 0; y < _map.Length; y++)
                 {
-                    _map.CityBlocks[x, y, z].GetCollision(obstacles);
+                    _map.CityBlocks[x, y, z].GetCollision(obstacles, false);
                 }
             }
             return obstacles;
         }
 
-        private static Dictionary<Vector2, List<ILineObstacle>> GetAllObstacleNodes(List<IObstacle> obstacles)
+        private static Dictionary<Vector2, List<ILineObstacle>> GetAllObstacleNodes(List<ILineObstacle> obstacles)
         {
             var nodes = new Dictionary<Vector2, List<ILineObstacle>>();
             foreach (var obstacle in obstacles)
@@ -209,9 +207,9 @@ namespace Hiale.GTA2NET.Core.Collision
             return new List<Vector2>();
         }
 
-        private static List<List<Vector2>> CreateLines(List<Vector2> forlornNodesStart, Vector2 origin, Dictionary<Vector2, List<ILineObstacle>> nodes, List<LineSegment> currentFigure, Dictionary<Vector2, SwitchPoint> switchPoints, List<LineSegment> currentFigureForlorn)
+        private static List<LineObstacle> CreateLines(List<Vector2> forlornNodesStart, Vector2 origin, Dictionary<Vector2, List<ILineObstacle>> nodes, List<LineSegment> currentFigure, Dictionary<Vector2, SwitchPoint> switchPoints, List<LineSegment> currentFigureForlorn)
         {
-            var lines = new List<List<Vector2>>();
+            var lines = new List<LineObstacle>();
             if (switchPoints.Count > 0)
             {
                 var forlornNodes = new Queue<Vector2>();
@@ -223,7 +221,7 @@ namespace Hiale.GTA2NET.Core.Collision
                     List<LineSegment> forlormLines;
                     var forlormRoot = GetForlormRoot(currentItem, origin, nodes, currentFigure, out forlormLines);
                     
-                    var currentLineFigure = new List<Vector2>();
+                    var currentLineStart = Vector2.Zero;
                     var currentPosition = currentItem;
                     var currentDirection = Direction.None;
                     for (var i = 0; i < forlormLines.Count; i++)
@@ -237,14 +235,14 @@ namespace Hiale.GTA2NET.Core.Collision
                         currentPosition = directedLine.EndPoint;
                         if (directedLine.Direction != currentDirection)
                         {
-                            currentLineFigure.Add(directedLine.StartPoint);
+                            if (currentDirection != Direction.None)
+                                lines.Add(new LineObstacle(currentLineStart, directedLine.StartPoint));
+                            currentLineStart = directedLine.StartPoint;
                             currentDirection = directedLine.Direction;
                         }
                         if (i == forlormLines.Count - 1) //last item
-                            currentLineFigure.Add(directedLine.EndPoint);
+                            lines.Add(new LineObstacle(currentLineStart, directedLine.EndPoint));
                     }
-                    lines.Add(currentLineFigure);
-
                     SwitchPoint switchPoint;
                     if (!switchPoints.TryGetValue(forlormRoot, out switchPoint))
                         continue;
@@ -252,6 +250,8 @@ namespace Hiale.GTA2NET.Core.Collision
                         switchPoint.EndPoints.Remove(forlormLines.Last().EndPoint);
                     if (switchPoint.EndPoints.Count == 0)
                         forlornNodes.Enqueue(forlormRoot);
+                    if (switchPoint.EndPoints.Count == 1)
+                        switchPoints.Remove(forlormRoot);
                 }
             }
             return lines;
@@ -287,21 +287,31 @@ namespace Hiale.GTA2NET.Core.Collision
             return currentItem;
         }
 
-        private static List<Vector2> CreatePolygon(List<LineSegment> sourceSegments)
+        private static List<Vector2> CreatePolygon(List<LineSegment> sourceSegments, Dictionary<Vector2, SwitchPoint> switchPoints)
         {
             var polygon = new List<Vector2>();
             var lineSegments = new List<LineSegment>(sourceSegments);
             var currentItem = lineSegments.First().StartPoint;
+            var origin = currentItem;
             var currentDirection = Direction.None;
             while (lineSegments.Count > 0)
             {
+                if (switchPoints.ContainsKey(currentItem))
+                {
+                    System.Diagnostics.Debug.WriteLine(currentItem);
+                }
                 var currentLines = lineSegments.Where(lineSegment => lineSegment.StartPoint == currentItem).ToList();
                 currentLines.AddRange(lineSegments.Where(lineSegment => lineSegment.EndPoint == currentItem).ToList());
                 var minPriority = int.MaxValue;
                 LineSegment preferedLine = null;
+                LineSegment directedLine = null;
                 foreach (var currentLine in currentLines)
                 {
-                    var currentPriority = _directionPriority[currentLine.Direction];
+                    if (currentItem == currentLine.EndPoint)
+                        directedLine = currentLine.SwapPoints();
+                    else if (currentItem == currentLine.StartPoint)
+                        directedLine = currentLine;
+                    var currentPriority = GetDirectionPriority(currentDirection, directedLine.Direction);
                     if (currentPriority >= minPriority)
                         continue;
                     minPriority = currentPriority;
@@ -321,9 +331,24 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (preferedLine.Direction == currentDirection)
                     continue;
                 polygon.Add(previousItem);
+                if (currentItem == origin)
+                    break;
                 currentDirection = preferedLine.Direction;
             }
             return polygon;
+        }
+
+        public static int GetDirectionPriority(Direction baseDirection, Direction newDirection)
+        {
+            var priority = _baseDirectionPriority[newDirection];
+            if (baseDirection == Direction.None)
+                baseDirection = Direction.Down;
+            priority += 4 - _baseDirectionPriority[baseDirection];
+            if (priority < 0)
+                priority = 8 + priority;
+            if (priority > 8)
+                priority = priority - 8;
+            return priority;
         }
 
         private static void SaveSegmentsPicture(List<LineSegment> segments)
