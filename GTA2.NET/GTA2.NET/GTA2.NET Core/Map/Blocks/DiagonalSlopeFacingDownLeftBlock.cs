@@ -31,7 +31,7 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
-    public class DiagonalSlopeFacingDownLeftBlock : Block
+    public class DiagonalSlopeFacingDownLeftBlock : DiagonalBlock
     {
         public DiagonalSlopeFacingDownLeftBlock() : base()
         {

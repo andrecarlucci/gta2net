@@ -64,21 +64,16 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             CreateRightVertices(frontCoordinates, backCoordinates, 0);
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
-            if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
-            {
-                obstacles.Add(new RectangleObstacle(new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar), (int)Position.Z, PartialBlockScalar, PartialBlockScalar));
-                return;
-            }
-            if (Left.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar), new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
-            if (Top.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar), new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar), (int) Position.Z, LineObstacleType.Horizontal));
-            if (Right.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar), new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
-            if (Bottom.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), (int)Position.Z, LineObstacleType.Horizontal));
+            if (DoesWallCollide(Left, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar), new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), (int)Position.Z));
+            if (DoesWallCollide(Top, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar), new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar), (int) Position.Z));
+            if (DoesWallCollide(Right, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar), new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), (int)Position.Z));
+            if (DoesWallCollide(Bottom, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + CentreBlockScalar + PartialBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), new Vector2(Position.X + CentreBlockScalar, Position.Y + CentreBlockScalar + PartialBlockScalar), (int)Position.Z));
         }
     }
 }

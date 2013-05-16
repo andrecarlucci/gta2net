@@ -38,7 +38,6 @@ namespace Hiale.GTA2NET.Core.Collision
     {
         Vector2 Start { get; set; }
         Vector2 End { get; set; }
-        LineObstacleType Type { get; set; }
     }
 
     //public class SlopeObstacle : IObstacle
@@ -104,46 +103,43 @@ namespace Hiale.GTA2NET.Core.Collision
         }
     }
 
-    public enum LineObstacleType
-    {
-        Horizontal,
-        Vertical,
-        Other
-    }
-
     public class LineObstacle : ILineObstacle
     {
         public int Z { get; set; }
         public Vector2 Start { get; set; }
         public Vector2 End { get; set; }
-        public LineObstacleType Type { get; set; }
 
-        public LineObstacle(Vector2 start, Vector2 end, int z, LineObstacleType type)
+        public LineObstacle(Vector2 start, Vector2 end)
+        {
+            Start = start;
+            End = end;
+        }
+
+        public LineObstacle(Vector2 start, Vector2 end, int z)
         {
             Z = z;
             Start = start;
             End = end;
-            Type = type;
         }
 
         public static LineObstacle DefaultLeft(int x, int y, int z)
         {
-            return new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), z, LineObstacleType.Vertical);
+            return new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), z);
         }
 
         public static LineObstacle DefaultTop(int x, int y, int z)
         {
-            return new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), z, LineObstacleType.Horizontal);
+            return new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), z);
         }
 
         public static LineObstacle DefaultRight(int x, int y, int z)
         {
-            return new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z, LineObstacleType.Vertical);
+            return new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z);
         }
 
         public static LineObstacle DefaultBottom(int x, int y, int z)
         {
-            return new LineObstacle(new Vector2(x + 1, y + 1), new Vector2(x, y + 1), z, LineObstacleType.Horizontal);
+            return new LineObstacle(new Vector2(x + 1, y + 1), new Vector2(x, y + 1), z);
         }
 
         public override string ToString()
@@ -154,7 +150,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
     public class SlopeLineObstacle : LineObstacle
     {
-        public SlopeLineObstacle(Vector2 start, Vector2 end, int z, LineObstacleType type) : base(start, end, z, type)
+        public SlopeLineObstacle(Vector2 start, Vector2 end, int z) : base(start, end, z)
         {
         }
     }

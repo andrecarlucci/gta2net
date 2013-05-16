@@ -356,25 +356,25 @@ namespace Hiale.GTA2NET.Core.Map
 
         protected override ILineObstacle GetDefaultLeftCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X, Position.Y + 1), (int)Position.Z, LineObstacleType.Vertical);
+            return new SlopeLineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X, Position.Y + 1), (int)Position.Z);
         }
 
         protected override ILineObstacle GetDefaultTopCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X + 1, Position.Y), (int)Position.Z, LineObstacleType.Horizontal);
+            return new SlopeLineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X + 1, Position.Y), (int)Position.Z);
         }
 
         protected override ILineObstacle GetDefaultRightCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X + 1, Position.Y + 1), (int)Position.Z, LineObstacleType.Vertical);
+            return new SlopeLineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X + 1, Position.Y + 1), (int)Position.Z);
         }
 
         protected override ILineObstacle GetDefaultBottomCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X + 1, Position.Y + 1), new Vector2(Position.X, Position.Y + 1), (int)Position.Z, LineObstacleType.Horizontal);
+            return new SlopeLineObstacle(new Vector2(Position.X + 1, Position.Y + 1), new Vector2(Position.X, Position.Y + 1), (int)Position.Z);
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
             obstacles.Add(GetDefaultLeftCollison());
             obstacles.Add(GetDefaultTopCollison());

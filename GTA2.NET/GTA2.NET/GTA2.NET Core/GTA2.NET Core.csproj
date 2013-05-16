@@ -68,6 +68,7 @@
     <Compile Include="Map\Blocks\PartialTopBlock.cs" />
     <Compile Include="Map\Blocks\PartialTopLeftBlock.cs" />
     <Compile Include="Map\Blocks\PartialTopRightBlock.cs" />
+    <Compile Include="Map\DiagonalBlock.cs" />
     <Compile Include="Map\SlopeBlock.cs" />
     <Compile Include="Style\DeltaItem.cs" />
     <Compile Include="Style\DeltaSubItem.cs" />

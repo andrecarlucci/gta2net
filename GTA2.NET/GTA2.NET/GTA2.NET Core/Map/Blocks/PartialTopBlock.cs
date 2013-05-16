@@ -47,21 +47,16 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             throw new NotImplementedException();
         }
 
-        public override void GetCollision(List<IObstacle> obstacles)
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
-            //if (Left.Wall && Top.Wall && Right.Wall && Bottom.Wall)
-            //{
-            //    obstacles.Add(new RectangleObstacle(new Vector2(Position.X, Position.Y), (int)Position.Z, 1, PartialBlockScalar));
-            //    return;
-            //}
-            if (Left.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X, Position.Y + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
-            if (Top.Wall)
+            if (DoesWallCollide(Left, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X, Position.Y + PartialBlockScalar), (int)Position.Z));
+            if (DoesWallCollide(Top, bulletWall))
                 obstacles.Add(GetDefaultTopCollison());
-            if (Right.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X + 1, Position.Y + PartialBlockScalar), (int)Position.Z, LineObstacleType.Vertical));
-            if (Bottom.Wall)
-                obstacles.Add(new LineObstacle(new Vector2(Position.X, Position.Y + PartialBlockScalar), new Vector2(Position.X + 1, Position.Y + PartialBlockScalar), (int)Position.Z, LineObstacleType.Horizontal));
+            if (DoesWallCollide(Right, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X + 1, Position.Y + PartialBlockScalar), (int)Position.Z));
+            if (DoesWallCollide(Bottom, bulletWall))
+                obstacles.Add(new LineObstacle(new Vector2(Position.X, Position.Y + PartialBlockScalar), new Vector2(Position.X + 1, Position.Y + PartialBlockScalar), (int)Position.Z));
         }
     }
 }
