@@ -25,15 +25,13 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Hiale.GTA2NET.Core.Collision;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Map
 {
-    public abstract class DiagonalBlock : SlopeBlock
+    public abstract class DiagonalBlock : Block
     {
         protected DiagonalBlock()
         {
@@ -57,8 +55,6 @@ namespace Hiale.GTA2NET.Core.Map
                 backCoordinates = RotateSlope(backCoordinates, rotation);
             }
 
-            if (Position.X == 79 && Position.Y == 175 && Position.Z == 4)
-                Console.Read();
             //
             //LID
             //
@@ -121,7 +117,7 @@ namespace Hiale.GTA2NET.Core.Map
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopLeft, Vector3.Zero, texPos[0]));
 
-                int startIndex = Coors.Count - 4;
+                var startIndex = Coors.Count - 4;
                 IndexBufferCollection.Add(startIndex + 2);
                 IndexBufferCollection.Add(startIndex + 1);
                 IndexBufferCollection.Add(startIndex);
@@ -150,26 +146,6 @@ namespace Hiale.GTA2NET.Core.Map
                     CreateLeftVertices(frontCoordinates, backCoordinates, 0);
                     break;
             }
-        }
-
-        protected override ILineObstacle GetDefaultLeftCollison()
-        {
-            return LineObstacle.DefaultLeft((int)Position.X, (int)Position.Y, (int)Position.Z);
-        }
-
-        protected override ILineObstacle GetDefaultTopCollison()
-        {
-            return LineObstacle.DefaultTop((int)Position.X, (int)Position.Y, (int)Position.Z);
-        }
-
-        protected override ILineObstacle GetDefaultRightCollison()
-        {
-            return LineObstacle.DefaultRight((int)Position.X, (int)Position.Y, (int)Position.Z);
-        }
-
-        protected override ILineObstacle GetDefaultBottomCollison()
-        {
-            return LineObstacle.DefaultBottom((int)Position.X, (int)Position.Y, (int)Position.Z);
         }
 
         public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)

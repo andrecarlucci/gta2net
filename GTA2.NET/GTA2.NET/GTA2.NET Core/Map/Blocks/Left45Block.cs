@@ -45,5 +45,11 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         {
             SetLowSlope(45, 2);
         }
+
+        public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
+        {
+            base.GetCollision(obstacles, bulletWall);
+            obstacles.Add(LineObstacle.DefaultLeft((int)Position.X, (int)Position.Y, (int)Position.Z));
+        }
     }
 }

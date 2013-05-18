@@ -24,9 +24,12 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
 using Microsoft.Xna.Framework;
 
@@ -51,9 +54,8 @@ namespace Hiale.GTA2NET.Core.Collision
             _baseDirectionPriority = new Dictionary<Direction, int> {{Direction.UpLeft, 1}, {Direction.Left, 2}, {Direction.DownLeft, 3}, {Direction.Down, 4}, {Direction.DownRight, 5}, {Direction.Right, 6}, {Direction.UpRight, 7}, {Direction.Up, 8}};
         }
 
-        public List<IObstacle> GetObstacles()
+        public List<IObstacle> GetObstacles(int currentLayer)
         {
-            int currentLayer = 2;
             var obstacles = new List<IObstacle>();
             var rawObstacles = GetBlockObstacles(currentLayer);
             var nodes = GetAllObstacleNodes(rawObstacles);
@@ -105,6 +107,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("DEBUG");
+                    SaveSegmentsPicture(currentFigure, currentLayer);
                 }
             }
             return obstacles;
@@ -283,8 +286,9 @@ namespace Hiale.GTA2NET.Core.Collision
                 currentItem = connectedNodes[0];
                 foreach (var lineSegment in lineSegments)
                 {
-                    var linePoint = switchMode ? lineSegment.EndPoint : lineSegment.StartPoint;
-                    if (linePoint != currentItem)
+                    var pointA = switchMode ? lineSegment.EndPoint : lineSegment.StartPoint;
+                    var pointB = switchMode ? lineSegment.StartPoint : lineSegment.EndPoint;
+                    if (pointA != currentItem || pointB != previousItem)
                         continue;
                     forlormLines.Add(lineSegment);
                     break;
@@ -336,15 +340,26 @@ namespace Hiale.GTA2NET.Core.Collision
                 polygon.Add(previousItem);
                 directions.Add(currentDirection);
             }
+            FixPolygonStartPoint(polygon, directions);
             isRectangle = IsRectangleObstacle(polygon, directions);
             return polygon;
         }
 
-        private static bool IsRectangleObstacle(List<Vector2> polygon, List<Direction> directions)
+        private static bool IsRectangleObstacle(ICollection polygon, ICollection<Direction> directions)
         {
             if (polygon.Count != 4 || directions.Count != 4)
                 return false;
             return directions.Contains(Direction.Down) && directions.Contains(Direction.Right) && directions.Contains(Direction.Up) && directions.Contains(Direction.Left);
+        }
+
+        private static void FixPolygonStartPoint(IList polygon, IList<Direction> directions)
+        {
+            if (polygon.Count != directions.Count || polygon.Count < 3)
+                return;
+            if (directions.First() != directions.Last())
+                return;
+            polygon.RemoveAt(0);
+            directions.RemoveAt(0);
         }
 
         private static int GetDirectionPriority(Direction baseDirection, Direction newDirection)
@@ -360,38 +375,27 @@ namespace Hiale.GTA2NET.Core.Collision
             return priority;
         }
 
-        private static void SaveSegmentsPicture(List<LineSegment> segments)
+        private static void SaveSegmentsPicture(List<LineSegment> segments, int currentLayer)
         {
-            using (var bmp = new Bitmap(2560, 2560))
+            var fileName = "Segments" + currentLayer + ".png";
+            Bitmap bmp;
+            if (File.Exists(fileName))
             {
-                using (var g = Graphics.FromImage(bmp))
-                {
-                    foreach (var segment in segments)
-                    {
-                        g.DrawLine(new Pen(new SolidBrush(System.Drawing.Color.Red), 1), segment.StartPoint.X * 10, segment.StartPoint.Y * 10, segment.EndPoint.X * 10, segment.EndPoint.Y * 10);
-                    }
-                }
-                bmp.Save("Segments.png", ImageFormat.Png);
+                var image = Image.FromFile(fileName);
+                bmp = new Bitmap(image);
+                image.Dispose();
             }
-        }
-
-        private static void SavePolygonPicture(List<Vector2> polygon)
-        {
-            if (polygon.Count > 3)
+            else
+                bmp = new Bitmap(2560, 2560);
+            using (var g = Graphics.FromImage(bmp))
             {
-                using (var bmp = new Bitmap(2560, 2560))
+                foreach (var segment in segments)
                 {
-                    using (var g = Graphics.FromImage(bmp))
-                    {
-                        var points = new PointF[polygon.Count];
-                        for (var i = 0; i < polygon.Count; i++)
-                            points[i] = new PointF(polygon[i].X * 10, polygon[i].Y * 10);
-                        g.DrawPolygon(new Pen(System.Drawing.Color.Red), points);
-                    }
-                    bmp.Save("Polygon.png", ImageFormat.Png);
+                    g.DrawLine(new Pen(new SolidBrush(System.Drawing.Color.Red), 1), segment.StartPoint.X*10, segment.StartPoint.Y*10, segment.EndPoint.X*10, segment.EndPoint.Y*10);
                 }
             }
+            bmp.Save(fileName, ImageFormat.Png);
+            bmp.Dispose();
         }
-
     }
 }

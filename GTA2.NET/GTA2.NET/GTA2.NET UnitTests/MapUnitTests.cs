@@ -50,10 +50,11 @@ namespace Hiale.GTA2NET.Test
         {
             var map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
             var collision = new MapCollision(map);
-            var obstacles = collision.GetObstacles();
-            //var collision = new MapCollisionOld(map);
-            //var obstacles = collision.CollisionMap(new Vector2(73,192));
-            DisplayCollision(obstacles);
+            for (var i = 0; i < 7; i++)
+            {
+                var obstacles = collision.GetObstacles(i);
+                DisplayCollision(obstacles);
+            }
             Assert.AreEqual(true, true);
         }
 
