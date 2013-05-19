@@ -96,6 +96,10 @@ namespace Hiale.GTA2NET.Core.Map
             Position = pos;
             Coors = new List<VertexPositionNormalTexture>();
             IndexBufferCollection = new List<int>();
+            Left.FixTileWallCollision();
+            Right.FixTileWallCollision();
+            Top.FixTileWallCollision();
+            Bottom.FixTileWallCollision();
         }
 
         protected Block()

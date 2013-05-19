@@ -23,7 +23,9 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System.IO;
+
+using System.Collections.Generic;
+using System.Linq;
 using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Map
@@ -54,4 +56,80 @@ namespace Hiale.GTA2NET.Core.Map
             BulletWall = BitHelper.CheckBit(value, 11);
         }
     }
+
+    internal static class BlockFaceEdgeWallFix
+    {
+        private class TileWallCollisionFix
+        {
+            public int TileNumber;
+            public int CollisionCount;
+            public int NoBulletCollision;
+            public int NoCollisionCount;
+            public readonly List<BlockFaceEdge> BlockFaces = new List<BlockFaceEdge>(); 
+
+            public override string ToString()
+            {
+                return TileNumber + " (" + CollisionCount + ":" + NoBulletCollision + ":" + NoCollisionCount + ")";
+            }
+        }
+
+        private static readonly Dictionary<int, TileWallCollisionFix> TileWallCollisionFixes = new Dictionary<int, TileWallCollisionFix>();
+        private static readonly List<int> MismatchTiles = new List<int>(); 
+
+        public static void FixTileWallCollision(this BlockFaceEdge blockFace)
+        {
+            if (blockFace.TileNumber == 0)
+                return;
+            TileWallCollisionFix tileWallCollisionFix;
+            var add = false;
+            if (!TileWallCollisionFixes.TryGetValue(blockFace.TileNumber, out tileWallCollisionFix))
+            {
+                tileWallCollisionFix = new TileWallCollisionFix();
+                add = true;
+            }
+            if (blockFace.Wall)
+            {
+                if (blockFace.BulletWall)
+                    tileWallCollisionFix.CollisionCount++;
+                else
+                    tileWallCollisionFix.NoBulletCollision++;
+                if (tileWallCollisionFix.NoCollisionCount > 0 && !MismatchTiles.Contains(blockFace.TileNumber))
+                    MismatchTiles.Add(blockFace.TileNumber);
+            }
+            else
+            {
+                tileWallCollisionFix.NoCollisionCount++;
+                if (tileWallCollisionFix.CollisionCount > 0 && !MismatchTiles.Contains(blockFace.TileNumber))
+                    MismatchTiles.Add(blockFace.TileNumber);
+            }
+            tileWallCollisionFix.TileNumber = blockFace.TileNumber;
+            tileWallCollisionFix.BlockFaces.Add(blockFace);
+            if (add)
+                TileWallCollisionFixes.Add(blockFace.TileNumber, tileWallCollisionFix);
+        }
+
+        private static List<TileWallCollisionFix> GetMismatchTiles()
+        {
+            var list = new List<TileWallCollisionFix>(MismatchTiles.Count);
+            list.AddRange(MismatchTiles.Select(mismatchTile => TileWallCollisionFixes[mismatchTile]));
+            TileWallCollisionFixes.Clear();
+            MismatchTiles.Clear();
+            return list;
+        }
+
+        public static void FixAllMismatchTiles()
+        {
+            var list = GetMismatchTiles();
+            foreach (var tileWallCollisionFix in list)
+            {
+                foreach (var blockFace in tileWallCollisionFix.BlockFaces)
+                {
+                    blockFace.Wall = true;
+                    if (tileWallCollisionFix.CollisionCount > 0)
+                        blockFace.BulletWall = true;
+                }
+            }
+        }
+    }
+
 }
