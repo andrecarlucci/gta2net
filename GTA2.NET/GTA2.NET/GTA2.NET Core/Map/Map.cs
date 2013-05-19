@@ -146,6 +146,7 @@ namespace Hiale.GTA2NET.Core.Map
                 }
             }
             reader.Close();
+            //BlockFaceEdgeWallFix.FixAllMismatchTiles();
             _loaded = true;
         }
 

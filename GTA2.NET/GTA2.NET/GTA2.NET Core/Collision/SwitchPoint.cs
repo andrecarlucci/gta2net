@@ -35,11 +35,6 @@ namespace Hiale.GTA2NET.Core.Collision
     {
         public List<Vector2> EndPoints { get; private set; }
 
-        private new Vector2 EndPoint
-        {
-            get { return EndPoints[0]; }
-        }
-
         public SwitchPoint(List<Vector2> endPoints)
         {
             EndPoints = endPoints;
@@ -47,7 +42,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public override string ToString()
         {
-            return EndPoint + " - " + EndPoints.Count + " Endpoints";
+            return EndPoints.Count + " Endpoints";
         }
 
     }
