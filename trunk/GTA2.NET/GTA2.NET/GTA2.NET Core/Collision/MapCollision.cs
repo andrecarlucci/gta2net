@@ -76,8 +76,9 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
 
                 currentFigure.Optimize();
-               currentFigure.Tokenize();
                 SaveSegmentsPicture(currentFigure.Lines, currentLayer + "_" + c + "_1");
+
+                currentFigure.Tokenize();
 
                 c++;
 

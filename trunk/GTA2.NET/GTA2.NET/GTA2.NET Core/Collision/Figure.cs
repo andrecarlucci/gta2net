@@ -59,11 +59,11 @@ namespace Hiale.GTA2NET.Core.Collision
             {
                 var currentItem = nodesToVisit.Pop();
                 var connectedNodes = GetConnectedNodes(currentItem.End, nodes);
-                connectedNodes.Remove(currentItem.Start);
-                if (connectedNodes.Count == 0)
+                if (connectedNodes.Count == 1) //only the item I come from
                     ForlornStartNodes.Add(currentItem.End);
-                if (connectedNodes.Count > 1 && !SwitchPoints.ContainsKey(currentItem.End))
+                if (connectedNodes.Count > 2 && !SwitchPoints.ContainsKey(currentItem.End))
                     SwitchPoints.Add(currentItem.End, new SwitchPoint(new List<Vector2>(connectedNodes)));
+                connectedNodes.Remove(currentItem.Start);
                 foreach (var connectedNode in connectedNodes)
                 {
                     if (visitedItems.Contains(connectedNode))
@@ -80,46 +80,50 @@ namespace Hiale.GTA2NET.Core.Collision
             return lines;
         }
 
+
         public List<LineSegment> Optimize()
         {
             var optimizedLines = new List<LineSegment>();
             var optimizedSwitchPoints = new Dictionary<Vector2, SwitchPoint>();
             Nodes.Clear();
             var currentDirection = Direction.None;
-            var start = new Vector2();
-            LineSegment previousItem = null;
+            Vector2? start = null;
+            Vector2? end = null;
 
             for (var i = 0; i < Lines.Count; i++)
             {
                 var directedLine = GetLine(Lines[i].Start, Lines[i].End, true);
-                if (previousItem != null && !HasConnection(previousItem.End, directedLine.Start))
+                if (end != null && !HasConnection(end.Value, directedLine.Start))
                     currentDirection = Direction.None;
 
                 var isLast = i == Lines.Count - 1;
-                var isSwitchPoint = SwitchPoints.ContainsKey(start);
-
-                if ((directedLine.Direction != currentDirection || isSwitchPoint) && !isLast)
+                var isSwitchPoint = start != null && SwitchPoints.ContainsKey(start.Value);
+                var isSwitchPointInvented = end != null && SwitchPoints.ContainsKey(end.Value);
+                
+                
+                if (directedLine.Direction != currentDirection || isSwitchPoint || isSwitchPointInvented)
                 {
-                    if (previousItem != null)
+                    if (start != null)
                     {
-                        AddLine(start, previousItem.End, optimizedLines);
+                        AddLine(start.Value, end.Value, optimizedLines);
                         if (isSwitchPoint)
-                            AddSwitchPoint(start, previousItem.End, optimizedSwitchPoints);
+                            AddSwitchPoint(start.Value, end.Value, optimizedSwitchPoints);
+                        if (isSwitchPointInvented)
+                            AddSwitchPoint(end.Value, start.Value, optimizedSwitchPoints);
                     }
                     currentDirection = directedLine.Direction;
                     start = directedLine.Start;
                 }
 
-                if (isLast)
+                if (isLast && start != null)
                 {
-                    AddLine(start, directedLine.End, optimizedLines);
+                    AddLine(start.Value, directedLine.End, optimizedLines);
                     if (isSwitchPoint)
-                    {
-                        AddSwitchPoint(start, previousItem.End, optimizedSwitchPoints);
-                        AddSwitchPoint(start, directedLine.End, optimizedSwitchPoints);
-                    }
+                        AddSwitchPoint(start.Value, directedLine.End, optimizedSwitchPoints);
+                    if (isSwitchPointInvented)
+                        AddSwitchPoint(directedLine.End, start.Value, optimizedSwitchPoints);
                 }
-                previousItem = directedLine;
+                end = directedLine.End;
             }
             Lines = optimizedLines;
             SwitchPoints = optimizedSwitchPoints;
@@ -158,7 +162,8 @@ namespace Hiale.GTA2NET.Core.Collision
             {
                 var currentItem = forlornNodes.Dequeue();
                 List<LineSegment> forlornLines;
-                var forlornRoot = GetforlornRoot(currentItem, out forlornLines);
+                Vector2 lastItemEndPoint; //this is needed for Switch Points below
+                var forlornRoot = GetforlornRoot(currentItem, out forlornLines, out lastItemEndPoint);
 
                 foreach (var line in forlornLines)
                     Lines.Remove(line);
@@ -170,7 +175,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (!SwitchPoints.TryGetValue(forlornRoot, out switchPoint))
                     continue;
                 if (switchPoint.EndPoints.Count > 0)
-                    switchPoint.EndPoints.Remove(forlornLines.Last().End); //ToDo Bug here: not always .End
+                    switchPoint.EndPoints.Remove(lastItemEndPoint); //ToDo Bug here: not always .End
                 if (switchPoint.EndPoints.Count == 0)
                     forlornNodes.Enqueue(forlornRoot);
                 if (switchPoint.EndPoints.Count == 1)
@@ -179,29 +184,15 @@ namespace Hiale.GTA2NET.Core.Collision
             return lineObstacles;
         }
 
-        private Vector2 GetforlornRoot(Vector2 forlornStart, out List<LineSegment> forlornLines)
+        private Vector2 GetforlornRoot(Vector2 forlornStart, out List<LineSegment> forlornLines, out Vector2 previousItem)
         {
             forlornLines = new List<LineSegment>();
             var currentItem = forlornStart;
-            var previousItem = currentItem;
-            var switchMode = false;
+            previousItem = currentItem;
             do
             {
                 //go through the nodes until a node with more than 2 connections are found
                 var connectedNodes = GetConnectedNodes(currentItem);
-                //foreach (var lineSegment in Lines)
-                //{
-                //    if (lineSegment.Start == currentItem)
-                //    {
-                //        if (connectedNodesTemp.Contains(lineSegment.End) && !connectedNodes.Contains(lineSegment.End))
-                //            connectedNodes.Add(lineSegment.End);
-                //    }
-                //    else if (lineSegment.End == currentItem)
-                //    {
-                //        if (connectedNodesTemp.Contains(lineSegment.Start) && !connectedNodes.Contains(lineSegment.Start))
-                //            connectedNodes.Add(lineSegment.Start);
-                //    }
-                //}
                 if (connectedNodes.Count >= 3 || forlornLines.Count == Lines.Count)
                     break;
                 if (connectedNodes.Count == 2)
@@ -209,15 +200,6 @@ namespace Hiale.GTA2NET.Core.Collision
                 previousItem = currentItem;
                 currentItem = connectedNodes[0];
                 forlornLines.Add(GetLine(previousItem, currentItem, false));
-                //foreach (var lineSegment in Lines)
-                //{
-                //    var pointA = switchMode ? lineSegment.End : lineSegment.Start;
-                //    var pointB = switchMode ? lineSegment.Start : lineSegment.End;
-                //    if (pointA != currentItem || pointB != previousItem)
-                //        continue;
-                //    forlornLines.Add(lineSegment);
-                //    break;
-                //}
             } while (true);
             return currentItem;
         }
