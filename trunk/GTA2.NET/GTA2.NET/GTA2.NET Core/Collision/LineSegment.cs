@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
 // File: LineSegment.cs
-// Created: 14.05.2013
+// Created: 23.05.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -31,18 +31,13 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public class LineSegment
+    public class LineSegment : LineObstacle
     {
-        public Vector2 StartPoint;
-        public Vector2 EndPoint;
         public Direction Direction;
 
-        public LineSegment(Vector2 startPoint, Vector2 endPoint)
+        public LineSegment(Vector2 start, Vector2 end) : base(start, end)
         {
-            StartPoint = startPoint;
-            EndPoint = endPoint;
-            Direction = Direction.None;
-            Direction = CalculateDirection(startPoint, endPoint);
+            Direction = CalculateDirection(start, end);
         }
 
         private static Direction CalculateDirection(Vector2 startPoint, Vector2 endPoint)
@@ -81,12 +76,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public LineSegment SwapPoints()
         {
-            return new LineSegment(EndPoint, StartPoint);
-        }
-
-        public override string ToString()
-        {
-            return StartPoint + " - " + EndPoint;
+            return new LineSegment(End, Start);
         }
     }
 }
