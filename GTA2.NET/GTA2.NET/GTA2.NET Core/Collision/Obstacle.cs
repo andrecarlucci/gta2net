@@ -23,8 +23,9 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
+using System;
 using System.Collections.Generic;
-using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -34,28 +35,7 @@ namespace Hiale.GTA2NET.Core.Collision
         int Z { get; set; }
     }
 
-    public interface ILineObstacle : IObstacle
-    {
-        Vector2 Start { get; set; }
-        Vector2 End { get; set; }
-    }
-
-    //public class SlopeObstacle : IObstacle
-    //{
-    //    public int Z { get; set; }
-
-    //    public Vector2 Position;
-
-    //    public SlopeType SlopeType;
-
-    //    public SlopeObstacle(Vector2 position, int z, SlopeType slopeType) : this()
-    //    {
-    //        Z = z;
-    //        Position = position;
-    //        SlopeType = slopeType;
-    //    }
-    //}
-
+    [Serializable]
     public class RectangleObstacle : IObstacle
     {
         public int Z { get; set; }
@@ -75,6 +55,7 @@ namespace Hiale.GTA2NET.Core.Collision
         }
     }
 
+    [Serializable]
     public class PolygonObstacle : IObstacle
     {
         public int Z { get; set; }
@@ -102,57 +83,4 @@ namespace Hiale.GTA2NET.Core.Collision
             return isInside;
         }
     }
-
-    public class LineObstacle : ILineObstacle
-    {
-        public int Z { get; set; }
-        public Vector2 Start { get; set; }
-        public Vector2 End { get; set; }
-
-        public LineObstacle(Vector2 start, Vector2 end)
-        {
-            Start = start;
-            End = end;
-        }
-
-        public LineObstacle(Vector2 start, Vector2 end, int z)
-        {
-            Z = z;
-            Start = start;
-            End = end;
-        }
-
-        public static LineObstacle DefaultLeft(int x, int y, int z)
-        {
-            return new LineObstacle(new Vector2(x, y), new Vector2(x, y + 1), z);
-        }
-
-        public static LineObstacle DefaultTop(int x, int y, int z)
-        {
-            return new LineObstacle(new Vector2(x, y), new Vector2(x + 1, y), z);
-        }
-
-        public static LineObstacle DefaultRight(int x, int y, int z)
-        {
-            return new LineObstacle(new Vector2(x + 1, y), new Vector2(x + 1, y + 1), z);
-        }
-
-        public static LineObstacle DefaultBottom(int x, int y, int z)
-        {
-            return new LineObstacle(new Vector2(x + 1, y + 1), new Vector2(x, y + 1), z);
-        }
-
-        public override string ToString()
-        {
-            return Start + " - " + End;
-        }
-    }
-
-    public class SlopeLineObstacle : LineObstacle
-    {
-        public SlopeLineObstacle(Vector2 start, Vector2 end, int z) : base(start, end, z)
-        {
-        }
-    }
-
 }

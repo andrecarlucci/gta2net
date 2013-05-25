@@ -49,9 +49,12 @@
     <Compile Include="CarInfo.cs" />
     <Compile Include="CarPhysicReader.cs" />
     <Compile Include="CarPhysics.cs" />
+    <Compile Include="Collision\Figure.cs" />
+    <Compile Include="Collision\LineObstacle.cs" />
     <Compile Include="Collision\LineSegment.cs" />
     <Compile Include="Collision\MapCollision.cs" />
     <Compile Include="Collision\SwitchPoint.cs" />
+    <Compile Include="Collision\SwitchPointCombination.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
