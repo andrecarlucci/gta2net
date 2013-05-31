@@ -33,14 +33,14 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class SwitchPointCombination
     {
-        public Vector2 Origin { get; set; }
+        public List<Vector2> Origins { get; set; }
 
-        public Vector2 Target { get; set; }
+        public List<Vector2> Targets { get; set; }
 
-       public SwitchPointCombination(Vector2 origin, Vector2 target)
+       public SwitchPointCombination(List<Vector2> origins, List<Vector2> targets)
        {
-          Origin = origin;
-          Target = target;
+          Origins = origins;
+          Targets = targets;
        }
     }
 }
