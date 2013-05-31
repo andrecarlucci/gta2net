@@ -78,7 +78,8 @@ namespace Hiale.GTA2NET.Core.Collision
                 currentFigure.Optimize();
                 SaveSegmentsPicture(currentFigure.Lines, currentLayer + "_" + c + "_1");
 
-                currentFigure.Tokenize();
+                var lineObstacles = currentFigure.Tokenize();
+                SaveSegmentsPicture(lineObstacles, currentLayer + "_" + c + "_2");
 
                 c++;
 
@@ -166,199 +167,8 @@ namespace Hiale.GTA2NET.Core.Collision
                 nodes.Add(newLine.Start, vectorList);
             }
         }
-        
 
-        #region OLD
-
-        //private static List<LineObstacle> CreateLines(List<Vector2> forlornNodesStart, Vector2 origin, Dictionary<Vector2, List<ILineObstacle>> nodes, List<LineObstacle> currentFigure, Dictionary<Vector2, SwitchPoint> switchPoints, List<LineObstacle> currentFigureForlorn)
-        //{
-        //    var lines = new List<LineObstacle>();
-        //        var forlornNodes = new Queue<Vector2>();
-        //        foreach (var forlornNodeStart in forlornNodesStart)
-        //            forlornNodes.Enqueue(forlornNodeStart);
-        //    while (forlornNodes.Count > 0)
-        //    {
-        //        var currentItem = forlornNodes.Dequeue();
-        //        List<LineObstacle> forlornLines;
-        //        var forlornRoot = GetforlornRoot(currentItem, origin, nodes, currentFigure, switchPoints, out forlornLines);
-
-        //        var currentLineStart = Vector2.Zero;
-        //        var currentPosition = currentItem;
-        //        var currentDirection = Direction.None;
-        //        for (var i = 0; i < forlornLines.Count; i++)
-        //        {
-        //            currentFigure.Remove(forlornLines[i]);
-        //            currentFigureForlorn.Add(forlornLines[i]);
-
-        //            var directedLine = forlornLines[i]; //we need to create a new LineSegment object because we need it ordered
-        //            if (directedLine.End == currentPosition)
-        //                directedLine = directedLine.SwapPoints();
-        //            currentPosition = directedLine.End;
-        //            if (directedLine.Direction != currentDirection)
-        //            {
-        //                if (currentDirection != Direction.None)
-        //                    lines.Add(new LineObstacle(currentLineStart, directedLine.Start));
-        //                currentLineStart = directedLine.Start;
-        //                currentDirection = directedLine.Direction;
-        //            }
-        //            if (i == forlornLines.Count - 1) //last item
-        //                lines.Add(new LineObstacle(currentLineStart, directedLine.End));
-        //        }
-        //        if (switchPoints.Count == 0)
-        //            continue;
-        //        SwitchPoint switchPoint;
-        //        if (!switchPoints.TryGetValue(forlornRoot, out switchPoint))
-        //            continue;
-        //        if (switchPoint.EndPoints.Count > 0)
-        //            switchPoint.EndPoints.Remove(forlornLines.Last().End);
-        //        if (switchPoint.EndPoints.Count == 0)
-        //            forlornNodes.Enqueue(forlornRoot);
-        //        if (switchPoint.EndPoints.Count == 1)
-        //            switchPoints.Remove(forlornRoot);
-        //    }
-        //    return lines;
-        //}
-
-        //private static Vector2 GetforlornRoot(Vector2 forlornStart, Vector2 origin, IDictionary<Vector2, List<ILineObstacle>> nodes, List<LineObstacle> lineSegments, Dictionary<Vector2, SwitchPoint> switchPoints, out List<LineObstacle> forlornLines)
-        //{
-        //    forlornLines = new List<LineObstacle>();
-        //    var currentItem = forlornStart;
-        //    var previousItem = currentItem;
-        //    var switchMode = false;
-        //    do
-        //    {
-        //        //go through the nodes until a node with more than 2 connections are found
-        //        var connectedNodesTemp = GetConnectedNodes(currentItem, nodes);
-        //        var connectedNodes = new List<Vector2>();
-        //        foreach (var lineSegment in lineSegments)
-        //        {
-        //            if (lineSegment.Start == currentItem)
-        //            {
-        //                if (connectedNodesTemp.Contains(lineSegment.End) && !connectedNodes.Contains(lineSegment.End))
-        //                    connectedNodes.Add(lineSegment.End);
-        //            }
-        //            else if (lineSegment.End == currentItem)
-        //            {
-        //                if (connectedNodesTemp.Contains(lineSegment.Start) && !connectedNodes.Contains(lineSegment.Start))
-        //                    connectedNodes.Add(lineSegment.Start);
-        //            }
-        //        }
-        //        if (connectedNodes.Count >= 3 || forlornLines.Count == lineSegments.Count)
-        //            break;
-        //        if (connectedNodes.Count == 2)
-        //            connectedNodes.Remove(previousItem);
-        //        previousItem = currentItem;
-        //        currentItem = connectedNodes[0];
-        //        foreach (var lineSegment in lineSegments)
-        //        {
-        //            var pointA = switchMode ? lineSegment.End : lineSegment.Start;
-        //            var pointB = switchMode ? lineSegment.Start : lineSegment.End;
-        //            if (pointA != currentItem || pointB != previousItem)
-        //                continue;
-        //            forlornLines.Add(lineSegment);
-        //            break;
-        //        }
-        //        if (currentItem == origin)
-        //            switchMode = true;
-        //    } while (true);
-        //    return currentItem;
-        //}
-
-        //private static List<Vector2> CreatePolygon(List<LineObstacle> sourceSegments, out bool isRectangle)
-        //{
-        //    isRectangle = false;
-        //    if (sourceSegments.Count == 0)
-        //        return new List<Vector2>();
-        //    var polygon = new List<Vector2>();
-        //    var directions = new List<Direction>();
-        //    var lineSegments = new List<LineObstacle>(sourceSegments);
-        //    var currentItem = lineSegments.First().Start;
-        //    var startPoint = currentItem;
-        //    var currentDirection = Direction.None;
-        //    while (lineSegments.Count > 0)
-        //    {
-        //        if (polygon.Count > 0 && startPoint == currentItem)
-        //            break;
-        //        var currentLines = lineSegments.Where(lineSegment => lineSegment.Start == currentItem).ToList();
-        //        currentLines.AddRange(lineSegments.Where(lineSegment => lineSegment.End == currentItem).ToList());
-        //        if (currentLines.Count == 0)
-        //            break;
-        //        var minPriority = int.MaxValue;
-        //        LineObstacle preferedLine = null;
-        //        LineObstacle directedLine = null;
-        //        LineObstacle tempLine = null;
-        //        foreach (var currentLine in currentLines)
-        //        {
-        //            if (currentItem == currentLine.End)
-        //                tempLine = currentLine.SwapPoints();
-        //            else if (currentItem == currentLine.Start)
-        //                tempLine = currentLine;
-        //            var currentPriority = GetDirectionPriority(currentDirection, tempLine.Direction);
-        //            if (currentPriority >= minPriority)
-        //                continue;
-        //            minPriority = currentPriority;
-        //            preferedLine = currentLine;
-        //            directedLine = tempLine;
-        //        }
-        //        if (preferedLine == null)
-        //            return new List<Vector2>();
-        //        lineSegments.Remove(preferedLine);
-        //        var previousItem = currentItem;
-        //        currentItem = directedLine.End;
-        //        if (directedLine.Direction == currentDirection)
-        //            continue;
-        //        currentDirection = directedLine.Direction;
-        //        polygon.Add(previousItem);
-        //        directions.Add(currentDirection);
-        //    }
-        //    FixPolygonStartPoint(polygon, directions);
-        //    //if (polygon.Count > 2)
-        //    //{
-        //    //    var firstItem = polygon.First();
-        //    //    var lastItem = polygon.Last();
-        //    //    if (firstItem.X != lastItem.X && firstItem.Y != lastItem.Y)
-        //    //    {
-        //    //        System.Diagnostics.Debug.WriteLine("OK");
-        //    //        return new List<Vector2>();
-        //    //    }
-        //    //}
-        //    isRectangle = IsRectangleObstacle(polygon, directions);
-        //    return polygon;
-        //}
-
-        //private static bool IsRectangleObstacle(ICollection polygon, ICollection<Direction> directions)
-        //{
-        //    if (polygon.Count != 4 || directions.Count != 4)
-        //        return false;
-        //    return directions.Contains(Direction.Down) && directions.Contains(Direction.Right) && directions.Contains(Direction.Up) && directions.Contains(Direction.Left);
-        //}
-
-        //private static void FixPolygonStartPoint(IList polygon, IList<Direction> directions)
-        //{
-        //    if (polygon.Count != directions.Count || polygon.Count < 3)
-        //        return;
-        //    if (directions.First() != directions.Last())
-        //        return;
-        //    polygon.RemoveAt(0);
-        //    directions.RemoveAt(0);
-        //}
-
-        #endregion
-
-        private static int GetDirectionPriority(Direction baseDirection, Direction newDirection)
-        {
-            var priority = _baseDirectionPriority[newDirection];
-            if (baseDirection == Direction.None)
-                baseDirection = Direction.Down;
-            priority += 4 - _baseDirectionPriority[baseDirection];
-            if (priority < 0)
-                priority = 8 + priority;
-            if (priority > 8)
-                priority = priority - 8;
-            return priority;
-        }
-
-        private static void SaveSegmentsPicture(List<LineSegment> segments, string name)
+        public static void SaveSegmentsPicture(List<LineSegment> segments, string name)
         {
             var fileName = "Segments_" + name + ".png";
             Bitmap bmp;
@@ -374,10 +184,10 @@ namespace Hiale.GTA2NET.Core.Collision
             {
                 foreach (var segment in segments)
                 {
-                    g.DrawLine(new Pen(new SolidBrush(System.Drawing.Color.Red), 1), segment.Start.X*10, segment.Start.Y*10, segment.End.X*10, segment.End.Y*10);
+                    g.DrawLine(new Pen(new SolidBrush(System.Drawing.Color.Red), 1), segment.Start.X * 10, segment.Start.Y * 10, segment.End.X * 10, segment.End.Y * 10);
                 }
             }
-            bmp.Save(fileName, ImageFormat.Png);
+            bmp.Save("debug\\" + fileName, ImageFormat.Png);
             bmp.Dispose();
         }
     }

@@ -73,10 +73,5 @@ namespace Hiale.GTA2NET.Core.Collision
             return Direction.None;
             // ReSharper restore CompareOfFloatsByEqualityOperator
         }
-
-        public LineSegment SwapPoints()
-        {
-            return new LineSegment(End, Start);
-        }
     }
 }

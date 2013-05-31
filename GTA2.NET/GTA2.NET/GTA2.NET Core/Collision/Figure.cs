@@ -40,8 +40,11 @@ namespace Hiale.GTA2NET.Core.Collision
 
         private List<Vector2> ForlornStartNodes { get; set; }
 
+        private static Dictionary<Direction, int> _baseDirectionPriority;
+
         public Figure(Vector2 origin, Dictionary<Vector2, List<LineSegment>> nodes)
         {
+            PrepareBasePriorityTable();
             Nodes = new Dictionary<Vector2, List<LineSegment>>();
             ForlornStartNodes = new List<Vector2>();
             SwitchPoints = new Dictionary<Vector2, SwitchPoint>();
@@ -100,8 +103,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 var isSwitchPoint = start != null && SwitchPoints.ContainsKey(start.Value);
                 var isSwitchPointInvented = end != null && SwitchPoints.ContainsKey(end.Value);
                 
-                
-                if (directedLine.Direction != currentDirection || isSwitchPoint || isSwitchPointInvented)
+                if (directedLine.Direction != currentDirection)
                 {
                     if (start != null)
                     {
@@ -130,31 +132,56 @@ namespace Hiale.GTA2NET.Core.Collision
             return optimizedLines;
         }
 
-        public List<IObstacle> Tokenize()
+        public List<LineSegment> Tokenize()
         {
-            GetForlorn();
-            return new List<IObstacle>();
+            var obstacles = new List<LineSegment>();
 
-            var combinationsCount = SwitchPoints.Sum(switchPoint => switchPoint.Value.EndPoints.Count);
-            var combinations = new List<SwitchPointCombination>(combinationsCount);
+            GetForlorn(obstacles);
+            if (Lines.Count == 0)
+                return obstacles;
 
-            foreach (var switchPoint in SwitchPoints)
+            MapCollision.SaveSegmentsPicture(Lines, "debug");
+
+            if (SwitchPoints.Count > 0)
             {
-                for (var i = 0; i < switchPoint.Value.EndPoints.Count; i++)
-                    combinations.Add(new SwitchPointCombination(switchPoint.Key, switchPoint.Value.EndPoints[i]));
+                var switchPointValues = SwitchPoints.Select(switchPoint => switchPoint.Value.EndPoints).ToList();
+                var combinations = GetCombinations(switchPointValues);
             }
-
-            foreach (var switchPointCombination in combinations)
+            else
             {
-                CheckCombination(switchPointCombination);
+                bool isRectangle;
+                var polygon = CreatePolygon(Lines, out isRectangle);
             }
+            
 
-            return new List<IObstacle>();
+
+            //var combinationsCount = SwitchPoints.Sum(switchPoint => switchPoint.Value.EndPoints.Count);
+            //var combinations = new List<SwitchPointCombination>(combinationsCount);
+
+            //var switchPointList = SwitchPoints.ToList();
+
+            ////int i = 0;
+
+            //for (int i = 0; i < switchPointList.Count; i++)
+            //{
+            //    for (int j = 0; j < switchPointList[i].Value.EndPoints.Count; j++)
+            //    {
+                    
+            //    }
+            //}
+
+            //foreach (var switchPointCombination in combinations)
+            //{
+            //    CheckCombination(switchPointCombination);
+            //}
+
+            //return new List<IObstacle>();
+
+            return obstacles;
         }
 
-        private List<LineObstacle> GetForlorn()
+        private void GetForlorn(List<LineSegment> obstacles)
         {
-            var lineObstacles = new List<LineObstacle>();
             var forlornNodes = new Queue<Vector2>();
             foreach (var forlornNodeStart in ForlornStartNodes)
                 forlornNodes.Enqueue(forlornNodeStart);
@@ -166,8 +193,12 @@ namespace Hiale.GTA2NET.Core.Collision
                 var forlornRoot = GetforlornRoot(currentItem, out forlornLines, out lastItemEndPoint);
 
                 foreach (var line in forlornLines)
+                {
+                    obstacles.Add(line);
                     Lines.Remove(line);
-                //ToDo: remove from Nodes
+                    RemoveNode(currentItem, line);
+                    RemoveNode(forlornRoot, line);
+                }
 
                 if (SwitchPoints.Count == 0)
                     continue;
@@ -175,13 +206,16 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (!SwitchPoints.TryGetValue(forlornRoot, out switchPoint))
                     continue;
                 if (switchPoint.EndPoints.Count > 0)
-                    switchPoint.EndPoints.Remove(lastItemEndPoint); //ToDo Bug here: not always .End
-                if (switchPoint.EndPoints.Count == 0)
-                    forlornNodes.Enqueue(forlornRoot);
+                    switchPoint.EndPoints.Remove(lastItemEndPoint);
                 if (switchPoint.EndPoints.Count == 1)
+                {
+                    forlornNodes.Enqueue(forlornRoot);
                     SwitchPoints.Remove(forlornRoot);
+                }
             }
-            return lineObstacles;
+            var listToRemove = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count == 2 select switchPoint.Key).ToList();
+            foreach (var key in listToRemove)
+                SwitchPoints.Remove(key);
         }
 
         private Vector2 GetforlornRoot(Vector2 forlornStart, out List<LineSegment> forlornLines, out Vector2 previousItem)
@@ -204,41 +238,122 @@ namespace Hiale.GTA2NET.Core.Collision
             return currentItem;
         }
 
+        private List<Vector2> CreatePolygon(List<LineSegment> sourceSegments, out bool isRectangle)
+        {
+            isRectangle = false;
+            var polygon = new List<Vector2>();
+            var directions = new List<Direction>();
+            var lineSegments = new List<LineSegment>(sourceSegments);
+            var currentItem = lineSegments.First().Start;
+            var startPoint = currentItem;
+            var currentDirection = Direction.None;
+            while (lineSegments.Count > 0)
+            {
+                if (polygon.Count > 0 && startPoint == currentItem)
+                    break;
+                var currentLines = GetLines(currentItem, lineSegments);
+                //var currentLines = lineSegments.Where(lineSegment => lineSegment.Start == currentItem).ToList(); //ToDo
+                //currentLines.AddRange(lineSegments.Where(lineSegment => lineSegment.End == currentItem).ToList());
+                if (currentLines.Count == 0)
+                    break;
+                var minPriority = int.MaxValue;
+                LineSegment preferedLine = null;
+                LineSegment directedLine = null;
+                LineSegment tempLine = null;
+                foreach (var currentLine in currentLines)
+                {
+                    if (currentItem == currentLine.End)
+                        tempLine = new LineSegment(currentLine.End, currentLine.Start);
+                    else if (currentItem == currentLine.Start)
+                        tempLine = currentLine;
+                    var currentPriority = GetDirectionPriority(currentDirection, tempLine.Direction);
+                    if (currentPriority >= minPriority)
+                        continue;
+                    minPriority = currentPriority;
+                    preferedLine = currentLine;
+                    directedLine = tempLine;
+                }
+                if (preferedLine == null)
+                    return new List<Vector2>();
+                lineSegments.Remove(preferedLine);
+                var previousItem = currentItem;
+                currentItem = directedLine.End;
+                if (directedLine.Direction == currentDirection)
+                    continue;
+                currentDirection = directedLine.Direction;
+                polygon.Add(previousItem);
+                directions.Add(currentDirection);
+            }
+            FixPolygonStartPoint(polygon, directions);
+            isRectangle = IsRectangleObstacle(polygon, directions);
+            return polygon;
+        }
+
+        private static int GetDirectionPriority(Direction baseDirection, Direction newDirection)
+        {
+            var priority = _baseDirectionPriority[newDirection];
+            if (baseDirection == Direction.None)
+                baseDirection = Direction.Down;
+            priority += 4 - _baseDirectionPriority[baseDirection];
+            if (priority < 0)
+                priority = 8 + priority;
+            if (priority > 8)
+                priority = priority - 8;
+            return priority;
+        }
+
+        private static bool IsRectangleObstacle(ICollection<Vector2> polygon, ICollection<Direction> directions)
+        {
+            if (polygon.Count != 4 || directions.Count != 4)
+                return false;
+            return directions.Contains(Direction.Down) && directions.Contains(Direction.Right) && directions.Contains(Direction.Up) && directions.Contains(Direction.Left);
+        }
+
+        private static void FixPolygonStartPoint(IList<Vector2> polygon, IList<Direction> directions)
+        {
+            if (polygon.Count != directions.Count || polygon.Count < 3)
+                return;
+            if (directions.First() != directions.Last())
+                return;
+            polygon.RemoveAt(0);
+            directions.RemoveAt(0);
+        }
+
         private void CheckCombination(SwitchPointCombination combination)
         {
-            var lines = new List<LineSegment>();
-            var visitedItems = new List<Vector2>();
-            LineSegment lineSegment;
-            Vector2 currentItem = Lines[0].Start;
-            Vector2 previousItem = currentItem;
-            var count = 0;
-            while (true)
-            {
-                if (visitedItems.Contains(currentItem))
-                {
-                    break;
-                }
-                else
-                {
-                    visitedItems.Add(currentItem);
-                }
+            //var lines = new List<LineSegment>();
+            //var visitedItems = new List<Vector2>();
+            //LineSegment lineSegment;
+            //Vector2 currentItem = Lines[0].Start;
+            //Vector2 previousItem = currentItem;
+            //var count = 0;
+            //while (true)
+            //{
+            //    if (visitedItems.Contains(currentItem))
+            //    {
+            //        break;
+            //    }
+            //    else
+            //    {
+            //        visitedItems.Add(currentItem);
+            //    }
 
-                if (currentItem == combination.Origin)
-                {
-                    lineSegment = GetLine(currentItem, combination.Target, false);
-                    count++;
-                    currentItem = combination.Target;
-                    continue;
+            //    if (currentItem == combination.Origin)
+            //    {
+            //        lineSegment = GetLine(currentItem, combination.Target, false);
+            //        count++;
+            //        currentItem = combination.Target;
+            //        continue;
 
-                }
-                var connectedNodes = GetConnectedNodes(currentItem);
-                connectedNodes.Remove(previousItem);
-                if (connectedNodes.Count == 0)
-                    break;
-                count++;
-                currentItem = connectedNodes[0];
-                previousItem = currentItem;
-            }
+            //    }
+            //    var connectedNodes = GetConnectedNodes(currentItem);
+            //    connectedNodes.Remove(previousItem);
+            //    if (connectedNodes.Count == 0)
+            //        break;
+            //    count++;
+            //    currentItem = connectedNodes[0];
+            //    previousItem = currentItem;
+            //}
 
         }
 
@@ -263,6 +378,17 @@ namespace Hiale.GTA2NET.Core.Collision
                 segments = new List<LineSegment> { line };
                 Nodes.Add(key, segments);
             }
+        }
+
+        private void RemoveNode(Vector2 key, LineSegment line)
+        {
+            List<LineSegment> segments;
+            if (!Nodes.TryGetValue(key, out segments))
+                return;
+            segments.Remove(line);
+            segments.Remove(new LineSegment(line.End, line.Start));
+            if (segments.Count == 0)
+                Nodes.Remove(key);
         }
 
         private static SwitchPoint AddSwitchPoint(Vector2 key, Vector2 target, IDictionary<Vector2, SwitchPoint> dictionary)
@@ -321,6 +447,51 @@ namespace Hiale.GTA2NET.Core.Collision
                     return directed ? new LineSegment(lineSegment.End, lineSegment.Start) : lineSegment;
             }
             return null;
+        }
+
+        private List<LineSegment> GetLines(Vector2 origin, IList<LineSegment> sourceLines)
+        {
+            var lines = new List<LineSegment>();
+            foreach (var lineSegment in sourceLines)
+            {
+                if (lineSegment.Start == origin)
+                    lines.Add(lineSegment);
+                else if (lineSegment.End == origin)
+                    lines.Add(lineSegment);
+            }
+            return lines;
+        }
+
+        private static List<List<T>> GetCombinations<T>(ICollection<List<T>> input)
+        {
+            var selected = new T[input.Count];
+            var result = new List<List<T>>();
+            GetCombinations(selected, 0, input, result);
+            return result;
+        }
+
+        private static void GetCombinations<T>(IList<T> selected, int index, IEnumerable<IEnumerable<T>> remaining, ICollection<List<T>> output)
+        {
+            // ReSharper disable PossibleMultipleEnumeration
+            var nextList = remaining.FirstOrDefault();
+            if (nextList == null)
+                output.Add(new List<T>(selected));
+            else
+            {
+                foreach (var i in nextList)
+                {
+                    selected[index] = i;
+                    GetCombinations(selected, index + 1, remaining.Skip(1), output);
+                }
+            }
+            // ReSharper restore PossibleMultipleEnumeration
+        }
+
+        private static void PrepareBasePriorityTable()
+        {
+            if (_baseDirectionPriority != null)
+                return;
+            _baseDirectionPriority = new Dictionary<Direction, int> { { Direction.UpLeft, 1 }, { Direction.Left, 2 }, { Direction.DownLeft, 3 }, { Direction.Down, 4 }, { Direction.DownRight, 5 }, { Direction.Right, 6 }, { Direction.UpRight, 7 }, { Direction.Up, 8 } };
         }
     }
 }
