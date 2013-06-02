@@ -1,7 +1,7 @@
-// GTA2.NET
+﻿// GTA2.NET
 // 
-// File: Program.cs
-// Created: 21.02.2013
+// File: Debug.cs
+// Created: 01.06.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -24,45 +24,37 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using System.IO;
-using System.Reflection;
-using Hiale.GTA2NET.Core.Helper;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Hiale.GTA2NET.Core.Collision;
 
-namespace Hiale.GTA2NET
+namespace Hiale.GTA2NET.Core.Helper
 {
-    static class Program
+    public static class Debug
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main(string[] args)
+        public static void Run()
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            var currentDir = Path.GetDirectoryName(assembly.Location);
-            if (!FileConverter.CheckConvertedAssets(currentDir))
-            {
-                if (!WinUI.Program.ConvertAssets())
-                    return;
-            }
+            DebugObstacles();
+        }
 
-            if (args.Length > 0 && args[0].ToLower() == "-debug")
+        private static void DebugObstacles()
+        {
+            try
             {
-                Debug.Run();
-                return;
+                var map = new Map.Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
+                var collision = new MapCollision(map);
+                for (var i = 0; i < 7; i++)
+                {
+                    var obstacles = collision.GetObstacles(i);
+                    //DisplayCollision(obstacles);
+                }
             }
-
-            if (args.Length > 0 && args[0].ToLower() == "-cardebug")
+            catch (Exception e)
             {
-                WinUI.Program.CarDebug();
-                return;
+                System.Diagnostics.Debug.WriteLine(e.StackTrace);
             }
-
-            using (var game = new MainGame())
-            {
-                game.Run();
-            }            
+            
         }
     }
 }
-

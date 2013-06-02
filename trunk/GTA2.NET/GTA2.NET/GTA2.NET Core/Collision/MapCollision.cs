@@ -67,19 +67,15 @@ namespace Hiale.GTA2NET.Core.Collision
                 var origin = nodes.Keys.First();
 
                 var currentFigure = new Figure(origin, nodes);
-                SaveSegmentsPicture(currentFigure.Lines, currentLayer + "_" + c + "_0");
-
                 foreach (var line in currentFigure.Lines)
                 {
                     nodes.Remove(line.Start);
                     nodes.Remove(line.End);
                 }
-
                 currentFigure.Optimize();
-                SaveSegmentsPicture(currentFigure.Lines, currentLayer + "_" + c + "_1");
 
                 var lineObstacles = currentFigure.Tokenize();
-                SaveSegmentsPicture(lineObstacles, currentLayer + "_" + c + "_2");
+                //SaveSegmentsPicture(lineObstacles, currentLayer + "_" + c + "_2");
 
                 c++;
 
@@ -168,9 +164,11 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
-        public static void SaveSegmentsPicture(List<LineSegment> segments, string name)
+        //Debug methods
+
+        public static void SaveSegmentsPicture(List<LineSegment> segments, Stream outputStream, string name)
         {
-            var fileName = "Segments_" + name + ".png";
+            var fileName = name + ".png";
             Bitmap bmp;
             if (File.Exists(fileName))
             {
@@ -187,8 +185,17 @@ namespace Hiale.GTA2NET.Core.Collision
                     g.DrawLine(new Pen(new SolidBrush(System.Drawing.Color.Red), 1), segment.Start.X * 10, segment.Start.Y * 10, segment.End.X * 10, segment.End.Y * 10);
                 }
             }
-            bmp.Save("debug\\" + fileName, ImageFormat.Png);
+            if (outputStream == null)
+                bmp.Save("debug\\" + fileName, ImageFormat.Png);
+            else
+                bmp.Save(outputStream, ImageFormat.Png);
             bmp.Dispose();
+            
+        }
+
+        public static void SaveSegmentsPicture(List<LineSegment> segments, string name)
+        {
+            SaveSegmentsPicture(segments, null, name);
         }
     }
 }

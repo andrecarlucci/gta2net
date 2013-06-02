@@ -25,29 +25,39 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public class Figure
+    public class Figure : IXmlSerializable
     {
         public List<LineSegment> Lines { get; private set; }
 
-        private Dictionary<Vector2, List<LineSegment>> Nodes { get; set; }
+        private SerializableDictionary<Vector2, List<LineSegment>> Nodes { get; set; }
 
-        private Dictionary<Vector2, SwitchPoint> SwitchPoints { get; set; }
+        private SerializableDictionary<Vector2, SwitchPoint> SwitchPoints { get; set; }
 
         private List<Vector2> ForlornStartNodes { get; set; }
 
         private static Dictionary<Direction, int> _baseDirectionPriority;
 
-        public Figure(Vector2 origin, Dictionary<Vector2, List<LineSegment>> nodes)
+        private Figure()
         {
             PrepareBasePriorityTable();
-            Nodes = new Dictionary<Vector2, List<LineSegment>>();
+            Lines = new List<LineSegment>();
+            Nodes = new SerializableDictionary<Vector2, List<LineSegment>>();
             ForlornStartNodes = new List<Vector2>();
-            SwitchPoints = new Dictionary<Vector2, SwitchPoint>();
+            SwitchPoints = new SerializableDictionary<Vector2, SwitchPoint>();
+        }
+
+        public Figure(Vector2 origin, Dictionary<Vector2, List<LineSegment>> nodes) : this()
+        {
             Lines = WalkFigure(origin, nodes);
         }
 
@@ -84,10 +94,10 @@ namespace Hiale.GTA2NET.Core.Collision
         }
 
 
-        public List<LineSegment> Optimize()
+        public void Optimize()
         {
             var optimizedLines = new List<LineSegment>();
-            var optimizedSwitchPoints = new Dictionary<Vector2, SwitchPoint>();
+            var optimizedSwitchPoints = new SerializableDictionary<Vector2, SwitchPoint>();
             Nodes.Clear();
             var currentDirection = Direction.None;
             Vector2? start = null;
@@ -95,6 +105,8 @@ namespace Hiale.GTA2NET.Core.Collision
 
             for (var i = 0; i < Lines.Count; i++)
             {
+                //if (start != null && start.Value.X == 99 && start.Value.Y == 174 || end != null && end.Value.X == 99 && end.Value.Y == 174)
+                //    Console.WriteLine();
                 var directedLine = GetLine(Lines[i].Start, Lines[i].End, true);
                 if (end != null && !HasConnection(end.Value, directedLine.Start))
                     currentDirection = Direction.None;
@@ -102,8 +114,8 @@ namespace Hiale.GTA2NET.Core.Collision
                 var isLast = i == Lines.Count - 1;
                 var isSwitchPoint = start != null && SwitchPoints.ContainsKey(start.Value);
                 var isSwitchPointInvented = end != null && SwitchPoints.ContainsKey(end.Value);
-                
-                if (directedLine.Direction != currentDirection)
+
+                if (directedLine.Direction != currentDirection || isSwitchPointInvented)
                 {
                     if (start != null)
                     {
@@ -124,15 +136,18 @@ namespace Hiale.GTA2NET.Core.Collision
                         AddSwitchPoint(start.Value, directedLine.End, optimizedSwitchPoints);
                     if (isSwitchPointInvented)
                         AddSwitchPoint(directedLine.End, start.Value, optimizedSwitchPoints);
+                    if (SwitchPoints.ContainsKey(directedLine.Start))
+                        AddSwitchPoint(directedLine.Start, directedLine.End, optimizedSwitchPoints);
+                    if (SwitchPoints.ContainsKey(directedLine.End))
+                        AddSwitchPoint(directedLine.End, directedLine.Start, optimizedSwitchPoints);
                 }
                 end = directedLine.End;
             }
             Lines = optimizedLines;
             SwitchPoints = optimizedSwitchPoints;
-            return optimizedLines;
         }
 
-        public List<LineSegment> Tokenize()
+        public List<LineSegment> Tokenize() //ToDo: return value: List<IObstacle>
         {
             var obstacles = new List<LineSegment>();
 
@@ -140,44 +155,42 @@ namespace Hiale.GTA2NET.Core.Collision
             if (Lines.Count == 0)
                 return obstacles;
 
-            MapCollision.SaveSegmentsPicture(Lines, "debug");
-
             if (SwitchPoints.Count > 0)
             {
+                var guid = Guid.NewGuid();
+                Save("debug\\" + guid + ".xml");
+                MapCollision.SaveSegmentsPicture(Lines, guid.ToString());
                 var switchPointValues = SwitchPoints.Select(switchPoint => switchPoint.Value.EndPoints).ToList();
                 var combinations = GetCombinations(switchPointValues);
             }
             else
             {
                 bool isRectangle;
-                var polygon = CreatePolygon(Lines, out isRectangle);
+                var polygonVertices = CreatePolygon(Lines, out isRectangle);
+                if (isRectangle)
+                {
+                    var width = polygonVertices[2].X - polygonVertices[0].X;
+                    var height = polygonVertices[1].Y - polygonVertices[0].Y;
+                    //var rectangle = new RectangleObstacle(polygonVertices[0], currentLayer, width, height);
+                    //obstacles.Add(rectangle);
+                }
             }
-            
-
-
-            //var combinationsCount = SwitchPoints.Sum(switchPoint => switchPoint.Value.EndPoints.Count);
-            //var combinations = new List<SwitchPointCombination>(combinationsCount);
-
-            //var switchPointList = SwitchPoints.ToList();
-
-            ////int i = 0;
-
-            //for (int i = 0; i < switchPointList.Count; i++)
-            //{
-            //    for (int j = 0; j < switchPointList[i].Value.EndPoints.Count; j++)
-            //    {
-                    
-            //    }
-            //}
-
-            //foreach (var switchPointCombination in combinations)
-            //{
-            //    CheckCombination(switchPointCombination);
-            //}
-
-            //return new List<IObstacle>();
-
             return obstacles;
+        }
+
+        private static void DebugPolygon(List<Vector2> polygon)
+        {
+            using (var bmp = new System.Drawing.Bitmap(2560, 2560))
+            {
+                using (var g = System.Drawing.Graphics.FromImage(bmp))
+                {
+                    var points = new System.Drawing.Point[polygon.Count];
+                    for (var i = 0; i < polygon.Count; i++)
+                        points[i] = new System.Drawing.Point((int)polygon[i].X * 10, (int)polygon[i].Y * 10);
+                    g.FillPolygon(new System.Drawing.SolidBrush(System.Drawing.Color.OrangeRed), points);
+                }
+                bmp.Save("debug\\polygon.png", System.Drawing.Imaging.ImageFormat.Png);
+            }
         }
 
         private void GetForlorn(List<LineSegment> obstacles)
@@ -213,6 +226,7 @@ namespace Hiale.GTA2NET.Core.Collision
                     SwitchPoints.Remove(forlornRoot);
                 }
             }
+            ForlornStartNodes.Clear();
             var listToRemove = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count == 2 select switchPoint.Key).ToList();
             foreach (var key in listToRemove)
                 SwitchPoints.Remove(key);
@@ -232,6 +246,8 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (connectedNodes.Count == 2)
                     connectedNodes.Remove(previousItem);
                 previousItem = currentItem;
+                if (connectedNodes.Count == 0)
+                    break;
                 currentItem = connectedNodes[0];
                 forlornLines.Add(GetLine(previousItem, currentItem, false));
             } while (true);
@@ -492,6 +508,83 @@ namespace Hiale.GTA2NET.Core.Collision
             if (_baseDirectionPriority != null)
                 return;
             _baseDirectionPriority = new Dictionary<Direction, int> { { Direction.UpLeft, 1 }, { Direction.Left, 2 }, { Direction.DownLeft, 3 }, { Direction.Down, 4 }, { Direction.DownRight, 5 }, { Direction.Right, 6 }, { Direction.UpRight, 7 }, { Direction.Up, 8 } };
+        }
+
+        public static Figure Load(string fileName)
+        {
+            var deserializer = new XmlSerializer(typeof (Figure));
+            TextReader reader = new StreamReader(fileName);
+            var figure = (Figure)deserializer.Deserialize(reader);
+            reader.Close();
+            return figure;
+        }
+
+        public void Save(string fileName)
+        {
+            var settings = new XmlWriterSettings {Indent = true};
+            var xmlWriter = XmlWriter.Create(fileName, settings);
+            var ns = new XmlSerializerNamespaces();
+            ns.Add(string.Empty, string.Empty);
+            var serializer = new XmlSerializer(typeof (Figure));
+            serializer.Serialize(xmlWriter, this, ns);
+            xmlWriter.Close();
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            var doc = new XmlDocument { PreserveWhitespace = false };
+            doc.Load(reader);
+
+            Lines.Clear();
+            var lineSegments = doc.GetElementsByTagName("LineSegments")[0];
+            foreach (XmlNode lineSegment in lineSegments)
+                Lines.Add( (LineSegment)new XmlSerializer(typeof(LineSegment)).Deserialize(XmlReader.Create(new StringReader(lineSegment.OuterXml))));
+
+            Nodes.Clear();
+            var nodes = doc.GetElementsByTagName("Nodes")[0];
+            var xmlReader = XmlReader.Create(new StringReader(nodes.OuterXml));
+            xmlReader.MoveToContent();
+            Nodes.ReadXml(xmlReader);
+
+            SwitchPoints.Clear();
+            var switchPoints = doc.GetElementsByTagName("SwitchPoints")[0];
+            xmlReader = XmlReader.Create(new StringReader(switchPoints.OuterXml));
+            xmlReader.MoveToContent();
+            SwitchPoints.ReadXml(xmlReader);
+
+            ForlornStartNodes.Clear();
+            var forlornStartNodes = doc.GetElementsByTagName("ForlornStartNodes")[0];
+            foreach (XmlNode forlornStartNode in forlornStartNodes)
+                ForlornStartNodes.Add((Vector2)new XmlSerializer(typeof(Vector2)).Deserialize(XmlReader.Create(new StringReader(forlornStartNode.OuterXml))));
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            var ns = new XmlSerializerNamespaces();
+            ns.Add(string.Empty, string.Empty);
+
+            writer.WriteStartElement("LineSegments");
+            foreach (var lineSegment in Lines)
+                new XmlSerializer(typeof(LineSegment)).Serialize(writer, lineSegment, ns);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("Nodes");
+            Nodes.WriteXml(writer);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("SwitchPoints");
+            SwitchPoints.WriteXml(writer);
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("ForlornStartNodes");
+            foreach (var forlornStartNode in ForlornStartNodes)
+                new XmlSerializer(typeof(Vector2)).Serialize(writer, forlornStartNode, ns);
+            writer.WriteEndElement();
         }
     }
 }
