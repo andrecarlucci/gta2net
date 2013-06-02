@@ -25,15 +25,18 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
     public class SwitchPoint
     {
-        public List<Vector2> EndPoints { get; private set; }
+        public List<Vector2> EndPoints { get; set; }
+
+        private SwitchPoint()
+        {
+            //XmlSerializer
+        }
 
         public SwitchPoint(List<Vector2> endPoints)
         {
