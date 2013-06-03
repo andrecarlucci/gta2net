@@ -25,12 +25,10 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -44,14 +42,6 @@ namespace Hiale.GTA2NET.Core.Collision
         public MapCollision(Map.Map map)
         {
             _map = map;
-            PrepareBasePriorityTable();
-        }
-
-        private static void PrepareBasePriorityTable()
-        {
-            if (_baseDirectionPriority != null)
-                return;
-            _baseDirectionPriority = new Dictionary<Direction, int> {{Direction.UpLeft, 1}, {Direction.Left, 2}, {Direction.DownLeft, 3}, {Direction.Down, 4}, {Direction.DownRight, 5}, {Direction.Right, 6}, {Direction.UpRight, 7}, {Direction.Up, 8}};
         }
 
         public List<IObstacle> GetObstacles(int currentLayer)
@@ -60,13 +50,9 @@ namespace Hiale.GTA2NET.Core.Collision
             var rawObstacles = GetBlockObstacles(currentLayer);
             var nodes = GetAllObstacleNodes(rawObstacles);
 
-            var c = 0;
-
             while (nodes.Count > 0)
             {
-                var origin = nodes.Keys.First();
-
-                var currentFigure = new Figure(origin, nodes);
+                var currentFigure = new Figure(currentLayer, nodes);
                 foreach (var line in currentFigure.Lines)
                 {
                     nodes.Remove(line.Start);
@@ -74,53 +60,12 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
                 currentFigure.Optimize();
 
-                var lineObstacles = currentFigure.Tokenize();
-                //SaveSegmentsPicture(lineObstacles, currentLayer + "_" + c + "_2");
-
-                c++;
-
-                //var lines = CreateLines(forlornNodesStart, origin, nodes, currentFigure, switchPoints, currentFigureForlorn);
-                //foreach (var lineObstacle in lines)
-                //{
-                //    lineObstacle.Z = currentLayer;
-                //    obstacles.Add(lineObstacle);
-                //}
-
-                //foreach (var segment in currentFigure)
-                //{
-                //    nodes.Remove(segment.Start);
-                //    nodes.Remove(segment.End);
-                //}
-                //foreach (var segment in currentFigureForlorn)
-                //{
-                //    nodes.Remove(segment.Start);
-                //    nodes.Remove(segment.End);
-                //}
-
-                //bool isRectangle;
-                //var polygonVertices = CreatePolygon(currentFigure, out isRectangle);
-                //if (isRectangle)
-                //{
-                //    var width = polygonVertices[2].X - polygonVertices[0].X;
-                //    var height = polygonVertices[1].Y - polygonVertices[0].Y;
-                //    var rectangle = new RectangleObstacle(polygonVertices[0], currentLayer, width, height);
-                //    obstacles.Add(rectangle);
-                //}
-                //else if (polygonVertices.Count > 2)
-                //{
-                //    var polygon = new PolygonObstacle(currentLayer) { Vertices = polygonVertices };
-                //    obstacles.Add(polygon);
-                //}
-                //else if (polygonVertices.Count > 0)
-                //{
-                //    System.Diagnostics.Debug.WriteLine("DEBUG");
-                //    SaveSegmentsPicture(currentFigure, currentLayer.ToString());
-                //}
+                obstacles.AddRange(currentFigure.Tokenize());
             }
             return obstacles;
         }
 
-        private List<ILineObstacle> GetBlockObstacles(int z)
+        private IEnumerable<ILineObstacle> GetBlockObstacles(int z)
         {
             var obstacles = new List<ILineObstacle>();
             for (var x = 0; x < _map.Width; x++)
@@ -133,7 +78,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return obstacles;
         }
 
-        private static Dictionary<Vector2, List<LineSegment>> GetAllObstacleNodes(List<ILineObstacle> obstacles)
+        private static Dictionary<Vector2, List<LineSegment>> GetAllObstacleNodes(IEnumerable<ILineObstacle> obstacles)
         {
             var nodes = new Dictionary<Vector2, List<LineSegment>>();
             foreach (var lineObstacle in obstacles)

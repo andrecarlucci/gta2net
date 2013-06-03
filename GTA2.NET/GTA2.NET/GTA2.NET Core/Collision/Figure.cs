@@ -37,6 +37,8 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class Figure : IXmlSerializable
     {
+        public int Layer { get; private set; }
+
         public List<LineSegment> Lines { get; private set; }
 
         private SerializableDictionary<Vector2, List<LineSegment>> Nodes { get; set; }
@@ -56,16 +58,18 @@ namespace Hiale.GTA2NET.Core.Collision
             SwitchPoints = new SerializableDictionary<Vector2, SwitchPoint>();
         }
 
-        public Figure(Vector2 origin, Dictionary<Vector2, List<LineSegment>> nodes) : this()
+        public Figure(int layer, Dictionary<Vector2, List<LineSegment>> nodes) : this()
         {
-            Lines = WalkFigure(origin, nodes);
+            Layer = layer;
+            Lines = WalkFigure(nodes);
         }
 
-        private List<LineSegment> WalkFigure(Vector2 origin, Dictionary<Vector2, List<LineSegment>> nodes)
+        private List<LineSegment> WalkFigure(Dictionary<Vector2, List<LineSegment>> nodes)
         {
             var lines = new List<LineSegment>();
             var visitedItems = new List<Vector2>();
             var nodesToVisit = new Stack<LineSegment>();
+            var origin = nodes.Keys.First();
             var lineSegment = new LineSegment(origin, origin);
             nodesToVisit.Push(lineSegment);
             while (nodesToVisit.Count > 0)
@@ -93,7 +97,9 @@ namespace Hiale.GTA2NET.Core.Collision
             return lines;
         }
 
-
+        /// <summary>
+        /// Tries to to merge neighbor lines.
+        /// </summary>
         public void Optimize()
         {
             var optimizedLines = new List<LineSegment>();
@@ -147,9 +153,13 @@ namespace Hiale.GTA2NET.Core.Collision
             SwitchPoints = optimizedSwitchPoints;
         }
 
-        public List<LineSegment> Tokenize() //ToDo: return value: List<IObstacle>
+        /// <summary>
+        /// Creates IObstacle objects of this figure.
+        /// </summary>
+        /// <returns></returns>
+        public List<IObstacle> Tokenize()
         {
-            var obstacles = new List<LineSegment>();
+            var obstacles = new List<IObstacle>();
 
             GetForlorn(obstacles);
             if (Lines.Count == 0)
@@ -157,9 +167,9 @@ namespace Hiale.GTA2NET.Core.Collision
 
             if (SwitchPoints.Count > 0)
             {
-                var guid = Guid.NewGuid();
+                var guid = Layer + "_" + Guid.NewGuid();
                 Save("debug\\" + guid + ".xml");
-                MapCollision.SaveSegmentsPicture(Lines, guid.ToString());
+                MapCollision.SaveSegmentsPicture(Lines, guid);
                 var switchPointValues = SwitchPoints.Select(switchPoint => switchPoint.Value.EndPoints).ToList();
                 var combinations = GetCombinations(switchPointValues);
             }
@@ -171,29 +181,19 @@ namespace Hiale.GTA2NET.Core.Collision
                 {
                     var width = polygonVertices[2].X - polygonVertices[0].X;
                     var height = polygonVertices[1].Y - polygonVertices[0].Y;
-                    //var rectangle = new RectangleObstacle(polygonVertices[0], currentLayer, width, height);
-                    //obstacles.Add(rectangle);
+                    var rectangle = new RectangleObstacle(polygonVertices[0], Layer, width, height);
+                    obstacles.Add(rectangle);
+                }
+                else
+                {
+                    var polygonObstacle = new PolygonObstacle(Layer) {Vertices = polygonVertices};
+                    obstacles.Add(polygonObstacle);
                 }
             }
             return obstacles;
         }
 
-        private static void DebugPolygon(List<Vector2> polygon)
-        {
-            using (var bmp = new System.Drawing.Bitmap(2560, 2560))
-            {
-                using (var g = System.Drawing.Graphics.FromImage(bmp))
-                {
-                    var points = new System.Drawing.Point[polygon.Count];
-                    for (var i = 0; i < polygon.Count; i++)
-                        points[i] = new System.Drawing.Point((int)polygon[i].X * 10, (int)polygon[i].Y * 10);
-                    g.FillPolygon(new System.Drawing.SolidBrush(System.Drawing.Color.OrangeRed), points);
-                }
-                bmp.Save("debug\\polygon.png", System.Drawing.Imaging.ImageFormat.Png);
-            }
-        }
-
-        private void GetForlorn(List<LineSegment> obstacles)
+        private void GetForlorn(List<IObstacle> obstacles)
         {
             var forlornNodes = new Queue<Vector2>();
             foreach (var forlornNodeStart in ForlornStartNodes)
@@ -207,7 +207,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
                 foreach (var line in forlornLines)
                 {
-                    obstacles.Add(line);
+                    obstacles.Add(new LineObstacle(line.Start, line.End, Layer));
                     Lines.Remove(line);
                     RemoveNode(currentItem, line);
                     RemoveNode(forlornRoot, line);
@@ -268,8 +268,6 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (polygon.Count > 0 && startPoint == currentItem)
                     break;
                 var currentLines = GetLines(currentItem, lineSegments);
-                //var currentLines = lineSegments.Where(lineSegment => lineSegment.Start == currentItem).ToList(); //ToDo
-                //currentLines.AddRange(lineSegments.Where(lineSegment => lineSegment.End == currentItem).ToList());
                 if (currentLines.Count == 0)
                     break;
                 var minPriority = int.MaxValue;
@@ -282,14 +280,14 @@ namespace Hiale.GTA2NET.Core.Collision
                         tempLine = new LineSegment(currentLine.End, currentLine.Start);
                     else if (currentItem == currentLine.Start)
                         tempLine = currentLine;
-                    var currentPriority = GetDirectionPriority(currentDirection, tempLine.Direction);
+                    var currentPriority = GetLinePriority(currentDirection, tempLine);
                     if (currentPriority >= minPriority)
                         continue;
                     minPriority = currentPriority;
                     preferedLine = currentLine;
                     directedLine = tempLine;
                 }
-                if (preferedLine == null)
+                if (preferedLine == null || directedLine == null)
                     return new List<Vector2>();
                 lineSegments.Remove(preferedLine);
                 var previousItem = currentItem;
@@ -305,9 +303,9 @@ namespace Hiale.GTA2NET.Core.Collision
             return polygon;
         }
 
-        private static int GetDirectionPriority(Direction baseDirection, Direction newDirection)
+        private static int GetLinePriority(Direction baseDirection, LineSegment line)
         {
-            var priority = _baseDirectionPriority[newDirection];
+            var priority = _baseDirectionPriority[line.Direction];
             if (baseDirection == Direction.None)
                 baseDirection = Direction.Down;
             priority += 4 - _baseDirectionPriority[baseDirection];
@@ -407,7 +405,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 Nodes.Remove(key);
         }
 
-        private static SwitchPoint AddSwitchPoint(Vector2 key, Vector2 target, IDictionary<Vector2, SwitchPoint> dictionary)
+        private static void AddSwitchPoint(Vector2 key, Vector2 target, IDictionary<Vector2, SwitchPoint> dictionary)
         {
             SwitchPoint switchPoint;
             if (dictionary.TryGetValue(key, out switchPoint))
@@ -420,7 +418,6 @@ namespace Hiale.GTA2NET.Core.Collision
                 switchPoint.EndPoints.Add(target);
                 dictionary.Add(key, switchPoint);
             }
-            return switchPoint;
         }
 
         private List<Vector2> GetConnectedNodes(Vector2 origin)
@@ -465,7 +462,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return null;
         }
 
-        private List<LineSegment> GetLines(Vector2 origin, IList<LineSegment> sourceLines)
+        private static List<LineSegment> GetLines(Vector2 origin, IEnumerable<LineSegment> sourceLines)
         {
             var lines = new List<LineSegment>();
             foreach (var lineSegment in sourceLines)
@@ -541,26 +538,38 @@ namespace Hiale.GTA2NET.Core.Collision
             doc.Load(reader);
 
             Lines.Clear();
-            var lineSegments = doc.GetElementsByTagName("LineSegments")[0];
-            foreach (XmlNode lineSegment in lineSegments)
-                Lines.Add( (LineSegment)new XmlSerializer(typeof(LineSegment)).Deserialize(XmlReader.Create(new StringReader(lineSegment.OuterXml))));
+            var lineSegments = doc.GetElementsByTagName("LineSegments");
+            if (lineSegments.Count > 0)
+            {
+                foreach (XmlNode lineSegment in lineSegments[0])
+                    Lines.Add((LineSegment) new XmlSerializer(typeof (LineSegment)).Deserialize(XmlReader.Create(new StringReader(lineSegment.OuterXml))));
+            }
 
             Nodes.Clear();
-            var nodes = doc.GetElementsByTagName("Nodes")[0];
-            var xmlReader = XmlReader.Create(new StringReader(nodes.OuterXml));
-            xmlReader.MoveToContent();
-            Nodes.ReadXml(xmlReader);
+            var nodes = doc.GetElementsByTagName("Nodes");
+            if (nodes.Count > 0)
+            {
+                var xmlReader = XmlReader.Create(new StringReader(nodes[0].OuterXml));
+                xmlReader.MoveToContent();
+                Nodes.ReadXml(xmlReader);
+            }
 
             SwitchPoints.Clear();
-            var switchPoints = doc.GetElementsByTagName("SwitchPoints")[0];
-            xmlReader = XmlReader.Create(new StringReader(switchPoints.OuterXml));
-            xmlReader.MoveToContent();
-            SwitchPoints.ReadXml(xmlReader);
+            var switchPoints = doc.GetElementsByTagName("SwitchPoints");
+            if (switchPoints.Count > 0)
+            {
+                var xmlReader = XmlReader.Create(new StringReader(switchPoints[0].OuterXml));
+                xmlReader.MoveToContent();
+                SwitchPoints.ReadXml(xmlReader);
+            }
 
             ForlornStartNodes.Clear();
-            var forlornStartNodes = doc.GetElementsByTagName("ForlornStartNodes")[0];
-            foreach (XmlNode forlornStartNode in forlornStartNodes)
-                ForlornStartNodes.Add((Vector2)new XmlSerializer(typeof(Vector2)).Deserialize(XmlReader.Create(new StringReader(forlornStartNode.OuterXml))));
+            var forlornStartNodes = doc.GetElementsByTagName("ForlornStartNodes");
+            if (forlornStartNodes.Count > 0)
+            {
+                foreach (XmlNode forlornStartNode in forlornStartNodes[0])
+                    ForlornStartNodes.Add((Vector2) new XmlSerializer(typeof (Vector2)).Deserialize(XmlReader.Create(new StringReader(forlornStartNode.OuterXml))));
+            }
         }
 
         public void WriteXml(XmlWriter writer)
@@ -568,23 +577,35 @@ namespace Hiale.GTA2NET.Core.Collision
             var ns = new XmlSerializerNamespaces();
             ns.Add(string.Empty, string.Empty);
 
-            writer.WriteStartElement("LineSegments");
-            foreach (var lineSegment in Lines)
-                new XmlSerializer(typeof(LineSegment)).Serialize(writer, lineSegment, ns);
-            writer.WriteEndElement();
+            if (Lines.Count > 0)
+            {
+                writer.WriteStartElement("LineSegments");
+                foreach (var lineSegment in Lines)
+                    new XmlSerializer(typeof (LineSegment)).Serialize(writer, lineSegment, ns);
+                writer.WriteEndElement();
+            }
 
-            writer.WriteStartElement("Nodes");
-            Nodes.WriteXml(writer);
-            writer.WriteEndElement();
+            if (Nodes.Count > 0)
+            {
+                writer.WriteStartElement("Nodes");
+                Nodes.WriteXml(writer);
+                writer.WriteEndElement();
+            }
 
-            writer.WriteStartElement("SwitchPoints");
-            SwitchPoints.WriteXml(writer);
-            writer.WriteEndElement();
+            if (SwitchPoints.Count > 0)
+            {
+                writer.WriteStartElement("SwitchPoints");
+                SwitchPoints.WriteXml(writer);
+                writer.WriteEndElement();
+            }
 
-            writer.WriteStartElement("ForlornStartNodes");
-            foreach (var forlornStartNode in ForlornStartNodes)
-                new XmlSerializer(typeof(Vector2)).Serialize(writer, forlornStartNode, ns);
-            writer.WriteEndElement();
+            if (ForlornStartNodes.Count > 0)
+            {
+                writer.WriteStartElement("ForlornStartNodes");
+                foreach (var forlornStartNode in ForlornStartNodes)
+                    new XmlSerializer(typeof (Vector2)).Serialize(writer, forlornStartNode, ns);
+                writer.WriteEndElement();
+            }
         }
     }
 }
