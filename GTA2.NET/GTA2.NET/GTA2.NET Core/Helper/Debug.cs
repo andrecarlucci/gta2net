@@ -28,8 +28,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-using System.Text;
 using Hiale.GTA2NET.Core.Collision;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Helper
 {
@@ -37,6 +37,11 @@ namespace Hiale.GTA2NET.Core.Helper
     {
         public static void Run()
         {
+            //List<LineSegment> ls = new List<LineSegment>();
+            //LineSegment a = new LineSegment(new Vector2(1, 1), new Vector2(2, 2));
+            //LineSegment b = new LineSegment(new Vector2(2, 2), new Vector2(1, 1), true);
+            //if (a == b)
+            //    Console.WriteLine("OK");
             DebugObstacles();
         }
 

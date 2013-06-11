@@ -50,6 +50,9 @@
     <Compile Include="CarPhysicReader.cs" />
     <Compile Include="CarPhysics.cs" />
     <Compile Include="Collision\Figure.cs" />
+    <Compile Include="Collision\FigureSplitter.cs" />
+    <Compile Include="Collision\IFigure.cs" />
+    <Compile Include="Collision\LineNodeDictionary.cs" />
     <Compile Include="Collision\LineObstacle.cs" />
     <Compile Include="Collision\LineSegment.cs" />
     <Compile Include="Collision\MapCollision.cs" />
