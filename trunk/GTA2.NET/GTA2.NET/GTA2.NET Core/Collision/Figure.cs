@@ -167,14 +167,14 @@ namespace Hiale.GTA2NET.Core.Collision
 
             if (SwitchPoints.Count > 0)
             {
-                var guid = Layer + "_" + Guid.NewGuid();
-                Save("debug\\" + guid + ".xml");
-                MapCollision.SaveSegmentsPicture(Lines, guid);
+                //var guid = Layer + "_" + Guid.NewGuid();
+                //Save("debug\\" + guid + ".xml");
+                //MapCollision.SaveSegmentsPicture(Lines, guid);
                 
-                //var switchPointValues = SwitchPoints.Select(switchPoint => switchPoint.Value.EndPoints).ToList();
-                //var combinations = GetCombinations(switchPointValues);
-                //var switchPointList = SwitchPoints.ToList();
-                //CheckCombination(combinations, Lines, switchPointList);
+                var switchPointValues = SwitchPoints.Select(switchPoint => switchPoint.Value.EndPoints).ToList();
+                var combinations = GetCombinations(switchPointValues);
+                var switchPointList = SwitchPoints.ToList();
+                CheckCombination(combinations, Lines, switchPointList);
             }
             else
             {
@@ -230,6 +230,11 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
             }
             ForlornStartNodes.Clear();
+            RemoveUnusedSwitchPoints();
+        }
+
+        private void RemoveUnusedSwitchPoints()
+        {
             var listToRemove = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count == 2 select switchPoint.Key).ToList();
             foreach (var key in listToRemove)
                 SwitchPoints.Remove(key);
@@ -257,9 +262,8 @@ namespace Hiale.GTA2NET.Core.Collision
             return currentItem;
         }
         
-        private static List<Vector2> CreatePolygon(List<LineSegment> sourceSegments, out bool isRectangle)
+        private static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
         {
-            isRectangle = false;
             var polygon = new List<Vector2>();
             var directions = new List<Direction>();
             var lineSegments = new List<LineSegment>(sourceSegments);
@@ -271,20 +275,17 @@ namespace Hiale.GTA2NET.Core.Collision
             {
                 if (polygon.Count > 0 && startPoint == currentItem)
                     break;
-                LineSegment preferedLine = null;
-                LineSegment directedLine = null;
-                if (ChooseNextLine(currentItem, lineSegments, currentDirection, ref preferedLine, ref directedLine))
+                var preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection);
+                if (preferedLine == null)
                     break;
-                if (preferedLine == null || directedLine == null)
-                    return new List<Vector2>();
                 lineSegments.Remove(preferedLine);
                 var previousItem = currentItem;
-                currentItem = directedLine.End;
-                if (directedLine.Direction == currentDirection)
+                currentItem = preferedLine.End;
+                if (preferedLine.Direction == currentDirection)
                     continue;
-                currentDirection = directedLine.Direction;
+                currentDirection = preferedLine.Direction;
                 polygon.Add(previousItem);
-                currentItem = directedLine.End;
+                currentItem = preferedLine.End;
                 directions.Add(currentDirection);
             }
             FixPolygonStartPoint(polygon, directions);
@@ -322,7 +323,7 @@ namespace Hiale.GTA2NET.Core.Collision
             directions.RemoveAt(0);
         }
 
-        private static int GetSwitchPointIndex(Vector2 origin, List<KeyValuePair<Vector2, SwitchPoint>> switchPointList)
+        private static int GetSwitchPointIndex(Vector2 origin, IList<KeyValuePair<Vector2, SwitchPoint>> switchPointList)
         {
             for (var i = 0; i < switchPointList.Count; i++)
             {
@@ -358,60 +359,60 @@ namespace Hiale.GTA2NET.Core.Collision
                     visitedItems.Add(currentItem);
 
                     SwitchPoint switchPoint;
-                    LineSegment preferedLine = null;
-                    LineSegment directedLine = null;
+                    LineSegment preferedLine;
                     if (SwitchPoints.TryGetValue(currentItem, out switchPoint))
                     {
+                        currentFigureSplitter.SwitchPointKeys.Add(currentItem);
                         var switchPointIndex = GetSwitchPointIndex(currentItem, switchPointList);
                         Vector2 nextItem;
                         if (switchPointIndex > -1)
                             nextItem = combinations[i][switchPointIndex];
                         else
                             break;
-                        preferedLine = GetLine(currentItem, nextItem, false);
-                        directedLine = GetLine(currentItem, nextItem, true);
+                        preferedLine = GetLine(currentItem, nextItem, true);
                         if (!lineSegments.Contains(preferedLine))
                             break;
                     }
                     else
                     {
-                        if (ChooseNextLine(currentItem, lineSegments, currentDirection, ref preferedLine, ref directedLine))
+                        preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection);
+                        if (preferedLine == null)
                             break;
                     }
-                    if (preferedLine == null || directedLine == null)
-                        return; //should not happen
                     lineSegments.Remove(preferedLine);
-                    currentItem = directedLine.End;
-                    if (directedLine.Direction == currentDirection)
+                    currentItem = preferedLine.End;
+                    if (preferedLine.Direction == currentDirection)
                         continue;
-                    currentDirection = directedLine.Direction;
-                    currentFigureSplitter.Lines.Add(directedLine);
+                    currentDirection = preferedLine.Direction;
+                    currentFigureSplitter.Lines.Add(preferedLine);
                 }
             }
             System.Diagnostics.Debug.WriteLine(figureSplitters.Count);
+            figureSplitters[0].UpdateSwitchPoints(SwitchPoints);
+            RemoveUnusedSwitchPoints();
         }
 
-        private static bool ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection, ref LineSegment preferedLine, ref LineSegment directedLine)
+        private static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection)
         {
             var currentLines = GetLines(currentItem, lineSegments);
             if (currentLines.Count == 0)
-                return true;
+                return null;
             var minPriority = int.MaxValue;
             LineSegment tempLine = null;
+            LineSegment preferedLine = null;
             foreach (var currentLine in currentLines)
             {
                 if (currentItem == currentLine.End)
-                    tempLine = new LineSegment(currentLine.End, currentLine.Start);
+                    tempLine = currentLine.Invert();
                 else if (currentItem == currentLine.Start)
                     tempLine = currentLine;
                 var currentPriority = currentLines.Count == 1 ? 1 : GetLinePriority(currentDirection, tempLine);
                 if (currentPriority >= minPriority)
                     continue;
                 minPriority = currentPriority;
-                preferedLine = currentLine;
-                directedLine = tempLine;
+                preferedLine = tempLine;
             }
-            return false;
+            return preferedLine;
         }
 
         private LineSegment AddLine(Vector2 start, Vector2 end, ICollection<LineSegment> list)
@@ -443,7 +444,7 @@ namespace Hiale.GTA2NET.Core.Collision
             if (!Nodes.TryGetValue(key, out segments))
                 return;
             segments.Remove(line);
-            segments.Remove(new LineSegment(line.End, line.Start)); //ToDo
+            segments.Remove(line.Invert());
             if (segments.Count == 0)
                 Nodes.Remove(key);
         }
@@ -500,7 +501,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 if (lineSegment.Start == start && lineSegment.End == end)
                     return lineSegment;
                 if (lineSegment.Start == end && lineSegment.End == start)
-                    return directed ? new LineSegment(lineSegment.End, lineSegment.Start) : lineSegment;
+                    return directed ? lineSegment.Invert() : lineSegment; //return directed ? new LineSegment(lineSegment.Start, lineSegment.End, true) : lineSegment; //return directed ? new LineSegment(lineSegment.End, lineSegment.Start) : lineSegment;
             }
             return null;
         }

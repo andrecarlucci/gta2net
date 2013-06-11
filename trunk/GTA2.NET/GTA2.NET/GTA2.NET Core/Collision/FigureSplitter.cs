@@ -25,6 +25,8 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Helper;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
@@ -35,12 +37,38 @@ namespace Hiale.GTA2NET.Core.Collision
     {
         public List<LineSegment> Lines { get; set; }
 
-        public List<LineSegment> RemainingLines { get; set; } 
+        public List<LineSegment> RemainingLines { get; set; }
+
+        public List<Vector2> SwitchPointKeys { get; set; }
 
         public FigureSplitter()
         {
             Lines = new List<LineSegment>();
             RemainingLines = new List<LineSegment>();
+            SwitchPointKeys = new List<Vector2>();
+        }
+
+        public Figure ConvertToFigure()
+        {
+            return new Figure(-1, null); //ToDo
+        }
+
+        public void UpdateSwitchPoints(SerializableDictionary<Vector2, SwitchPoint> switchPoints)
+        {
+            foreach (var switchPointKey in SwitchPointKeys)
+            {
+                SwitchPoint currentSwitchPoint;
+                if (!switchPoints.TryGetValue(switchPointKey, out currentSwitchPoint))
+                    continue;
+                foreach (var lineSegment in Lines)
+                {
+                    if (lineSegment.Start == switchPointKey)
+                        currentSwitchPoint.EndPoints.Remove(lineSegment.End);
+                    else if (lineSegment.End == switchPointKey)
+                        currentSwitchPoint.EndPoints.Remove(lineSegment.Start);
+                }
+            }
+            
         }
     }
 }
