@@ -37,16 +37,15 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             get
             {
-                //return IsInverted ? base.End : base.Start;
-                return base.Start;
+                return IsInverted ? base.End : base.Start;
             }
             set
             {
-                //if (IsInverted)
-                //    base.End = value;
-                //else
+                if (IsInverted)
+                    base.End = value;
+                else
                     base.Start = value;
-                CalculateDirection(Start, End);
+                UpdateDirection();
             }
         }
 
@@ -54,28 +53,27 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             get
             {
-                //return IsInverted ? base.Start : base.End;
-                return base.End;
+                return IsInverted ? base.Start : base.End;
             }
             set
             {
-                //if (IsInverted)
-                //    base.Start = value;
-                //else
+                if (IsInverted)
+                    base.Start = value;
+                else
                     base.End = value;
-                CalculateDirection(Start, End);
+                UpdateDirection();
             }
         }
 
-        //public bool IsInverted
-        //{
-        //    get { return _isInverted; }
-        //    set
-        //    {
-        //        _isInverted = value;
-        //        CalculateDirection(Start, End);
-        //    }
-        //}
+        public bool IsInverted
+        {
+            get { return _isInverted; }
+            set
+            {
+                _isInverted = value;
+                UpdateDirection();
+            }
+        }
 
         [XmlIgnore]
         public Block Block { get; set; }
@@ -83,7 +81,7 @@ namespace Hiale.GTA2NET.Core.Collision
         [XmlIgnore]
         public Direction Direction;
 
-        //private bool _isInverted;
+        private bool _isInverted;
 
         private LineSegment() : this(Vector2.Zero, Vector2.Zero)
         {
@@ -92,19 +90,25 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public LineSegment(Vector2 start, Vector2 end) : base(start, end)
         {
-            Direction = CalculateDirection(Start, End);
+            UpdateDirection();
         }
 
         public LineSegment(Vector2 start, Vector2 end, bool isInverted) : base(start, end)
         {
-            //IsInverted = isInverted;
-            Direction = CalculateDirection(Start, End);
+            IsInverted = isInverted;
+            UpdateDirection();
         }
 
-        //public void Invert()
-        //{
-        //    IsInverted = !IsInverted;
-        //}
+        public LineSegment Invert()
+        {
+            IsInverted = !IsInverted;
+            return this;
+        }
+
+        private void UpdateDirection()
+        {
+            Direction = CalculateDirection(Start, End);
+        }
 
         private static Direction CalculateDirection(Vector2 startPoint, Vector2 endPoint)
         {
