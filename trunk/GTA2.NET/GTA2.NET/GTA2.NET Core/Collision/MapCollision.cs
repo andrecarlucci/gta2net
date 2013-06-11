@@ -35,8 +35,6 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class MapCollision
     {
-        private static Dictionary<Direction, int> _baseDirectionPriority;
-
         private readonly Map.Map _map;
 
         public MapCollision(Map.Map map)
@@ -48,16 +46,14 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             var obstacles = new List<IObstacle>();
             var rawObstacles = GetBlockObstacles(currentLayer);
-            var nodes = GetAllObstacleNodes(rawObstacles);
+            var nodes = new LineNodeDictionary(rawObstacles);
+
+            //var nodes = GetAllObstacleNodes(rawObstacles);
 
             while (nodes.Count > 0)
             {
                 var currentFigure = new Figure(currentLayer, nodes);
-                foreach (var line in currentFigure.Lines)
-                {
-                    nodes.Remove(line.Start);
-                    nodes.Remove(line.End);
-                }
+                nodes.Purge(currentFigure.Lines);
                 currentFigure.Optimize();
 
                 obstacles.AddRange(currentFigure.Tokenize());
@@ -76,37 +72,6 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
             }
             return obstacles;
-        }
-
-        private static Dictionary<Vector2, List<LineSegment>> GetAllObstacleNodes(IEnumerable<ILineObstacle> obstacles)
-        {
-            var nodes = new Dictionary<Vector2, List<LineSegment>>();
-            foreach (var lineObstacle in obstacles)
-            {
-                if (lineObstacle is SlopeLineObstacle)
-                    continue;
-
-                //start point
-                var newLine = new LineSegment(lineObstacle.Start, lineObstacle.End);
-                InsertLine(nodes, newLine);
-
-                //end point
-                newLine = new LineSegment(lineObstacle.End, lineObstacle.Start);
-                InsertLine(nodes, newLine);
-            }
-            return nodes;
-        }
-
-        private static void InsertLine(IDictionary<Vector2, List<LineSegment>> nodes, LineSegment newLine)
-        {
-            List<LineSegment> vectorList;
-            if (nodes.TryGetValue(newLine.Start, out vectorList))
-                vectorList.Add(newLine);
-            else
-            {
-                vectorList = new List<LineSegment> { newLine };
-                nodes.Add(newLine.Start, vectorList);
-            }
         }
 
         //Debug methods

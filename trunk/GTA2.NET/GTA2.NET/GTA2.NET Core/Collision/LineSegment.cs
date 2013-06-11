@@ -26,34 +26,64 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public class LineSegment : LineObstacle
+    public class LineSegment : LineObstacle //, IEquatable<LineSegment>
     {
         public new Vector2 Start
         {
-            get { return base.Start; }
+            get
+            {
+                //return IsInverted ? base.End : base.Start;
+                return base.Start;
+            }
             set
             {
-                base.Start = value;
+                //if (IsInverted)
+                //    base.End = value;
+                //else
+                    base.Start = value;
                 CalculateDirection(Start, End);
             }
         }
 
         public new Vector2 End
         {
-            get { return base.End; }
+            get
+            {
+                //return IsInverted ? base.Start : base.End;
+                return base.End;
+            }
             set
             {
-                base.End = value;
+                //if (IsInverted)
+                //    base.Start = value;
+                //else
+                    base.End = value;
                 CalculateDirection(Start, End);
             }
         }
 
+        //public bool IsInverted
+        //{
+        //    get { return _isInverted; }
+        //    set
+        //    {
+        //        _isInverted = value;
+        //        CalculateDirection(Start, End);
+        //    }
+        //}
+
+        [XmlIgnore]
+        public Block Block { get; set; }
+
         [XmlIgnore]
         public Direction Direction;
+
+        //private bool _isInverted;
 
         private LineSegment() : this(Vector2.Zero, Vector2.Zero)
         {
@@ -62,8 +92,19 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public LineSegment(Vector2 start, Vector2 end) : base(start, end)
         {
-            Direction = CalculateDirection(start, end);
+            Direction = CalculateDirection(Start, End);
         }
+
+        public LineSegment(Vector2 start, Vector2 end, bool isInverted) : base(start, end)
+        {
+            //IsInverted = isInverted;
+            Direction = CalculateDirection(Start, End);
+        }
+
+        //public void Invert()
+        //{
+        //    IsInverted = !IsInverted;
+        //}
 
         private static Direction CalculateDirection(Vector2 startPoint, Vector2 endPoint)
         {
@@ -98,5 +139,43 @@ namespace Hiale.GTA2NET.Core.Collision
             return Direction.None;
             // ReSharper restore CompareOfFloatsByEqualityOperator
         }
+
+        public override string ToString()
+        {
+            return Start + " - " + End;
+        }
+
+        //public override int GetHashCode()
+        //{
+        //    return Start.GetHashCode() ^ End.GetHashCode();
+        //}
+
+        //public override bool Equals(object obj)
+        //{
+        //    return Equals((LineSegment)obj);
+        //}
+
+        //public bool Equals(LineSegment other)
+        //{
+        //    if (ReferenceEquals(null, other))
+        //        return false;
+        //    if (ReferenceEquals(this, other))
+        //        return true;
+        //    if (other.GetType() != GetType())
+        //        return false;
+        //    return Start == other.Start && End == other.End;
+        //}
+
+        //public static bool operator ==(LineSegment a, LineSegment b)
+        //{
+        //    if (((object)a == null) || ((object)b == null))
+        //        return false;
+        //    return a.Equals(b);
+        //}
+
+        //public static bool operator !=(LineSegment a, LineSegment b)
+        //{
+        //    return !(a == b);
+        //}
     }
 }
