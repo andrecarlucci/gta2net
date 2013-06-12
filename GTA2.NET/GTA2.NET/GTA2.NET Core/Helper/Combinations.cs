@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: SwitchPointCombination.cs
-// Created: 23.05.2013
+// File: Combinations.cs
+// Created: 12.06.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,24 +23,36 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.Xna.Framework;
 
-namespace Hiale.GTA2NET.Core.Collision
+namespace Hiale.GTA2NET.Core.Helper
 {
-    public class SwitchPointCombination
+    public static class Combinations
     {
-        public List<Vector2> Origins { get; set; }
+        public static List<List<T>> GetCombinations<T>(ICollection<List<T>> input)
+        {
+            var selected = new T[input.Count];
+            var result = new List<List<T>>();
+            GetCombinations(selected, 0, input, result);
+            return result;
+        }
 
-        public List<Vector2> Targets { get; set; }
-
-       public SwitchPointCombination(List<Vector2> origins, List<Vector2> targets)
-       {
-          Origins = origins;
-          Targets = targets;
-       }
+        private static void GetCombinations<T>(IList<T> selected, int index, IEnumerable<IEnumerable<T>> remaining, ICollection<List<T>> output)
+        {
+            // ReSharper disable PossibleMultipleEnumeration
+            var nextList = remaining.FirstOrDefault();
+            if (nextList == null)
+                output.Add(new List<T>(selected));
+            else
+            {
+                foreach (var i in nextList)
+                {
+                    selected[index] = i;
+                    GetCombinations(selected, index + 1, remaining.Skip(1), output);
+                }
+            }
+            // ReSharper restore PossibleMultipleEnumeration
+        }
     }
 }
