@@ -52,7 +52,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
             while (nodes.Count > 0)
             {
-                var currentFigure = new Figure(currentLayer, nodes);
+                var currentFigure = new RawFigure(currentLayer, nodes);
                 nodes.Purge(currentFigure.Lines);
                 currentFigure.Optimize();
 

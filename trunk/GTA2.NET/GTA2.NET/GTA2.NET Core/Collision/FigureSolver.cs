@@ -37,10 +37,9 @@ namespace Hiale.GTA2NET.Core.Collision
             
         }
 
-        public Figure Solve(List<FigureSplitter> figureSplitters)
+        public RawFigure Solve(List<SplitterFigure> figureSplitters)
         {
-            if (figureSplitters.Count == 1)
-                return figureSplitters[0].ConvertToFigure();
+            throw new NotImplementedException();
 
         }
     }

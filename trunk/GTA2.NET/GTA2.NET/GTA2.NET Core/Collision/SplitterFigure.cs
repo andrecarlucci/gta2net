@@ -31,26 +31,23 @@ using Microsoft.Xna.Framework;
 namespace Hiale.GTA2NET.Core.Collision
 {
     /// <summary>
-    /// A Figure Splitter is a Figure which was a part of a complex Figure.
+    /// A Splitter Figure is a Figure which was a part of a complex Figure.
     /// </summary>
-    public class FigureSplitter : IFigure 
+    public class SplitterFigure : Figure 
     {
-        public List<LineSegment> Lines { get; set; }
-
         public List<LineSegment> RemainingLines { get; set; }
 
         public List<Vector2> SwitchPointKeys { get; set; }
 
-        public FigureSplitter()
+        public SplitterFigure() : base()
         {
-            Lines = new List<LineSegment>();
             RemainingLines = new List<LineSegment>();
             SwitchPointKeys = new List<Vector2>();
         }
 
-        public Figure ConvertToFigure()
+        public RawFigure ConvertToFigure()
         {
-            return new Figure(-1, null); //ToDo
+            return new RawFigure(-1, null); //ToDo
         }
 
         public void UpdateSwitchPoints(SerializableDictionary<Vector2, SwitchPoint> switchPoints)
