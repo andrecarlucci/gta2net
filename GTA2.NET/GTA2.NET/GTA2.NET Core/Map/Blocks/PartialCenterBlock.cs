@@ -50,7 +50,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             FaceCoordinates backCoordinates;
             var centreBlockScalar = CentreBlockScalar;
             var partialBlockScalar = PartialBlockScalar;
-            PrepareCoordinates(ref centreBlockScalar, ref centreBlockScalar, ref partialBlockScalar, ref partialBlockScalar, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(centreBlockScalar, centreBlockScalar, partialBlockScalar, partialBlockScalar, out frontCoordinates, out backCoordinates);
 
             CreateFrontVertices(frontCoordinates);
 
