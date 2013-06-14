@@ -734,7 +734,7 @@ namespace Hiale.GTA2NET.Core.Map
             float y = 0;
             float width = 1;
             float height = 1;
-            PrepareCoordinates(ref x, ref y, ref width, ref height, out frontCoords, out backCoords);
+            PrepareCoordinates(x, y, width, height, out frontCoords, out backCoords);
         }
 
         /// <summary>
@@ -746,7 +746,7 @@ namespace Hiale.GTA2NET.Core.Map
         /// <param name="y"></param>
         /// <param name="width"></param>
         /// <param name="height"></param>
-        protected void PrepareCoordinates(ref float x, ref float y, ref float width, ref float height, out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
+        protected void PrepareCoordinates(float x, float y, float width, float height, out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
         {
             Vector3 position = Position;
             position.Y *= -1;
