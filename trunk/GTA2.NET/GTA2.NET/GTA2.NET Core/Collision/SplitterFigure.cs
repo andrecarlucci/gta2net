@@ -32,7 +32,8 @@ using Microsoft.Xna.Framework;
 namespace Hiale.GTA2NET.Core.Collision
 {
     /// <summary>
-    /// A Splitter Figure is a Figure which was a part of a complex Figure.
+    /// A Splitter Figure is a Figure which was a part of a complex Figure. This kind of Figure exists only temporary.
+    /// See example SplitterFigure.png: The whole figure includes three elements. Two squares and one line. The red squares are split and processed separately.
     /// </summary>
     public class SplitterFigure : Figure 
     {
@@ -48,11 +49,6 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             RemainingLines = new List<LineSegment>();
             SwitchPointKeys = new List<Vector2>();
-        }
-
-        public Figure ConvertToFigure()
-        {
-            throw new NotImplementedException();
         }
 
         private void GenerateLocalSwitchPoints()

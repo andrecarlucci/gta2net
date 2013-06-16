@@ -37,8 +37,16 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public List<LineSegment> Lines { get; protected set; }
 
+        /// <summary>
+        /// A special point where several lines connect.
+        /// See SwitchPoints.png: The blue circles show  Switch Points.
+        /// </summary>
         protected internal SerializableDictionary<Vector2, SwitchPoint> SwitchPoints { get; set; }
-
+        
+        /// <summary>
+        /// A List Forlorn (= a line which emerges out of a figure) start nodes.
+        /// See Forlorn.png: The magenta lines show forlorn lines. They go to a dead end. The blue circles show these ForlornStartNodes (dead ends)
+        /// </summary>
         protected internal List<Vector2> ForlornStartNodes { get; set; }
 
         private static Dictionary<Direction, int> _baseDirectionPriority;
@@ -77,14 +85,10 @@ namespace Hiale.GTA2NET.Core.Collision
 
             if (SwitchPoints.Count > 0)
             {
-                //var guid = Layer + "_" + Guid.NewGuid();
-                //Save("debug\\" + guid + ".xml");
-                //MapCollision.SaveSegmentsPicture(Lines, guid);
-
                 var switchPointValues = SwitchPoints.Select(switchPoint => switchPoint.Value.EndPoints).ToList();
                 var combinations = Combinations.GetCombinations(switchPointValues);
                 var switchPointList = SwitchPoints.ToList();
-                CheckCombination(combinations, Lines, switchPointList, obstacles);
+                EvaluateCombination(combinations, Lines, switchPointList, obstacles);
             }
             else
             {
@@ -182,6 +186,10 @@ namespace Hiale.GTA2NET.Core.Collision
 
         //Forlorn stuff
 
+        /// <summary>
+        /// Removes Forlorn out of the figure and converts them to LineObstacles.
+        /// </summary>
+        /// <param name="obstacles"></param>
         protected void GetForlorn(List<IObstacle> obstacles)
         {
             var forlornNodes = new Queue<Vector2>();
@@ -261,6 +269,9 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
+        /// <summary>
+        /// Finds removed switchpoints which now describe forlorn ends. Add these to ForlornStartNodes. Afterwards all unneeded SwitchPoints are removed.
+        /// </summary>
         protected void UpdateSwitchPoints()
         {
             var forlornStartNodes = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count == 1 select switchPoint.Key).ToList();
@@ -285,11 +296,19 @@ namespace Hiale.GTA2NET.Core.Collision
             return -1;
         }
 
-        protected virtual void CheckCombination(List<List<Vector2>> combinations, List<LineSegment> sourceSegments, List<KeyValuePair<Vector2, SwitchPoint>> switchPointList, List<IObstacle> obstacles)
+        /// <summary>
+        /// Creates a a Figure of each combination and evaluate which one to choose.
+        /// See Combinations.png: The original figure on top has four combinations (because of the Switch Points). In this example Figure a is choosen as final figure.
+        /// </summary>
+        /// <param name="combinations"></param>
+        /// <param name="sourceSegments"></param>
+        /// <param name="switchPointList"></param>
+        /// <param name="obstacles"></param>
+        protected virtual void EvaluateCombination(List<List<Vector2>> combinations, List<LineSegment> sourceSegments, List<KeyValuePair<Vector2, SwitchPoint>> switchPointList, List<IObstacle> obstacles)
         {
             var figureSplitters = new List<SplitterFigure>();
-            var startPoint = sourceSegments.First().Start;
-            for (var i = 0; i < combinations.Count; i++)
+            var startPoint = sourceSegments.First().Start; //ToDo: if the start point does not lie on the output figure, this method returns a wrong result
+            foreach (var combination in combinations)
             {
                 var lineSegments = new List<LineSegment>(sourceSegments);
                 var currentItem = startPoint;
@@ -317,7 +336,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         var switchPointIndex = GetSwitchPointIndex(currentItem, switchPointList);
                         Vector2 nextItem;
                         if (switchPointIndex > -1)
-                            nextItem = combinations[i][switchPointIndex];
+                            nextItem = combination[switchPointIndex];
                         else
                             break;
                         currentFigureSplitter.SwitchPointKeys.Add(currentItem);
@@ -347,12 +366,23 @@ namespace Hiale.GTA2NET.Core.Collision
 
         //Create Figure stuff
 
+        /// <summary>
+        /// Creates a polygon out of a List of Lines.
+        /// </summary>
+        /// <param name="sourceSegments"></param>
+        /// <returns></returns>
         public static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments)
         {
             bool isRectangle;
             return CreatePolygon(sourceSegments, out isRectangle);
         }
 
+        /// <summary>
+        /// Creates a polygon out of a List of Lines.
+        /// </summary>
+        /// <param name="sourceSegments"></param>
+        /// <param name="isRectangle">The returning polygon is actually a rectangle</param>
+        /// <returns></returns>
         public static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
         {
             var polygon = new List<Vector2>();

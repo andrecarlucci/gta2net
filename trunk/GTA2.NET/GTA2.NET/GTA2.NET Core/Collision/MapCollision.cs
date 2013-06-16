@@ -48,8 +48,6 @@ namespace Hiale.GTA2NET.Core.Collision
             var rawObstacles = GetBlockObstacles(currentLayer);
             var nodes = new LineNodeDictionary(rawObstacles);
 
-            //var nodes = GetAllObstacleNodes(rawObstacles);
-
             while (nodes.Count > 0)
             {
                 var currentFigure = new RawFigure(currentLayer, nodes);

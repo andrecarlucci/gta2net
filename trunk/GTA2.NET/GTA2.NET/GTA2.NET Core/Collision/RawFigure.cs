@@ -31,6 +31,9 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
+    /// <summary>
+    /// A Raw Figure describe a figure which is put together of many individual LineSegments. These are not optimized yet.
+    /// </summary>
     public class RawFigure : Figure
     {
         private LineNodeDictionary Nodes { get; set; }
