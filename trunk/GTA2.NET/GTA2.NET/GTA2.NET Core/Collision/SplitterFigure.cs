@@ -25,6 +25,7 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
@@ -39,33 +40,78 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public List<Vector2> SwitchPointKeys { get; set; }
 
-        public SplitterFigure() : base()
+        public List<Vector2> Polygon { get; set; }
+
+        public bool IsRectangle { get; set; }
+
+        public SplitterFigure(int layer) : base(layer)
         {
             RemainingLines = new List<LineSegment>();
             SwitchPointKeys = new List<Vector2>();
         }
 
-        public RawFigure ConvertToFigure()
+        public Figure ConvertToFigure()
         {
-            return new RawFigure(-1, null); //ToDo
+            throw new NotImplementedException();
         }
 
-        public void UpdateSwitchPoints(SerializableDictionary<Vector2, SwitchPoint> switchPoints)
+        private void GenerateLocalSwitchPoints()
         {
+            SwitchPoints.Clear();
             foreach (var switchPointKey in SwitchPointKeys)
             {
-                SwitchPoint currentSwitchPoint;
-                if (!switchPoints.TryGetValue(switchPointKey, out currentSwitchPoint))
-                    continue;
-                foreach (var lineSegment in Lines)
+                var connectedNodes = GetConnectedNodes(switchPointKey);
+                foreach (var connectedNode in connectedNodes)
+                    AddSwitchPoint(switchPointKey, connectedNode);
+            }
+            UpdateSwitchPoints();
+            SwitchPointKeys.Clear();
+        }
+
+        public void SeparateSwitchPoints(SerializableDictionary<Vector2, SwitchPoint> switchPoints)
+        {
+            GenerateLocalSwitchPoints();
+
+            var switchPointsToRemove = new Dictionary<Vector2, SwitchPoint>();
+            foreach (var switchPoint in switchPoints)
+            {
+                foreach (var endPoint in switchPoint.Value.EndPoints)
                 {
-                    if (lineSegment.Start == switchPointKey)
-                        currentSwitchPoint.EndPoints.Remove(lineSegment.End);
-                    else if (lineSegment.End == switchPointKey)
-                        currentSwitchPoint.EndPoints.Remove(lineSegment.Start);
+                    if (Geometry.IsPointInPolygonOrEdge(Polygon, endPoint) && Geometry.IsPointInPolygonOrEdge(Polygon, switchPoint.Key))
+                    {
+                        var line = GetLine(switchPoint.Key, endPoint, false, RemainingLines);
+                        if (line != null)
+                            RemainingLines.Remove(line);
+                        AddSwitchPoint(switchPoint.Key, endPoint, switchPointsToRemove);
+                    }
                 }
             }
-            
+
+            foreach (var switchPoint in switchPointsToRemove)
+            {
+                foreach (var endPoint in switchPoint.Value.EndPoints)
+                    switchPoints[switchPoint.Key].EndPoints.Remove(endPoint);
+                if (switchPoints[switchPoint.Key].EndPoints.Count == 0)
+                    switchPoints.Remove(switchPoint.Key);
+            }
+
+
+            var linesToRemove = RemainingLines.Where(remainingLine => Geometry.IsPointInPolygonOrEdge(Polygon, remainingLine.Start) && Geometry.IsPointInPolygonOrEdge(Polygon, remainingLine.End)).ToList();
+            foreach (var lineSegment in linesToRemove)
+                RemainingLines.Remove(lineSegment);
+        }
+
+        public override bool Equals(object obj)
+        {
+            var item = obj as SplitterFigure;
+            if (item == null)
+                return false;
+            return GetHashCode() == item.GetHashCode();
+        }
+
+        public override int GetHashCode()
+        {
+            return Lines.Aggregate(0, (current, lineSegment) => (current*397) ^ lineSegment.Start.GetHashCode() ^ lineSegment.End.GetHashCode());
         }
     }
 }
