@@ -26,6 +26,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -70,17 +71,12 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public bool IsPointInPolygon(Vector2 point)
         {
-            var isInside = false;
-            for (int i = 0, j = Vertices.Count - 1; i < Vertices.Count; j = i++)
-            {
-                // ReSharper disable CompareOfFloatsByEqualityOperator
-                if ((point.X == Vertices[i].X && point.Y == Vertices[i].Y) || (point.X == Vertices[j].X && point.Y == Vertices[j].Y)) //point IS one of the edges
-                // ReSharper restore CompareOfFloatsByEqualityOperator
-                    return true;
-                if (((Vertices[i].Y > point.Y) != (Vertices[j].Y > point.Y)) && (point.X < (Vertices[j].X - Vertices[i].X) * (point.Y - Vertices[i].Y) / (Vertices[j].Y - Vertices[i].Y) + Vertices[i].X))
-                    isInside = !isInside;
-            }
-            return isInside;
+            return Geometry.IsPointInPolygon(Vertices, point);
+        }
+
+        public bool IsPointInPolygonOrEdge(Vector2 point)
+        {
+            return Geometry.IsPointInPolygonOrEdge(Vertices, point);
         }
     }
 }

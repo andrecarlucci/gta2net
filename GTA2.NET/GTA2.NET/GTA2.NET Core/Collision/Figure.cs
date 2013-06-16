@@ -63,10 +63,17 @@ namespace Hiale.GTA2NET.Core.Collision
         public List<IObstacle> Tokenize()
         {
             var obstacles = new List<IObstacle>();
+            Tokenize(obstacles);
+            return obstacles;
+        }
 
+        private void Tokenize(List<IObstacle> obstacles)
+        {
+            if (Lines.Count == 0)
+                return;
             GetForlorn(obstacles);
             if (Lines.Count == 0)
-                return obstacles;
+                return;
 
             if (SwitchPoints.Count > 0)
             {
@@ -77,26 +84,14 @@ namespace Hiale.GTA2NET.Core.Collision
                 var switchPointValues = SwitchPoints.Select(switchPoint => switchPoint.Value.EndPoints).ToList();
                 var combinations = Combinations.GetCombinations(switchPointValues);
                 var switchPointList = SwitchPoints.ToList();
-                CheckCombination(combinations, Lines, switchPointList);
+                CheckCombination(combinations, Lines, switchPointList, obstacles);
             }
             else
             {
                 bool isRectangle;
                 var polygonVertices = CreatePolygon(Lines, out isRectangle);
-                if (isRectangle)
-                {
-                    var width = polygonVertices[2].X - polygonVertices[0].X;
-                    var height = polygonVertices[1].Y - polygonVertices[0].Y;
-                    var rectangle = new RectangleObstacle(polygonVertices[0], Layer, width, height);
-                    obstacles.Add(rectangle);
-                }
-                else
-                {
-                    var polygonObstacle = new PolygonObstacle(Layer) { Vertices = polygonVertices };
-                    obstacles.Add(polygonObstacle);
-                }
+                AddPolygonObstacle(polygonVertices, isRectangle, obstacles);
             }
-            return obstacles;
         }
 
         protected static void PrepareBasePriorityTable()
@@ -113,6 +108,11 @@ namespace Hiale.GTA2NET.Core.Collision
             var line = new LineSegment(start, end);
             list.Add(line);
             return line;
+        }
+
+        protected virtual LineSegment GetLine(Vector2 start, Vector2 end)
+        {
+            return GetLine(start, end, false);
         }
 
         protected virtual LineSegment GetLine(Vector2 start, Vector2 end, bool directed)
@@ -214,7 +214,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
             }
             ForlornStartNodes.Clear();
-            RemoveUnusedSwitchPoints();
+            UpdateSwitchPoints();
         }
 
         protected virtual Vector2 GetforlornRoot(Vector2 forlornStart, out List<LineSegment> forlornLines, out Vector2 previousItem)
@@ -261,9 +261,14 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
-        protected void RemoveUnusedSwitchPoints()
+        protected void UpdateSwitchPoints()
         {
-            var listToRemove = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count == 2 select switchPoint.Key).ToList();
+            var forlornStartNodes = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count == 1 select switchPoint.Key).ToList();
+            foreach (var forlornStartNode in forlornStartNodes)
+            {
+                ForlornStartNodes.Add(forlornStartNode);
+            }
+            var listToRemove = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count < 3  select switchPoint.Key).ToList();
             foreach (var key in listToRemove)
                 SwitchPoints.Remove(key);
         }
@@ -280,9 +285,8 @@ namespace Hiale.GTA2NET.Core.Collision
             return -1;
         }
 
-        protected virtual void CheckCombination(List<List<Vector2>> combinations, List<LineSegment> sourceSegments, List<KeyValuePair<Vector2, SwitchPoint>> switchPointList)
+        protected virtual void CheckCombination(List<List<Vector2>> combinations, List<LineSegment> sourceSegments, List<KeyValuePair<Vector2, SwitchPoint>> switchPointList, List<IObstacle> obstacles)
         {
-            var objects = new List<IObstacle>();
             var figureSplitters = new List<SplitterFigure>();
             var startPoint = sourceSegments.First().Start;
             for (var i = 0; i < combinations.Count; i++)
@@ -291,14 +295,15 @@ namespace Hiale.GTA2NET.Core.Collision
                 var currentItem = startPoint;
                 var currentDirection = Direction.None;
                 var visitedItems = new List<Vector2>();
-                var currentFigureSplitter = new SplitterFigure();
+                var currentFigureSplitter = new SplitterFigure(Layer);
 
                 while (true)
                 {
                     if (currentFigureSplitter.Lines.Count > 0 && startPoint == currentItem)
                     {
                         currentFigureSplitter.RemainingLines = lineSegments;
-                        figureSplitters.Add(currentFigureSplitter);
+                        if (!figureSplitters.Contains(currentFigureSplitter))
+                            figureSplitters.Add(currentFigureSplitter);
                         break;
                     }
                     if (visitedItems.Contains(currentItem))
@@ -309,13 +314,13 @@ namespace Hiale.GTA2NET.Core.Collision
                     LineSegment preferedLine;
                     if (SwitchPoints.TryGetValue(currentItem, out switchPoint))
                     {
-                        currentFigureSplitter.SwitchPointKeys.Add(currentItem);
                         var switchPointIndex = GetSwitchPointIndex(currentItem, switchPointList);
                         Vector2 nextItem;
                         if (switchPointIndex > -1)
                             nextItem = combinations[i][switchPointIndex];
                         else
                             break;
+                        currentFigureSplitter.SwitchPointKeys.Add(currentItem);
                         preferedLine = GetLine(currentItem, nextItem, true);
                         if (!lineSegments.Contains(preferedLine))
                             break;
@@ -328,20 +333,27 @@ namespace Hiale.GTA2NET.Core.Collision
                     }
                     lineSegments.Remove(preferedLine);
                     currentItem = preferedLine.End;
-                    if (preferedLine.Direction == currentDirection)
-                        continue;
                     currentDirection = preferedLine.Direction;
                     currentFigureSplitter.Lines.Add(preferedLine);
                 }
             }
-            System.Diagnostics.Debug.WriteLine(figureSplitters.Count);
-            figureSplitters[0].UpdateSwitchPoints(SwitchPoints);
-            RemoveUnusedSwitchPoints();
+            var choosenFigure = FigureSolver.Solve(figureSplitters);
+            choosenFigure.SeparateSwitchPoints(SwitchPoints);
+            UpdateSwitchPoints();
+            AddPolygonObstacle(choosenFigure.Polygon, choosenFigure.IsRectangle, obstacles);
+            Lines = choosenFigure.RemainingLines;
+            Tokenize(obstacles);
         }
 
         //Create Figure stuff
 
-        protected static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
+        public static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments)
+        {
+            bool isRectangle;
+            return CreatePolygon(sourceSegments, out isRectangle);
+        }
+
+        public static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
         {
             var polygon = new List<Vector2>();
             var directions = new List<Direction>();
@@ -364,7 +376,6 @@ namespace Hiale.GTA2NET.Core.Collision
                     continue;
                 currentDirection = preferedLine.Direction;
                 polygon.Add(previousItem);
-                currentItem = preferedLine.End;
                 directions.Add(currentDirection);
             }
             FixPolygonStartPoint(polygon, directions);
@@ -393,6 +404,22 @@ namespace Hiale.GTA2NET.Core.Collision
                 preferedLine = tempLine;
             }
             return preferedLine;
+        }
+
+        private void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles)
+        {
+            if (isRectangle)
+            {
+                var width = polygonVertices[2].X - polygonVertices[0].X;
+                var height = polygonVertices[1].Y - polygonVertices[0].Y;
+                var rectangle = new RectangleObstacle(polygonVertices[0], Layer, width, height);
+                obstacles.Add(rectangle);
+            }
+            else
+            {
+                var polygonObstacle = new PolygonObstacle(Layer) { Vertices = polygonVertices };
+                obstacles.Add(polygonObstacle);
+            }
         }
 
         protected static int GetLinePriority(Direction baseDirection, LineSegment line)
