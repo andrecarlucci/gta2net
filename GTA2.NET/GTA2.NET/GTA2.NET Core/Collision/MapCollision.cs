@@ -71,39 +71,5 @@ namespace Hiale.GTA2NET.Core.Collision
             }
             return obstacles;
         }
-
-        //Debug methods
-
-        public static void SaveSegmentsPicture(List<LineSegment> segments, Stream outputStream, string name)
-        {
-            var fileName = name + ".png";
-            Bitmap bmp;
-            if (File.Exists(fileName))
-            {
-                var image = Image.FromFile(fileName);
-                bmp = new Bitmap(image);
-                image.Dispose();
-            }
-            else
-                bmp = new Bitmap(2560, 2560);
-            using (var g = Graphics.FromImage(bmp))
-            {
-                foreach (var segment in segments)
-                {
-                    g.DrawLine(new Pen(new SolidBrush(System.Drawing.Color.Red), 1), segment.Start.X * 10, segment.Start.Y * 10, segment.End.X * 10, segment.End.Y * 10);
-                }
-            }
-            if (outputStream == null)
-                bmp.Save("debug\\" + fileName, ImageFormat.Png);
-            else
-                bmp.Save(outputStream, ImageFormat.Png);
-            bmp.Dispose();
-            
-        }
-
-        public static void SaveSegmentsPicture(List<LineSegment> segments, string name)
-        {
-            SaveSegmentsPicture(segments, null, name);
-        }
     }
 }

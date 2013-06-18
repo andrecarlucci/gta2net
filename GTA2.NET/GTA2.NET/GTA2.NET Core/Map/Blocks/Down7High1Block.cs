@@ -33,7 +33,7 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
     {
         public Down7High1Block() : base()
         {
-            SlopeType = SlopeType.Down7High0;
+            SlopeType = SlopeType.Down7High1;
         }
 
         public Down7High1Block(BlockStructure blockStructure, Vector3 pos) : base(blockStructure, pos) 
