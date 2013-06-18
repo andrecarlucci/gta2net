@@ -91,7 +91,6 @@ namespace Hiale.GTA2NET.Core.Collision
                     switchPoints.Remove(switchPoint.Key);
             }
 
-
             var linesToRemove = RemainingLines.Where(remainingLine => Geometry.IsPointInPolygonOrEdge(Polygon, remainingLine.Start) && Geometry.IsPointInPolygonOrEdge(Polygon, remainingLine.End)).ToList();
             foreach (var lineSegment in linesToRemove)
                 RemainingLines.Remove(lineSegment);
@@ -107,7 +106,9 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public override int GetHashCode()
         {
-            return Lines.Aggregate(0, (current, lineSegment) => (current*397) ^ lineSegment.Start.GetHashCode() ^ lineSegment.End.GetHashCode());
+            // ReSharper disable NonReadonlyFieldInGetHashCode
+            return Lines.Aggregate(0, (current, lineSegment) => (current*397) ^ lineSegment.Start.X.GetHashCode() ^ lineSegment.Start.Y.GetHashCode() ^ lineSegment.End.X.GetHashCode() ^ lineSegment.End.Y.GetHashCode());
+            // ReSharper restore NonReadonlyFieldInGetHashCode
         }
     }
 }

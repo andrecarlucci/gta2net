@@ -119,7 +119,7 @@ namespace Hiale.GTA2NET.Core.Collision
                     start = directedLine.Start;
                 }
 
-                if (isLast && start != null)
+                if (isLast && start != null && end != null) //ToDo: not sure if these SwitchPoints here are correct. Create a simple figure to test it.
                 {
                     AddLine(start.Value, directedLine.End, optimizedLines);
                     if (isSwitchPoint)
@@ -127,9 +127,13 @@ namespace Hiale.GTA2NET.Core.Collision
                     if (isSwitchPointInvented)
                         AddSwitchPoint(directedLine.End, start.Value, optimizedSwitchPoints);
                     if (SwitchPoints.ContainsKey(directedLine.Start))
-                        AddSwitchPoint(directedLine.Start, directedLine.End, optimizedSwitchPoints);
+                       AddSwitchPoint(directedLine.Start, end.Value, optimizedSwitchPoints);
                     if (SwitchPoints.ContainsKey(directedLine.End))
-                        AddSwitchPoint(directedLine.End, directedLine.Start, optimizedSwitchPoints);
+                       AddSwitchPoint(directedLine.End, start.Value, optimizedSwitchPoints);
+                    //if (SwitchPoints.ContainsKey(directedLine.Start))
+                    //    AddSwitchPoint(directedLine.Start, directedLine.End, optimizedSwitchPoints);
+                    //if (SwitchPoints.ContainsKey(directedLine.End))
+                    //    AddSwitchPoint(directedLine.End, directedLine.Start, optimizedSwitchPoints);
                 }
                 end = directedLine.End;
             }
