@@ -293,24 +293,18 @@ namespace Hiale.GTA2NET.Core.Collision
             return -1;
         }
 
-
-        protected virtual Vector2 GetStartPoint(List<LineSegment> sourceSegment)
+        protected List<Vector2> GetStartPoints(List<LineSegment> sourceSegments)
         {
-            var item = new Vector2(float.MaxValue, float.MaxValue);
-            foreach (var lineSegment in sourceSegment)
+            var pointList = new List<Vector2>();
+            foreach (var lineSegment in sourceSegments)
             {
-                if (lineSegment.Start.X < item.X)
-                    item = lineSegment.Start;
-                if (lineSegment.End.X < item.X)
-                    item = lineSegment.End;
-                // ReSharper disable CompareOfFloatsByEqualityOperator
-                if (lineSegment.Start.X == item.X && lineSegment.Start.Y < item.Y)
-                    item = lineSegment.Start;
-                if (lineSegment.End.X == item.X && lineSegment.End.Y < item.Y)
-                    item = lineSegment.End;
-                // ReSharper restore CompareOfFloatsByEqualityOperator
+                if (!pointList.Contains(lineSegment.Start))
+                    pointList.Add(lineSegment.Start);
+                if (!pointList.Contains(lineSegment.End))
+                    pointList.Add(lineSegment.End);
             }
-            return item;
+            pointList.Sort(new StartPointComparer());
+            return pointList;
         }
 
         /// <summary>
@@ -323,90 +317,99 @@ namespace Hiale.GTA2NET.Core.Collision
         protected virtual void Split(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
         {
             //var startPoint = sourceSegments.First().Start; //ToDo: if the start point does not lie on the output figure, this method returns a wrong result
-            var startPoint = GetStartPoint(sourceSegments);
 
             var figureSplitters = new List<SplitterFigure>();
-            var relevantSwitchPoints = new List<Vector2>();
-            int previousSwitchPointCount;
+
+            var startPoints = GetStartPoints(sourceSegments);
+            var startPointIndex = 0;
+
             do
             {
-                previousSwitchPointCount = relevantSwitchPoints.Count;
-
-                var switchPointValues = new List<List<Vector2>>();
-                var switchPointList = new List<KeyValuePair<Vector2, SwitchPoint>>();
-                foreach (var foundSwitchPoint in relevantSwitchPoints)
+                //var startPoint = GetStartPoint(sourceSegments);
+                if (startPointIndex >= startPoints.Count - 1)
+                    throw new NotSupportedException();
+                var startPoint = startPoints[startPointIndex];
+                startPointIndex++;
+                var relevantSwitchPoints = new List<Vector2>();
+                int previousSwitchPointCount;
+                do
                 {
-                    var switchPoint = SwitchPoints[foundSwitchPoint];
-                    switchPointValues.Add(switchPoint.EndPoints);
-                    switchPointList.Add(new KeyValuePair<Vector2, SwitchPoint>(foundSwitchPoint, switchPoint));
-                }
-                var combinations = Combinations.GetCombinations(switchPointValues);
-
-                foreach (var combination in combinations)
-                {
-                    var lineSegments = new List<LineSegment>(sourceSegments);
-                    var currentItem = startPoint;
-                    var currentDirection = Direction.None;
-                    var visitedItems = new List<Vector2>();
-                    var currentFigureSplitter = new SplitterFigure(Layer);
-                    var foundSwitchPoints = new List<Vector2>(relevantSwitchPoints);
-
-                    while (true)
+                    previousSwitchPointCount = relevantSwitchPoints.Count;
+                    var switchPointValues = new List<List<Vector2>>();
+                    var switchPointList = new List<KeyValuePair<Vector2, SwitchPoint>>();
+                    foreach (var foundSwitchPoint in relevantSwitchPoints)
                     {
-                        if (currentFigureSplitter.Lines.Count > 0 && startPoint == currentItem)
-                        {
-                            foreach (var switchPointKey in foundSwitchPoints)
-                            {
-                                if (!relevantSwitchPoints.Contains(switchPointKey))
-                                    relevantSwitchPoints.Add(switchPointKey);
-                            }
-                            currentFigureSplitter.RemainingLines = lineSegments;
-                            if (!figureSplitters.Contains(currentFigureSplitter))
-                                figureSplitters.Add(currentFigureSplitter);
-                            break;
-                        }
-                        if (visitedItems.Contains(currentItem))
-                            break;
-                        visitedItems.Add(currentItem);
+                        var switchPoint = SwitchPoints[foundSwitchPoint];
+                        switchPointValues.Add(switchPoint.EndPoints);
+                        switchPointList.Add(new KeyValuePair<Vector2, SwitchPoint>(foundSwitchPoint, switchPoint));
+                    }
+                    var combinations = Combinations.GetCombinations(switchPointValues);
 
-                        SwitchPoint switchPoint;
-                        LineSegment preferedLine;
-                        if (SwitchPoints.TryGetValue(currentItem, out switchPoint))
+                    foreach (var combination in combinations)
+                    {
+                        var lineSegments = new List<LineSegment>(sourceSegments);
+                        var currentItem = startPoint;
+                        var currentDirection = Direction.None;
+                        var visitedItems = new List<Vector2>();
+                        var currentFigureSplitter = new SplitterFigure(Layer);
+                        var foundSwitchPoints = new List<Vector2>(relevantSwitchPoints);
+
+                        while (true)
                         {
-                            var switchPointIndex = GetSwitchPointIndex(currentItem, switchPointList);
-                            if (switchPointIndex > -1)
+                            if (currentFigureSplitter.Lines.Count > 0 && startPoint == currentItem)
                             {
-                                var nextItem = combination[switchPointIndex];
-                                preferedLine = GetLine(currentItem, nextItem, true);
+                                foreach (var switchPointKey in foundSwitchPoints)
+                                {
+                                    if (!relevantSwitchPoints.Contains(switchPointKey))
+                                        relevantSwitchPoints.Add(switchPointKey);
+                                }
+                                currentFigureSplitter.RemainingLines = lineSegments;
+                                if (!figureSplitters.Contains(currentFigureSplitter))
+                                    figureSplitters.Add(currentFigureSplitter);
+                                break;
+                            }
+                            if (visitedItems.Contains(currentItem))
+                                break;
+                            visitedItems.Add(currentItem);
+
+                            SwitchPoint switchPoint;
+                            LineSegment preferedLine;
+                            if (SwitchPoints.TryGetValue(currentItem, out switchPoint))
+                            {
+                                var switchPointIndex = GetSwitchPointIndex(currentItem, switchPointList);
+                                if (switchPointIndex > -1)
+                                {
+                                    var nextItem = combination[switchPointIndex];
+                                    preferedLine = GetLine(currentItem, nextItem, true);
+                                }
+                                else
+                                {
+                                    preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection, true);
+                                    if (preferedLine == null)
+                                        break;
+                                    if (!foundSwitchPoints.Contains(currentItem))
+                                        foundSwitchPoints.Add(currentItem);
+                                }
+                                currentFigureSplitter.SwitchPointKeys.Add(currentItem);
+                                if (!lineSegments.Contains(preferedLine))
+                                    break;
                             }
                             else
                             {
-                                preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection, true);
+                                preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection);
                                 if (preferedLine == null)
                                     break;
-                                if (!foundSwitchPoints.Contains(currentItem))
-                                    foundSwitchPoints.Add(currentItem);
                             }
-                            currentFigureSplitter.SwitchPointKeys.Add(currentItem);
-                            if (!lineSegments.Contains(preferedLine))
-                                break;
+                            lineSegments.Remove(preferedLine);
+                            currentItem = preferedLine.End;
+                            currentDirection = preferedLine.Direction;
+                            currentFigureSplitter.Lines.Add(preferedLine);
                         }
-                        else
-                        {
-                            preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection);
-                            if (preferedLine == null)
-                                break;
-                        }
-                        lineSegments.Remove(preferedLine);
-                        currentItem = preferedLine.End;
-                        currentDirection = preferedLine.Direction;
-                        currentFigureSplitter.Lines.Add(preferedLine);
                     }
-                }
-            } while (previousSwitchPointCount < relevantSwitchPoints.Count);
+                } while (previousSwitchPointCount < relevantSwitchPoints.Count);
+
+            } while (figureSplitters.Count == 0);
             var choosenFigure = FigureSolver.Solve(figureSplitters);
-            if (choosenFigure == null)
-                Console.WriteLine("ToDo: probably because a wrong start point was choosen. The start point is on a forlorn segment.");
             choosenFigure.SeparateSwitchPoints(SwitchPoints);
             UpdateSwitchPoints();
             AddPolygonObstacle(choosenFigure.Polygon, choosenFigure.IsRectangle, obstacles);

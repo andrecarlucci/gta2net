@@ -101,13 +101,33 @@ namespace Hiale.GTA2NET.Core.Collision
             var item = obj as SplitterFigure;
             if (item == null)
                 return false;
-            return GetHashCode() == item.GetHashCode();
+            if (Lines != null && item.Lines != null)
+            {
+                for (var i = 0; i < Lines.Count; i++)
+                {
+                    if (Lines[i].Start != item.Lines[i].Start || Lines[i].End != item.Lines[i].End)
+                        return false;
+
+                }
+            }
+            return true;
         }
 
         public override int GetHashCode()
         {
+            unchecked
+            {
+                var hash = 397;
+                if (Lines == null)
+                    return hash;
+                foreach (var lineSegment in Lines)
+                {
+                    hash = hash*29 + lineSegment.Start.GetHashCode()*lineSegment.End.GetHashCode();
+                }
+                return hash;
+            }
             // ReSharper disable NonReadonlyFieldInGetHashCode
-            return Lines.Aggregate(0, (current, lineSegment) => (current*397) ^ lineSegment.Start.X.GetHashCode() ^ lineSegment.Start.Y.GetHashCode() ^ lineSegment.End.X.GetHashCode() ^ lineSegment.End.Y.GetHashCode());
+            //return Lines.Aggregate(0, (current, lineSegment) => (current*397) ^ lineSegment.Start.X.GetHashCode() ^ lineSegment.Start.Y.GetHashCode() ^ lineSegment.End.X.GetHashCode() ^ lineSegment.End.Y.GetHashCode());
             // ReSharper restore NonReadonlyFieldInGetHashCode
         }
     }
