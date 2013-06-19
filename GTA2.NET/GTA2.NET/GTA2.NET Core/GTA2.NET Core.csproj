@@ -58,6 +58,7 @@
     <Compile Include="Collision\LineObstacle.cs" />
     <Compile Include="Collision\LineSegment.cs" />
     <Compile Include="Collision\MapCollision.cs" />
+    <Compile Include="Collision\StartPointComparer.cs" />
     <Compile Include="Collision\SwitchPoint.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
