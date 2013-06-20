@@ -45,7 +45,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public bool IsRectangle { get; set; }
 
-        public SplitterFigure(int layer) : base(layer)
+        public SplitterFigure(Map.Map map, int layer) : base(map, layer)
         {
             RemainingLines = new List<LineSegment>();
             SwitchPointKeys = new List<Vector2>();

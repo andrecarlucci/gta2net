@@ -27,12 +27,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hiale.GTA2NET.Core.Helper;
+using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
     public class Figure
     {
+        public Map.Map Map { get; protected set; }
+
         public int Layer { get; protected set; }
 
         public List<LineSegment> Lines { get; protected set; }
@@ -59,8 +62,9 @@ namespace Hiale.GTA2NET.Core.Collision
             SwitchPoints = new SerializableDictionary<Vector2, SwitchPoint>();
         }
 
-        public Figure(int layer) : this()
+        public Figure(Map.Map map, int layer) : this()
         {
+            Map = map;
             Layer = layer;
         }
 
@@ -68,14 +72,14 @@ namespace Hiale.GTA2NET.Core.Collision
         /// Creates IObstacle objects of this figure.
         /// </summary>
         /// <returns></returns>
-        public List<IObstacle> Tokenize()
+        public virtual List<IObstacle> Tokenize()
         {
             var obstacles = new List<IObstacle>();
             Tokenize(obstacles);
             return obstacles;
         }
 
-        private void Tokenize(List<IObstacle> obstacles)
+        protected virtual void Tokenize(List<IObstacle> obstacles)
         {
             if (Lines.Count == 0)
                 return;
@@ -163,7 +167,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return lines;
         }
 
-        protected List<Vector2> GetConnectedNodes(Vector2 origin)
+        protected virtual List<Vector2> GetConnectedNodes(Vector2 origin)
         {
             return GetConnectedNodes(origin, Lines);
         }
@@ -187,7 +191,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// Removes Forlorn out of the figure and converts them to LineObstacles.
         /// </summary>
         /// <param name="obstacles"></param>
-        protected void GetForlorn(List<IObstacle> obstacles)
+        protected virtual void GetForlorn(List<IObstacle> obstacles)
         {
             var forlornNodes = new Queue<Vector2>();
             foreach (var forlornNodeStart in ForlornStartNodes)
@@ -269,7 +273,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// <summary>
         /// Finds removed switchpoints which now describe forlorn ends. Add these to ForlornStartNodes. Afterwards all unneeded SwitchPoints are removed.
         /// </summary>
-        protected void UpdateSwitchPoints()
+        protected virtual void UpdateSwitchPoints()
         {
             var forlornStartNodes = (from switchPoint in SwitchPoints where switchPoint.Value.EndPoints.Count == 1 select switchPoint.Key).ToList();
             foreach (var forlornStartNode in forlornStartNodes)
@@ -293,7 +297,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return -1;
         }
 
-        protected List<Vector2> GetStartPoints(List<LineSegment> sourceSegments)
+        protected virtual List<Vector2> GetStartPoints(List<LineSegment> sourceSegments)
         {
             var pointList = new List<Vector2>();
             foreach (var lineSegment in sourceSegments)
@@ -351,7 +355,7 @@ namespace Hiale.GTA2NET.Core.Collision
                         var currentItem = startPoint;
                         var currentDirection = Direction.None;
                         var visitedItems = new List<Vector2>();
-                        var currentFigureSplitter = new SplitterFigure(Layer);
+                        var currentFigureSplitter = new SplitterFigure(Map, Layer);
                         var foundSwitchPoints = new List<Vector2>(relevantSwitchPoints);
 
                         while (true)
@@ -424,7 +428,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <returns></returns>
-        public static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments)
+        public virtual List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments)
         {
             bool isRectangle;
             return CreatePolygon(sourceSegments, out isRectangle);
@@ -436,7 +440,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// <param name="sourceSegments"></param>
         /// <param name="isRectangle">The returning polygon is actually a rectangle</param>
         /// <returns></returns>
-        public static List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
+        public virtual List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
         {
             var polygon = new List<Vector2>();
             var directions = new List<Direction>();
@@ -462,6 +466,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 directions.Add(currentDirection);
             }
             FixPolygonStartPoint(polygon, directions);
+            GetAssociatedBlocks(polygon);
             isRectangle = IsRectangleObstacle(polygon, directions);
             return polygon;
         }
@@ -502,7 +507,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return preferedLine;
         }
 
-        private void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles)
+        protected virtual void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles)
         {
             if (isRectangle)
             {
@@ -531,6 +536,58 @@ namespace Hiale.GTA2NET.Core.Collision
                 var polygonObstacle = new PolygonObstacle(Layer) { Vertices = polygonVertices };
                 obstacles.Add(polygonObstacle);
             }
+        }
+
+        //Work-in-Progress method
+        protected virtual void GetAssociatedBlocks(List<Vector2> polygonVertices)
+        {
+            var minX = float.MaxValue;
+            var maxX = float.MinValue;
+            var minY = float.MaxValue;
+            var maxY = float.MinValue;
+            foreach (var polygonVertex in polygonVertices)
+            {
+                if (polygonVertex.X < minX)
+                    minX = polygonVertex.X;
+                if (polygonVertex.X > maxX)
+                    maxX = polygonVertex.X;
+                if (polygonVertex.Y < minY)
+                    minY = polygonVertex.Y;
+                if (polygonVertex.Y > maxY)
+                    maxY = polygonVertex.Y;
+            }
+            maxX = (float) Math.Ceiling(maxX);
+            maxY = (float) Math.Ceiling(maxY);
+
+            var blocks = new List<Block>();
+            var pointsCache = new Dictionary<Vector2, bool>();
+            for (var y = (int) minY; y < maxY; y++)
+            {
+                for (var x = (int) minX; x < maxX; x++)
+                {
+                    var obstacles = new List<ILineObstacle>();
+                    Map.CityBlocks[x, y, Layer].GetCollision(obstacles, false);
+
+                    var blockPoints = new List<Vector2>();
+                    foreach (var lineObstacle in obstacles)
+                    {
+                        if (!blockPoints.Contains(lineObstacle.Start))
+                            blockPoints.Add(lineObstacle.Start);
+                        if (!blockPoints.Contains(lineObstacle.End))
+                            blockPoints.Add(lineObstacle.End);
+                    }
+
+                    foreach (var blockPoint in blockPoints)
+                    {
+                        if (!pointsCache.ContainsKey(blockPoint))
+                        {
+                            var isOnPolygon = Geometry.IsPointInPolygonOrEdge(polygonVertices, blockPoint);
+                            pointsCache.Add(blockPoint, isOnPolygon);
+                        }
+                    }
+                }
+            }
+            Debug.SavePolygonPicture(polygonVertices, pointsCache);
         }
 
         protected static int GetLinePriority(Direction baseDirection, LineSegment line)

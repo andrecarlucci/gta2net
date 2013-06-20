@@ -50,7 +50,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
             while (nodes.Count > 0)
             {
-                var currentFigure = new RawFigure(currentLayer, nodes);
+                var currentFigure = new RawFigure(_map, currentLayer, nodes);
                 nodes.Purge(currentFigure.Lines);
                 currentFigure.Optimize();
 

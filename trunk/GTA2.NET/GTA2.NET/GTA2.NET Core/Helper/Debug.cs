@@ -149,5 +149,28 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             SaveSegmentsPicture(segments, null, name);
         }
+
+        public static void SavePolygonPicture(List<Vector2> polygon, Dictionary<Vector2, bool> pointsCache)
+        {
+            var points = new PointF[polygon.Count];
+            for (var i = 0; i < polygon.Count; i++)
+                points[i] = new PointF(polygon[i].X * 10, polygon[i].Y * 10);
+            
+            using (var bmp = new Bitmap(2560, 2560))
+            {
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
+
+                    foreach (var point in pointsCache)
+                    {
+                        System.Drawing.Color color = point.Value ? System.Drawing.Color.Green : System.Drawing.Color.DarkRed;
+                        g.DrawRectangle(new Pen(color), point.Key.X*10, point.Key.Y*10, 0.5f, 0.5f);
+                    }
+                }
+                bmp.Save("debug\\polygon.png", ImageFormat.Png);
+            }
+        }
+
     }
 }
