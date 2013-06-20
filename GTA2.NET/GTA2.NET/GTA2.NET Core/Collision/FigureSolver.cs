@@ -38,7 +38,7 @@ namespace Hiale.GTA2NET.Core.Collision
             foreach (var figureSplitter in figureSplitters)
             {
                 bool isRectangle;
-                var polygon = Figure.CreatePolygon(figureSplitter.Lines, out isRectangle);
+                var polygon = figureSplitter.CreatePolygon(figureSplitter.Lines, out isRectangle);
                 var polygonArea = Geometry.CalculatePolygonArea(polygon);
                 if (polygonArea <= maxValue)
                     continue;

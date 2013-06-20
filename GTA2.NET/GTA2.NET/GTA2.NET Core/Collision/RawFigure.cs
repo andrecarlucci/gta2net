@@ -43,7 +43,7 @@ namespace Hiale.GTA2NET.Core.Collision
             Nodes = new LineNodeDictionary();
         }
 
-        public RawFigure(int layer, LineNodeDictionary nodes) : base(layer)
+        public RawFigure(Map.Map map, int layer, LineNodeDictionary nodes) : base(map, layer)
         {
             PrepareBasePriorityTable();
             Nodes = new LineNodeDictionary();
