@@ -26,6 +26,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarseerPhysics.Common;
+using FarseerPhysics.Common.Decomposition;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
@@ -94,8 +96,9 @@ namespace Hiale.GTA2NET.Core.Collision
             else
             {
                 bool isRectangle;
-                var polygonVertices = CreatePolygon(Lines, out isRectangle);
-                AddPolygonObstacle(polygonVertices, isRectangle, obstacles);
+                var polygon = new Polygon(Map, Layer);
+                var polygonVertices = polygon.CreatePolygon(Lines, out isRectangle);
+                polygon.AddPolygonObstacle(polygonVertices, isRectangle, obstacles);
             }
         }
 
@@ -416,67 +419,18 @@ namespace Hiale.GTA2NET.Core.Collision
             var choosenFigure = FigureSolver.Solve(figureSplitters);
             choosenFigure.SeparateSwitchPoints(SwitchPoints);
             UpdateSwitchPoints();
-            AddPolygonObstacle(choosenFigure.Polygon, choosenFigure.IsRectangle, obstacles);
+            var polygon = new Polygon(Map, Layer);
+            polygon.AddPolygonObstacle(choosenFigure.Polygon, choosenFigure.IsRectangle, obstacles);
             Lines = choosenFigure.RemainingLines;
             Tokenize(obstacles);
         }
 
-        //Create Figure stuff
-
-        /// <summary>
-        /// Creates a polygon out of a List of Lines.
-        /// </summary>
-        /// <param name="sourceSegments"></param>
-        /// <returns></returns>
-        public virtual List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments)
-        {
-            bool isRectangle;
-            return CreatePolygon(sourceSegments, out isRectangle);
-        }
-
-        /// <summary>
-        /// Creates a polygon out of a List of Lines.
-        /// </summary>
-        /// <param name="sourceSegments"></param>
-        /// <param name="isRectangle">The returning polygon is actually a rectangle</param>
-        /// <returns></returns>
-        public virtual List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
-        {
-            var polygon = new List<Vector2>();
-            var directions = new List<Direction>();
-            var lineSegments = new List<LineSegment>(sourceSegments);
-
-            var currentItem = lineSegments.First().Start;
-            var startPoint = currentItem;
-            var currentDirection = Direction.None;
-            while (lineSegments.Count > 0)
-            {
-                if (polygon.Count > 0 && startPoint == currentItem)
-                    break;
-                var preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection);
-                if (preferedLine == null)
-                    break;
-                lineSegments.Remove(preferedLine);
-                var previousItem = currentItem;
-                currentItem = preferedLine.End;
-                if (preferedLine.Direction == currentDirection)
-                    continue;
-                currentDirection = preferedLine.Direction;
-                polygon.Add(previousItem);
-                directions.Add(currentDirection);
-            }
-            FixPolygonStartPoint(polygon, directions);
-            GetAssociatedBlocks(polygon);
-            isRectangle = IsRectangleObstacle(polygon, directions);
-            return polygon;
-        }
-
-        protected static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection)
+        protected internal static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection)
         {
             return ChooseNextLine(currentItem, lineSegments, currentDirection, false);
         }
 
-        protected static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection, bool invertPriority)
+        protected internal static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection, bool invertPriority)
         {
             var currentLines = GetLines(currentItem, lineSegments);
             if (currentLines.Count == 0)
@@ -507,88 +461,36 @@ namespace Hiale.GTA2NET.Core.Collision
             return preferedLine;
         }
 
-        protected virtual void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles)
-        {
-            if (isRectangle)
-            {
-                var minX = float.MaxValue;
-                var maxX = float.MinValue;
-                var minY = float.MaxValue;
-                var maxY = float.MinValue;
-                foreach (var polygonVertex in polygonVertices)
-                {
-                    if (polygonVertex.X < minX)
-                        minX = polygonVertex.X;
-                    if (polygonVertex.X > maxX)
-                        maxX = polygonVertex.X;
-                    if (polygonVertex.Y < minY)
-                        minY = polygonVertex.Y;
-                    if (polygonVertex.Y > maxY)
-                        maxY = polygonVertex.Y;
-                }
-                var width = maxX - minX;
-                var height = maxY - minY;
-                var rectangle = new RectangleObstacle(new Vector2(minX, minY), Layer, width, height);
-                obstacles.Add(rectangle);
-            }
-            else
-            {
-                var polygonObstacle = new PolygonObstacle(Layer) { Vertices = polygonVertices };
-                obstacles.Add(polygonObstacle);
-            }
-        }
-
-        //Work-in-Progress method
-        protected virtual void GetAssociatedBlocks(List<Vector2> polygonVertices)
-        {
-            var minX = float.MaxValue;
-            var maxX = float.MinValue;
-            var minY = float.MaxValue;
-            var maxY = float.MinValue;
-            foreach (var polygonVertex in polygonVertices)
-            {
-                if (polygonVertex.X < minX)
-                    minX = polygonVertex.X;
-                if (polygonVertex.X > maxX)
-                    maxX = polygonVertex.X;
-                if (polygonVertex.Y < minY)
-                    minY = polygonVertex.Y;
-                if (polygonVertex.Y > maxY)
-                    maxY = polygonVertex.Y;
-            }
-            maxX = (float) Math.Ceiling(maxX);
-            maxY = (float) Math.Ceiling(maxY);
-
-            var blocks = new List<Block>();
-            var pointsCache = new Dictionary<Vector2, bool>();
-            for (var y = (int) minY; y < maxY; y++)
-            {
-                for (var x = (int) minX; x < maxX; x++)
-                {
-                    var obstacles = new List<ILineObstacle>();
-                    Map.CityBlocks[x, y, Layer].GetCollision(obstacles, false);
-
-                    var blockPoints = new List<Vector2>();
-                    foreach (var lineObstacle in obstacles)
-                    {
-                        if (!blockPoints.Contains(lineObstacle.Start))
-                            blockPoints.Add(lineObstacle.Start);
-                        if (!blockPoints.Contains(lineObstacle.End))
-                            blockPoints.Add(lineObstacle.End);
-                    }
-
-                    foreach (var blockPoint in blockPoints)
-                    {
-                        if (!pointsCache.ContainsKey(blockPoint))
-                        {
-                            var isOnPolygon = Geometry.IsPointInPolygonOrEdge(polygonVertices, blockPoint);
-                            pointsCache.Add(blockPoint, isOnPolygon);
-                        }
-                    }
-                }
-            }
-            Debug.SavePolygonPicture(polygonVertices, pointsCache);
-        }
+        //protected virtual void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles)
+        //{
+        //    if (isRectangle)
+        //    {
+        //        var minX = float.MaxValue;
+        //        var maxX = float.MinValue;
+        //        var minY = float.MaxValue;
+        //        var maxY = float.MinValue;
+        //        foreach (var polygonVertex in polygonVertices)
+        //        {
+        //            if (polygonVertex.X < minX)
+        //                minX = polygonVertex.X;
+        //            if (polygonVertex.X > maxX)
+        //                maxX = polygonVertex.X;
+        //            if (polygonVertex.Y < minY)
+        //                minY = polygonVertex.Y;
+        //            if (polygonVertex.Y > maxY)
+        //                maxY = polygonVertex.Y;
+        //        }
+        //        var width = maxX - minX;
+        //        var height = maxY - minY;
+        //        var rectangle = new RectangleObstacle(new Vector2(minX, minY), Layer, width, height);
+        //        obstacles.Add(rectangle);
+        //    }
+        //    else
+        //    {
+        //        var polygonObstacle = new PolygonObstacle(Layer) { Vertices = polygonVertices };
+        //        obstacles.Add(polygonObstacle);
+        //    }
+        //}
 
         protected static int GetLinePriority(Direction baseDirection, LineSegment line)
         {
@@ -601,23 +503,6 @@ namespace Hiale.GTA2NET.Core.Collision
             if (priority > 8)
                 priority = priority - 8;
             return priority;
-        }
-
-        protected static bool IsRectangleObstacle(ICollection<Vector2> polygon, ICollection<Direction> directions)
-        {
-            if (polygon.Count != 4 || directions.Count != 4)
-                return false;
-            return directions.Contains(Direction.Down) && directions.Contains(Direction.Right) && directions.Contains(Direction.Up) && directions.Contains(Direction.Left);
-        }
-
-        protected static void FixPolygonStartPoint(IList<Vector2> polygon, IList<Direction> directions)
-        {
-            if (polygon.Count != directions.Count || polygon.Count < 3)
-                return;
-            if (directions.First() != directions.Last())
-                return;
-            polygon.RemoveAt(0);
-            directions.RemoveAt(0);
         }
     }
 }

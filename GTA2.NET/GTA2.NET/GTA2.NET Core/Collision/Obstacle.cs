@@ -57,7 +57,7 @@ namespace Hiale.GTA2NET.Core.Collision
     }
 
     [Serializable]
-    public class PolygonObstacle : IObstacle
+    public class PolygonObstacle : IObstacle //ToDo: Use Farsser Vertices instead of List<Vector2>
     {
         public int Z { get; set; }
 
