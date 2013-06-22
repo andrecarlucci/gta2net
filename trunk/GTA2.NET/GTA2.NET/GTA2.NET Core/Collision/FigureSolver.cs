@@ -38,13 +38,14 @@ namespace Hiale.GTA2NET.Core.Collision
             foreach (var figureSplitter in figureSplitters)
             {
                 bool isRectangle;
-                var polygon = figureSplitter.CreatePolygon(figureSplitter.Lines, out isRectangle);
-                var polygonArea = Geometry.CalculatePolygonArea(polygon);
+                var polygon = new Polygon(figureSplitter.Map, figureSplitter.Layer);
+                var polygonVertices = polygon.CreatePolygon(figureSplitter.Lines, out isRectangle);
+                var polygonArea = Geometry.CalculatePolygonArea(polygonVertices);
                 if (polygonArea <= maxValue)
                     continue;
                 preferedFigure = figureSplitter;
                 maxValue = polygonArea;
-                preferedFigure.Polygon = polygon;
+                preferedFigure.Polygon = polygonVertices;
                 preferedFigure.IsRectangle = isRectangle;
             }
             return preferedFigure;

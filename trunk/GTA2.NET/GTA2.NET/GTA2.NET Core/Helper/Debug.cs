@@ -29,7 +29,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using FarseerPhysics.Common;
 using Hiale.GTA2NET.Core.Collision;
+using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Helper
@@ -150,7 +152,43 @@ namespace Hiale.GTA2NET.Core.Helper
             SaveSegmentsPicture(segments, null, name);
         }
 
-        public static void SavePolygonPicture(List<Vector2> polygon, Dictionary<Vector2, bool> pointsCache)
+        public static void SavePolygonPicture(Vertices vertices)
+        {
+            var points = new PointF[vertices.Count];
+            for (var i = 0; i < vertices.Count; i++)
+                points[i] = new PointF(vertices[i].X * 10, vertices[i].Y * 10);
+
+            using (var bmp = new Bitmap(2560, 2560))
+            {
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
+                }
+                bmp.Save("debug\\polygon.png", ImageFormat.Png);
+            }
+        }
+
+        public static void SavePolygonWithBlocksPicture(Vertices vertices, List<Block> blocks )
+        {
+            var points = new PointF[vertices.Count];
+            for (var i = 0; i < vertices.Count; i++)
+                points[i] = new PointF(vertices[i].X * 10, vertices[i].Y * 10);
+
+            using (var bmp = new Bitmap(2560, 2560))
+            {
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    foreach (var block in blocks)
+                    {
+                           g.FillRectangle(new SolidBrush(System.Drawing.Color.Aqua), block.Position.X * 10, block.Position.Y * 10, 10, 10);
+                    }
+                    g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
+                }
+                bmp.Save("debug\\polygonBlocks.png", ImageFormat.Png);
+            }
+        }
+
+        public static void SavePolygonWithPointsPicture(List<Vector2> polygon, Dictionary<Vector2, bool> pointsCache)
         {
             var points = new PointF[polygon.Count];
             for (var i = 0; i < polygon.Count; i++)
@@ -168,7 +206,7 @@ namespace Hiale.GTA2NET.Core.Helper
                         g.DrawRectangle(new Pen(color), point.Key.X*10, point.Key.Y*10, 0.5f, 0.5f);
                     }
                 }
-                bmp.Save("debug\\polygon.png", ImageFormat.Png);
+                bmp.Save("debug\\polygonPoints.png", ImageFormat.Png);
             }
         }
 
