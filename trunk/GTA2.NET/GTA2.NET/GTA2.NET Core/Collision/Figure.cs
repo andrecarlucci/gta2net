@@ -67,7 +67,6 @@ namespace Hiale.GTA2NET.Core.Collision
             Layer = layer;
         }
 
-
         /// <summary>
         /// Creates IObstacle objects of this figure.
         /// </summary>
@@ -80,11 +79,11 @@ namespace Hiale.GTA2NET.Core.Collision
             if (Lines.Count == 0)
                 return;
 
-            List<VerticesEx> polygons;
+            List<Polygon> polygons;
             if (SwitchPoints.Count > 0)
                 polygons = SplitPolygon(Lines, obstacles);
             else
-                polygons = new List<VerticesEx> {CreatePolygon(Lines)};
+                polygons = new List<Polygon> {CreatePolygon(Lines)};
             ProcessPolygons(polygons, obstacles);
         }
 
@@ -274,14 +273,15 @@ namespace Hiale.GTA2NET.Core.Collision
                 SwitchPoints.Remove(key);
         }
 
-        //Polygon
+        //PolygonOLD
 
         //Work-in-Progress method
-        protected void ProcessPolygons(List<VerticesEx> polygons, List<IObstacle> obstacles)
+        protected void ProcessPolygons(List<Polygon> polygons, List<IObstacle> obstacles)
         {
             foreach (var polygon in polygons)
             {
-                obstacles.Add(new PolygonObstacle(polygon, Layer));
+                polygon.AddToObstacles(Map, Layer, obstacles);
+                //obstacles.Add(new PolygonObstacle(polygon, Layer));
             }
         }
 
@@ -290,9 +290,9 @@ namespace Hiale.GTA2NET.Core.Collision
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <returns></returns>
-        public VerticesEx CreatePolygon(IEnumerable<LineSegment> sourceSegments)
+        public Polygon CreatePolygon(IEnumerable<LineSegment> sourceSegments)
         {
-            var polygon = new VerticesEx();
+            var polygon = new Polygon();
             var directions = new List<Direction>();
             var lineSegments = new List<LineSegment>(sourceSegments);
 
@@ -342,17 +342,17 @@ namespace Hiale.GTA2NET.Core.Collision
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <param name="obstacles"></param>
-        protected virtual List<VerticesEx> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
+        protected virtual List<Polygon> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
         {
             //Debug.SaveSegmentsPicture(sourceSegments, "current");
-            var verticesCombinations = new List<VerticesEx>();
-            var polygonLinesDict = new Dictionary<VerticesEx, List<LineSegment>>();
+            var verticesCombinations = new List<Polygon>();
+            var polygonLinesDict = new Dictionary<Polygon, List<LineSegment>>();
             foreach (var switchPoint in SwitchPoints)
             {
                 foreach (var endPoint in switchPoint.Value.EndPoints)
                 {
                     var startPoint = switchPoint.Key;
-                    var polygon = new VerticesEx();
+                    var polygon = new Polygon();
                     
                     var polygonLines = new List<LineSegment>();
 
@@ -397,7 +397,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return verticesCombinations;
         }
 
-        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<VerticesEx> verticesCombinations, IDictionary<VerticesEx, List<LineSegment>> polygonLinesDict)
+        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<Polygon> verticesCombinations, IDictionary<Polygon, List<LineSegment>> polygonLinesDict)
         {
             //Find lines which belongs to no polygon i.e. are forlorn
             var forlornLines = new List<LineSegment>(sourceSegments);
@@ -420,9 +420,9 @@ namespace Hiale.GTA2NET.Core.Collision
         /// </summary>
         /// <param name="verticesCombinations"></param>
         /// <returns></returns>
-        private static List<VerticesEx> RemoveUnnecessaryPolygons(List<VerticesEx> verticesCombinations)
+        private static List<Polygon> RemoveUnnecessaryPolygons(List<Polygon> verticesCombinations)
         {
-            var itemsToRemove = new List<VerticesEx>();
+            var itemsToRemove = new List<Polygon>();
             foreach (var verticesCombination in verticesCombinations)
             {
                 foreach (var verticesCombination2 in verticesCombinations)
