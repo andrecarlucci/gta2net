@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: FigureSolver.cs
-// Created: 12.06.2013
+// File: PolygonObstacle.cs
+// Created: 23.06.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -26,29 +26,55 @@
 using System;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Helper;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public class FigureSolver
+    [Serializable]
+    public class PolygonObstacle : IObstacle //ToDo: Use Farsser Vertices instead of List<Vector2>
     {
-        public static SplitterFigure Solve(List<SplitterFigure> figureSplitters)
+        private List<Vector2> _vertices;
+
+        public int Z { get; set; }
+
+        public List<Vector2> Vertices
         {
-            SplitterFigure preferedFigure = null;
-            var maxValue = float.MinValue;
-            foreach (var figureSplitter in figureSplitters)
+            get { return _vertices; }
+            set
             {
-                bool isRectangle;
-                var polygon = new Polygon(figureSplitter.Map, figureSplitter.Layer);
-                var polygonVertices = polygon.CreatePolygon(figureSplitter.Lines, out isRectangle);
-                var polygonArea = Geometry.CalculatePolygonArea(polygonVertices);
-                if (polygonArea <= maxValue)
-                    continue;
-                preferedFigure = figureSplitter;
-                maxValue = polygonArea;
-                preferedFigure.Polygon = polygonVertices;
-                preferedFigure.IsRectangle = isRectangle;
+                _vertices = value;
+                Bounds = CalculateBounds();
             }
-            return preferedFigure;
+        }
+
+        public RectangleF Bounds { get; private set; }
+
+        public PolygonObstacle(int z) : this(new List<Vector2>(), z)
+        {
+            //
+        }
+
+        public PolygonObstacle(List<Vector2> vertices, int z)
+        {
+            Z = z;
+            Vertices = vertices;
+            CalculateBounds();
+            Bounds = CalculateBounds();
+        }
+
+        private RectangleF CalculateBounds()
+        {
+            float minX;
+            float maxX;
+            float minY;
+            float maxY;
+            Polygon.CalculateBounds(Vertices, out minX, out maxX, out minY, out maxY);
+            return new RectangleF(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        public bool Contains(Vector2 point)
+        {
+            return VerticesEx.IsPointInPolygonOrEdge(Vertices, point);
         }
     }
 }

@@ -42,9 +42,9 @@ namespace Hiale.GTA2NET.Core.Collision
             _map = map;
         }
 
-        public List<IObstacle> GetObstacles(int currentLayer)
+        public void GetObstacles(int currentLayer,  List<IObstacle> obstacles)
         {
-            var obstacles = new List<IObstacle>();
+            //var obstacles = new List<IObstacle>();
             var rawObstacles = GetBlockObstacles(currentLayer);
             var nodes = new LineNodeDictionary(rawObstacles);
 
@@ -54,9 +54,8 @@ namespace Hiale.GTA2NET.Core.Collision
                 nodes.Purge(currentFigure.Lines);
                 currentFigure.Optimize();
 
-                obstacles.AddRange(currentFigure.Tokenize());
+                currentFigure.Tokenize(obstacles);
             }
-            return obstacles;
         }
 
         private IEnumerable<ILineObstacle> GetBlockObstacles(int z)

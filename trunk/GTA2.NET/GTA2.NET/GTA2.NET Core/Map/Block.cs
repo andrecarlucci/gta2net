@@ -288,9 +288,10 @@ namespace Hiale.GTA2NET.Core.Map
 
         public override string ToString()
         {
+            var positionString = Position == Vector3.Zero ? String.Empty : " Position: " + Position;
             if (IsEmpty)
-                return "[empty block]";
-            return "Lid: " + Lid + " Left: " + Left + " Top: " + Top + " Right: " + Right + " Bottom: " + Bottom + " Ground: " + GroundType.ToString();
+                return "[empty block]" + positionString;
+            return "Type: " + SlopeType + positionString + " Lid: " + Lid + " Left: " + Left + " Top: " + Top + " Right: " + Right + " Bottom: " + Bottom + " Ground: " + GroundType;
         }
 
         /// <summary>

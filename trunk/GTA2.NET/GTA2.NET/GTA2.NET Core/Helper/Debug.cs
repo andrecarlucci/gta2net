@@ -50,11 +50,12 @@ namespace Hiale.GTA2NET.Core.Helper
                 var map = new Map.Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
                 //var map = new Map.Map(Globals.MapsSubDir + "\\bil.gmp");
                 var collision = new MapCollision(map);
-                for (var i = 0; i < 7; i++)
+                var obstacles = new List<IObstacle>();
+                for (var i = 7; i >= 0; i--)
                 {
-                    var obstacles = collision.GetObstacles(i);
-                    DisplayCollision(obstacles);
+                    collision.GetObstacles(i, obstacles);
                 }
+                DisplayCollision(obstacles);
             }
             catch (Exception e)
             {
@@ -152,12 +153,24 @@ namespace Hiale.GTA2NET.Core.Helper
             SaveSegmentsPicture(segments, null, name);
         }
 
+        public static void SavePolygonPicture(List<Vector2> vertices)
+        {
+            var points = new PointF[vertices.Count];
+            for (var i = 0; i < vertices.Count; i++)
+                points[i] = new PointF(vertices[i].X * 10, vertices[i].Y * 10);
+            SavePolygonPicture(points);
+        }
+
         public static void SavePolygonPicture(Vertices vertices)
         {
             var points = new PointF[vertices.Count];
             for (var i = 0; i < vertices.Count; i++)
                 points[i] = new PointF(vertices[i].X * 10, vertices[i].Y * 10);
+            SavePolygonPicture(points);
+        }
 
+        public static void SavePolygonPicture(PointF[] points)
+        {
             using (var bmp = new Bitmap(2560, 2560))
             {
                 using (var g = Graphics.FromImage(bmp))
@@ -168,21 +181,23 @@ namespace Hiale.GTA2NET.Core.Helper
             }
         }
 
-        public static void SavePolygonWithBlocksPicture(Vertices vertices, List<Block> blocks )
+        public static void SavePolygonWithBlocksPicture(List<Vertices> convexPolygons, List<Block> blocks )
         {
-            var points = new PointF[vertices.Count];
-            for (var i = 0; i < vertices.Count; i++)
-                points[i] = new PointF(vertices[i].X * 10, vertices[i].Y * 10);
-
             using (var bmp = new Bitmap(2560, 2560))
             {
                 using (var g = Graphics.FromImage(bmp))
                 {
                     foreach (var block in blocks)
                     {
-                           g.FillRectangle(new SolidBrush(System.Drawing.Color.Aqua), block.Position.X * 10, block.Position.Y * 10, 10, 10);
+                        g.FillRectangle(new SolidBrush(System.Drawing.Color.Aqua), block.Position.X*10, block.Position.Y*10, 10, 10);
                     }
-                    g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
+                    foreach (var convexPolygon in convexPolygons)
+                    {
+                        var points = new PointF[convexPolygon.Count];
+                        for (var i = 0; i < convexPolygon.Count; i++)
+                            points[i] = new PointF(convexPolygon[i].X * 10, convexPolygon[i].Y * 10);
+                        g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
+                    }
                 }
                 bmp.Save("debug\\polygonBlocks.png", ImageFormat.Png);
             }

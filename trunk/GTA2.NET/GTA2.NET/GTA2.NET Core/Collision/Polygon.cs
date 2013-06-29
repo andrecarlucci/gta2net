@@ -40,59 +40,98 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public int Layer { get; private set; }
 
-        public Polygon(Map.Map map, int layer)
+        public List<IObstacle> Obstacles { get; set; }
+
+        public Polygon(Map.Map map, int layer, List<IObstacle> obstacles)
         {
             Map = map;
             Layer = layer;
-
+            Obstacles = obstacles;
         }
 
-        /// <summary>
-        /// Creates a polygon out of a List of Lines.
-        /// </summary>
-        /// <param name="sourceSegments"></param>
-        /// <returns></returns>
-        public List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments)
+        public Polygon(Map.Map map, int layer) : this(map, layer, null)
         {
-            bool isRectangle;
-            return CreatePolygon(sourceSegments, out isRectangle);
+            //
         }
 
-        /// <summary>
-        /// Creates a polygon out of a List of Lines.
-        /// </summary>
-        /// <param name="sourceSegments"></param>
-        /// <param name="isRectangle">The returning polygon is actually a rectangle</param>
-        /// <returns></returns>
-        public List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
-        {
-            var polygon = new List<Vector2>();
-            var directions = new List<Direction>();
-            var lineSegments = new List<LineSegment>(sourceSegments);
+        ///// <summary>
+        ///// Creates a polygon out of a List of Lines.
+        ///// </summary>
+        ///// <param name="sourceSegments"></param>
+        ///// <returns></returns>
+        //public List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments)
+        //{
+        //    bool isRectangle;
+        //    return CreatePolygon(sourceSegments, out isRectangle);
+        //}
 
-            var currentItem = lineSegments.First().Start;
-            var startPoint = currentItem;
-            var currentDirection = Direction.None;
-            while (lineSegments.Count > 0)
-            {
-                if (polygon.Count > 0 && startPoint == currentItem)
-                    break;
-                var preferedLine = Figure.ChooseNextLine(currentItem, lineSegments, currentDirection);
-                if (preferedLine == null)
-                    break;
-                lineSegments.Remove(preferedLine);
-                var previousItem = currentItem;
-                currentItem = preferedLine.End;
-                if (preferedLine.Direction == currentDirection)
-                    continue;
-                currentDirection = preferedLine.Direction;
-                polygon.Add(previousItem);
-                directions.Add(currentDirection);
-            }
-            FixPolygonStartPoint(polygon, directions);
-            //GetAssociatedBlocks(polygon);
-            isRectangle = IsRectangleObstacle(polygon, directions);
-            return polygon;
+        ///// <summary>
+        ///// Creates a polygon out of a List of Lines.
+        ///// </summary>
+        ///// <param name="sourceSegments"></param>
+        ///// <param name="isRectangle">The returning polygon is actually a rectangle</param>
+        ///// <returns></returns>
+        //public List<Vector2> CreatePolygon(IEnumerable<LineSegment> sourceSegments, out bool isRectangle)
+        //{
+        //    var polygon = new List<Vector2>();
+        //    var directions = new List<Direction>();
+        //    var lineSegments = new List<LineSegment>(sourceSegments);
+
+        //    var currentItem = lineSegments.First().Start;
+        //    var startPoint = currentItem;
+        //    var currentDirection = Direction.None;
+        //    while (lineSegments.Count > 0)
+        //    {
+        //        if (polygon.Count > 0 && startPoint == currentItem)
+        //            break;
+        //        var preferedLine = Figure.ChooseNextLine(currentItem, lineSegments, currentDirection);
+        //        if (preferedLine == null)
+        //            break;
+        //        lineSegments.Remove(preferedLine);
+        //        var previousItem = currentItem;
+        //        currentItem = preferedLine.End;
+        //        if (preferedLine.Direction == currentDirection)
+        //            continue;
+        //        currentDirection = preferedLine.Direction;
+        //        polygon.Add(previousItem);
+        //        directions.Add(currentDirection);
+        //    }
+        //    FixPolygonStartPoint(polygon, directions);
+        //    isRectangle = IsRectangleObstacle(polygon, directions);
+        //    return polygon;
+        //}
+
+        public void CreateConvexPolygons(IEnumerable<LineSegment> sourceSegments, List<IObstacle> obstacles) //Note: this signature will change
+        {
+            //bool isRectangle;
+            //var sourcePolygon = CreatePolygon(sourceSegments, out isRectangle);
+            ////Debug.SavePolygonPicture(sourcePolygon);
+            //var convexPolygons = CreateConvexPolygons(sourcePolygon);
+            //var blocks = GetAssociatedBlocks(convexPolygons);
+            //var fill = CheckLid(blocks);
+            //if (fill)
+            //{
+            //    foreach (var convexPolygon in convexPolygons)
+            //    {
+            //        AddPolygonObstacle(convexPolygon, false, obstacles);
+            //    }
+            //}
+            //else
+            //{
+            //    foreach (var convexPolygon in convexPolygons)
+            //    {
+            //        CreateLineSegments(convexPolygon, obstacles);
+            //    }
+                
+            //}
+
+            //return sourcePolygon;
+        }
+
+        private void CreateLineSegments(List<Vector2> polygonVertices, List<IObstacle> obstacles)
+        {
+            for (int i = 0, j = polygonVertices.Count - 1; i < polygonVertices.Count; j = i++)
+                obstacles.Add(new LineObstacle(polygonVertices[i], polygonVertices[j], Layer));
         }
 
         public void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles)
@@ -143,56 +182,31 @@ namespace Hiale.GTA2NET.Core.Collision
             directions.RemoveAt(0);
         }
 
-        //Work-in-Progress method
-        public void GetAssociatedBlocks(List<Vector2> polygonVertices)
+        private static List<Vertices> CreateConvexPolygons(IList<Vector2> polygonVertices)
         {
-            var convexPolygons = BayazitDecomposer.ConvexPartition(new Vertices(polygonVertices));
-            foreach (var convexPolygon in convexPolygons)
+            return BayazitDecomposer.ConvexPartition(new Vertices(polygonVertices));
+        }
+
+        private List<Block> GetAssociatedBlocks(List<Vertices> vertices)
+        {
+            var blocks = new List<Block>();
+            foreach (var convexPolygon in vertices)
             {
-                Debug.SavePolygonPicture(convexPolygon);
-                var minX = float.MaxValue;
-                var maxX = float.MinValue;
-                var minY = float.MaxValue;
-                var maxY = float.MinValue;
-                foreach (var polygonVertex in convexPolygon)
-                {
-                    if (polygonVertex.X < minX)
-                        minX = polygonVertex.X;
-                    if (polygonVertex.X > maxX)
-                        maxX = polygonVertex.X;
-                    if (polygonVertex.Y < minY)
-                        minY = polygonVertex.Y;
-                    if (polygonVertex.Y > maxY)
-                        maxY = polygonVertex.Y;
-                }
+                float minX;
+                float maxX;
+                float minY;
+                float maxY;
+                CalculateBounds(convexPolygon, out minX, out maxX, out minY, out maxY);
                 maxX = (float)Math.Ceiling(maxX);
                 maxY = (float)Math.Ceiling(maxY);
-
-                var blocks = new List<Block>();
+                
                 var pointsCache = new Dictionary<Vector2, bool>();
                 for (var y = (int)minY; y < maxY; y++)
                 {
                     for (var x = (int)minX; x < maxX; x++)
                     {
-                        var obstacles = new List<ILineObstacle>();
                         var block = Map.CityBlocks[x, y, Layer];
-                        block.GetCollision(obstacles, false);
-                        if (obstacles.Count == 0)
-                        {
-                            obstacles.Add(LineObstacle.DefaultLeft((int)block.Position.X, (int)block.Position.Y, Layer));
-                            obstacles.Add(LineObstacle.DefaultTop((int)block.Position.X, (int)block.Position.Y, Layer));
-                            obstacles.Add(LineObstacle.DefaultRight((int)block.Position.X, (int)block.Position.Y, Layer));
-                            obstacles.Add(LineObstacle.DefaultBottom((int)block.Position.X, (int)block.Position.Y, Layer));
-                        }
-
-                        var blockPoints = new List<Vector2>();
-                        foreach (var lineObstacle in obstacles)
-                        {
-                            if (!blockPoints.Contains(lineObstacle.Start))
-                                blockPoints.Add(lineObstacle.Start);
-                            if (!blockPoints.Contains(lineObstacle.End))
-                                blockPoints.Add(lineObstacle.End);
-                        }
+                        var blockPoints = GetBlockPoints(block);
 
                         var addBlock = false;
                         foreach (var blockPoint in blockPoints)
@@ -200,19 +214,161 @@ namespace Hiale.GTA2NET.Core.Collision
                             bool isOnPolygon;
                             if (pointsCache.TryGetValue(blockPoint, out isOnPolygon))
                                 continue;
-                            isOnPolygon = Geometry.IsPointInPolygonOrEdge(convexPolygon, blockPoint);
+                            isOnPolygon = VerticesEx.IsPointInPolygonOrEdge(convexPolygon, blockPoint);
                             pointsCache.Add(blockPoint, isOnPolygon);
                             if (!isOnPolygon)
                                 continue;
                             addBlock = true;
                             break;
                         }
-                        if (addBlock)
+                        if (addBlock && !blocks.Contains(block))
                             blocks.Add(block);
                     }
                 }
-                Debug.SavePolygonWithBlocksPicture(convexPolygon, blocks);
             }
+            Debug.SavePolygonWithBlocksPicture(vertices, blocks);
+            return blocks;
+        }
+
+        public static void CalculateBounds(IList<Vector2> convexPolygon, out float minX, out float maxX, out float minY, out float maxY)
+        {
+            if (convexPolygon.Count == 0)
+            {
+                minX = 0;
+                maxX = 0;
+                minY = 0;
+                maxY = 0;
+                return;
+            }
+            minX = float.MaxValue;
+            maxX = float.MinValue;
+            minY = float.MaxValue;
+            maxY = float.MinValue;
+            foreach (var polygonVertex in convexPolygon)
+            {
+                if (polygonVertex.X < minX)
+                    minX = polygonVertex.X;
+                if (polygonVertex.X > maxX)
+                    maxX = polygonVertex.X;
+                if (polygonVertex.Y < minY)
+                    minY = polygonVertex.Y;
+                if (polygonVertex.Y > maxY)
+                    maxY = polygonVertex.Y;
+            }
+            maxX = (float)Math.Ceiling(maxX);
+            maxY = (float)Math.Ceiling(maxY);
+        }
+
+        private List<Vector2> GetBlockPoints(Block block)
+        {
+            var obstacles = new List<ILineObstacle>();
+            block.GetCollision(obstacles, false);
+            if (obstacles.Count == 0)
+            {
+                obstacles.Add(LineObstacle.DefaultLeft((int)block.Position.X, (int)block.Position.Y, Layer));
+                obstacles.Add(LineObstacle.DefaultTop((int)block.Position.X, (int)block.Position.Y, Layer));
+                obstacles.Add(LineObstacle.DefaultRight((int)block.Position.X, (int)block.Position.Y, Layer));
+                obstacles.Add(LineObstacle.DefaultBottom((int)block.Position.X, (int)block.Position.Y, Layer));
+            }
+            var blockPoints = new List<Vector2>();
+            foreach (var lineObstacle in obstacles)
+            {
+                if (!blockPoints.Contains(lineObstacle.Start))
+                    blockPoints.Add(lineObstacle.Start);
+                if (!blockPoints.Contains(lineObstacle.End))
+                    blockPoints.Add(lineObstacle.End);
+            }
+            return blockPoints;
+        }
+
+        private bool CheckLid(List<Block> blocks)
+        {
+            //var pos = 0;
+            //var neg = 0;
+            var closedBlocks = new List<Block>();
+            var openBlocks = new List<Block>();
+            foreach (var block in blocks)
+            {
+                if (block.Lid)
+                    closedBlocks.Add(block);
+                //{
+                //    pos++;
+                //}
+                else
+                {
+                    var blocksAbove = CheckBlocksAbove(block);
+                    if (blocksAbove)
+                        closedBlocks.Add(block);
+                        //pos++;
+                    else
+                        openBlocks.Add(block);
+                        //neg++;
+                }
+            }
+
+            Console.WriteLine(closedBlocks.Count + ":" + openBlocks.Count);
+            if (openBlocks.Count > 0)
+                return false;
+            return true;
+        }
+
+        private bool CheckBlocksAbove(Block block)
+        {
+            var blockPoints = GetBlockPoints(block); //ToDo: dictionary
+            for (var z = (int)block.Position.Z + 1; z < 9; z++)
+            {
+                var blockFilled = false;
+
+                //ToDo: optimize!
+                var layerObstacles = Obstacles.Where(obstacle => obstacle.Z == z && (obstacle is PolygonObstacle || obstacle is RectangleObstacle)).ToList();
+
+                foreach (var layerObstacle in layerObstacles)
+                {
+                    var containAll = true;
+                    foreach (var blockPoint in blockPoints)
+                    {
+                        if (!layerObstacle.Bounds.Contains(blockPoint))
+                        {
+                            containAll = false;
+                            break;
+                        }
+                        //
+                    }
+                    if (containAll)
+                    {
+                        if (layerObstacle is RectangleObstacle)
+                        {
+                            //bound check of rectangle obstacles is enough, block is ok
+                            blockFilled = true;
+                            break;
+                        }
+
+                        var polygonObstacle = layerObstacle as PolygonObstacle;
+                        if (polygonObstacle == null)
+                            break;
+                        containAll = true;
+                        foreach (var blockPoint in blockPoints)
+                        {
+                            if (!polygonObstacle.Contains(blockPoint))
+                            {
+                                containAll = false;
+                                break;
+                            }
+                            //
+                        }
+                        if (containAll)
+                        {
+                            //all points are within the polygon, block is ok
+                            blockFilled = true;
+                            break;
+                        }
+                    }
+                }
+                Console.WriteLine(blockFilled);
+                if (blockFilled)
+                    return true;
+            }
+            return false;
         }
 
     }
