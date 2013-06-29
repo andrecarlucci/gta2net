@@ -1,7 +1,7 @@
-﻿// GTA2.NET
+// GTA2.NET
 // 
-// File: Geometry.cs
-// Created: 16.06.2013
+// File: VerticesEx.cs
+// Created: 28.06.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -25,35 +25,51 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using FarseerPhysics.Common;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Helper
 {
-    public class Geometry
+    public class VerticesEx : Vertices, IEquatable<VerticesEx>
     {
-        public static float CalculatePolygonArea(List<Vector2> polygon)
+        public override int GetHashCode()
         {
-            int i;
-            float area = 0;
-            for (i = 0; i < polygon.Count; i++)
-            {
-                var j = (i + 1) % polygon.Count;
-                area += polygon[i].X * polygon[j].Y;
-                area -= polygon[i].Y * polygon[j].X;
-            }
-            area /= 2;
-            return (area < 0 ? -area : area);
+            return base.GetHashCode(); //ToDo
         }
 
-        public static bool IsPointInPolygon(List<Vector2> vertices, Vector2 point)
+        public bool Equals(VerticesEx other)
         {
-            var isInside = false;
-            for (int i = 0, j = vertices.Count - 1; i < vertices.Count; j = i++)
-            {
-                if (((vertices[i].Y > point.Y) != (vertices[j].Y > point.Y)) && (point.X < (vertices[j].X - vertices[i].X) * (point.Y - vertices[i].Y) / (vertices[j].Y - vertices[i].Y) + vertices[i].X))
-                    isInside = !isInside;
-            }
-            return isInside;
+            if (other == null)
+                return false;
+            return Count == other.Count && this.All(other.Contains);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+            var vertices = obj as VerticesEx;
+            return vertices != null && Equals(vertices);
+        }
+
+        public static bool operator ==(VerticesEx a, VerticesEx b)
+        {
+            if (ReferenceEquals(a, b))
+                return true;
+            if (((object)a == null) || ((object)b == null))
+                return false;
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(VerticesEx a, VerticesEx b)
+        {
+            return !(a == b);
+        }
+
+        public bool Contains(List<Vector2> polygon)
+        {
+            return polygon.All(point => IsPointInPolygonOrEdge(this, point));
         }
 
         public static bool IsPointInPolygonOrEdge(List<Vector2> vertices, Vector2 point)
@@ -66,7 +82,6 @@ namespace Hiale.GTA2NET.Core.Helper
                 if (((vertices[i].Y) >= point.Y != (vertices[j].Y >= point.Y)) && (point.X <= (vertices[j].X - vertices[i].X) * (point.Y - vertices[i].Y) / (vertices[j].Y - vertices[i].Y) + vertices[i].X))
                     isInside = !isInside;
             }
-
             return isInside;
         }
 

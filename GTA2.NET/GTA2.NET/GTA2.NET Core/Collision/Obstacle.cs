@@ -34,12 +34,26 @@ namespace Hiale.GTA2NET.Core.Collision
     public interface IObstacle
     {
         int Z { get; set; }
+
+        RectangleF Bounds { get; }
     }
 
     [Serializable]
     public class RectangleObstacle : IObstacle
     {
         public int Z { get; set; }
+
+        public RectangleF Bounds
+        {
+            get
+            {
+                return new RectangleF(Position.X, Position.Y, Width, Length);
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
 
         public Vector2 Position;
 
@@ -53,30 +67,6 @@ namespace Hiale.GTA2NET.Core.Collision
             Position = position;
             Width = width;
             Length = length;
-        }
-    }
-
-    [Serializable]
-    public class PolygonObstacle : IObstacle //ToDo: Use Farsser Vertices instead of List<Vector2>
-    {
-        public int Z { get; set; }
-
-        public List<Vector2> Vertices { get; set; }
- 
-        public PolygonObstacle(int z)
-        {
-            Z = z;
-            Vertices = new List<Vector2>();
-        }
-
-        public bool IsPointInPolygon(Vector2 point)
-        {
-            return Geometry.IsPointInPolygon(Vertices, point);
-        }
-
-        public bool IsPointInPolygonOrEdge(Vector2 point)
-        {
-            return Geometry.IsPointInPolygonOrEdge(Vertices, point);
         }
     }
 }

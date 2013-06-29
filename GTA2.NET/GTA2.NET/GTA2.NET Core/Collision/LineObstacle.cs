@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -41,6 +42,13 @@ namespace Hiale.GTA2NET.Core.Collision
     public class LineObstacle : ILineObstacle
     {
         public int Z { get; set; }
+        public RectangleF Bounds
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
         public Vector2 Start { get; set; }
         public Vector2 End { get; set; }
         

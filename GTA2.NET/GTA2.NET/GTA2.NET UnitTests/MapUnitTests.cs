@@ -45,45 +45,45 @@ namespace Hiale.GTA2NET.Test
             System.Environment.CurrentDirectory = "..\\..\\..\\GTA2.NET\\bin\\Debug\\";
         }
 
-        [TestMethod]
-        public void LoadMapTinyTown()
-        {
-            var map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
-            var collision = new MapCollision(map);
-            for (var i = 0; i < 7; i++)
-            {
-                var obstacles = collision.GetObstacles(i);
-                //DisplayCollision(obstacles);
-            }
-            Assert.AreEqual(true, true);
-        }
+        //[TestMethod]
+        //public void LoadMapTinyTown()
+        //{
+        //    var map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
+        //    var collision = new MapCollision(map);
+        //    for (var i = 0; i < 7; i++)
+        //    {
+        //        var obstacles = collision.GetObstacles(i);
+        //        //DisplayCollision(obstacles);
+        //    }
+        //    Assert.AreEqual(true, true);
+        //}
 
-        [TestMethod]
-        public void LoadMapBil()
-        {
-            var map = new Map(Globals.MapsSubDir + "\\bil.gmp");
-            //var collision = new MapCollisionOld(map);
-            //var obstacles = collision.CollisionMap(new Vector2(239, 192));
-            //DisplayCollision(obstacles);
-            Assert.AreEqual(true, true);
-        }
+        //[TestMethod]
+        //public void LoadMapBil()
+        //{
+        //    var map = new Map(Globals.MapsSubDir + "\\bil.gmp");
+        //    //var collision = new MapCollisionOld(map);
+        //    //var obstacles = collision.CollisionMap(new Vector2(239, 192));
+        //    //DisplayCollision(obstacles);
+        //    Assert.AreEqual(true, true);
+        //}
 
-        [TestMethod]
-        public void SaveMapTinyTown()
-        {
-            var map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
-            map.Save("data\\TinyTown.gta2map");
-            Assert.AreEqual(true, true);
-        }
+        //[TestMethod]
+        //public void SaveMapTinyTown()
+        //{
+        //    var map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
+        //    map.Save("data\\TinyTown.gta2map");
+        //    Assert.AreEqual(true, true);
+        //}
 
-        [TestMethod]
-        public void LoadMapTinyTownInternalFormat()
-        {
-            SaveMapTinyTown();
-            var map = new Map();
-            map.Load(Globals.MapsSubDir + "\\TinyTown.gta2map");
-            Assert.AreEqual(true, true);
-        }
+        //[TestMethod]
+        //public void LoadMapTinyTownInternalFormat()
+        //{
+        //    SaveMapTinyTown();
+        //    var map = new Map();
+        //    map.Load(Globals.MapsSubDir + "\\TinyTown.gta2map");
+        //    Assert.AreEqual(true, true);
+        //}
 
 
     }

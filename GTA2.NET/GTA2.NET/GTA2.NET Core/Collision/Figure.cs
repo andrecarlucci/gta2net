@@ -26,10 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FarseerPhysics.Common;
-using FarseerPhysics.Common.Decomposition;
 using Hiale.GTA2NET.Core.Helper;
-using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -70,18 +67,12 @@ namespace Hiale.GTA2NET.Core.Collision
             Layer = layer;
         }
 
+
         /// <summary>
         /// Creates IObstacle objects of this figure.
         /// </summary>
         /// <returns></returns>
-        public virtual List<IObstacle> Tokenize()
-        {
-            var obstacles = new List<IObstacle>();
-            Tokenize(obstacles);
-            return obstacles;
-        }
-
-        protected virtual void Tokenize(List<IObstacle> obstacles)
+        public virtual void Tokenize(List<IObstacle> obstacles)
         {
             if (Lines.Count == 0)
                 return;
@@ -89,17 +80,12 @@ namespace Hiale.GTA2NET.Core.Collision
             if (Lines.Count == 0)
                 return;
 
+            List<VerticesEx> polygons;
             if (SwitchPoints.Count > 0)
-            {
-                Split(Lines, obstacles);
-            }
+                polygons = SplitPolygon(Lines, obstacles);
             else
-            {
-                bool isRectangle;
-                var polygon = new Polygon(Map, Layer);
-                var polygonVertices = polygon.CreatePolygon(Lines, out isRectangle);
-                polygon.AddPolygonObstacle(polygonVertices, isRectangle, obstacles);
-            }
+                polygons = new List<VerticesEx> {CreatePolygon(Lines)};
+            ProcessPolygons(polygons, obstacles);
         }
 
         protected static void PrepareBasePriorityTable()
@@ -288,154 +274,177 @@ namespace Hiale.GTA2NET.Core.Collision
                 SwitchPoints.Remove(key);
         }
 
-        //Combination
+        //Polygon
 
-        protected static int GetSwitchPointIndex(Vector2 origin, IList<KeyValuePair<Vector2, SwitchPoint>> switchPointList)
+        //Work-in-Progress method
+        protected void ProcessPolygons(List<VerticesEx> polygons, List<IObstacle> obstacles)
         {
-            for (var i = 0; i < switchPointList.Count; i++)
+            foreach (var polygon in polygons)
             {
-                if (switchPointList[i].Key == origin)
-                    return i;
+                obstacles.Add(new PolygonObstacle(polygon, Layer));
             }
-            return -1;
         }
 
-        protected virtual List<Vector2> GetStartPoints(List<LineSegment> sourceSegments)
+        /// <summary>
+        /// Creates a polygon out of a List of Lines.
+        /// </summary>
+        /// <param name="sourceSegments"></param>
+        /// <returns></returns>
+        public VerticesEx CreatePolygon(IEnumerable<LineSegment> sourceSegments)
         {
-            var pointList = new List<Vector2>();
-            foreach (var lineSegment in sourceSegments)
+            var polygon = new VerticesEx();
+            var directions = new List<Direction>();
+            var lineSegments = new List<LineSegment>(sourceSegments);
+
+            var currentItem = lineSegments.First().Start;
+            var startPoint = currentItem;
+            var currentDirection = Direction.None;
+            while (lineSegments.Count > 0)
             {
-                if (!pointList.Contains(lineSegment.Start))
-                    pointList.Add(lineSegment.Start);
-                if (!pointList.Contains(lineSegment.End))
-                    pointList.Add(lineSegment.End);
+                if (polygon.Count > 0 && startPoint == currentItem)
+                    break;
+                var preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection);
+                if (preferedLine == null)
+                    break;
+                lineSegments.Remove(preferedLine);
+                var previousItem = currentItem;
+                currentItem = preferedLine.End;
+                if (preferedLine.Direction == currentDirection)
+                    continue;
+                currentDirection = preferedLine.Direction;
+                polygon.Add(previousItem);
+                directions.Add(currentDirection);
             }
-            pointList.Sort(new StartPointComparer());
-            return pointList;
+            FixPolygonStartPoint(polygon, directions);
+            //isRectangle = IsRectangleObstacle(polygon, directions);
+            return polygon;
+        }
+
+        //private static bool IsRectangleObstacle(ICollection<Vector2> polygon, ICollection<Direction> directions)
+        //{
+        //    if (polygon.Count != 4 || directions.Count != 4)
+        //        return false;
+        //    return directions.Contains(Direction.Down) && directions.Contains(Direction.Right) && directions.Contains(Direction.Up) && directions.Contains(Direction.Left);
+        //}
+
+        private static void FixPolygonStartPoint(IList<Vector2> polygon, IList<Direction> directions)
+        {
+            if (polygon.Count != directions.Count || polygon.Count < 3)
+                return;
+            if (directions.First() != directions.Last())
+                return;
+            polygon.RemoveAt(0);
+            directions.RemoveAt(0);
         }
 
         /// <summary>
         /// Splites a multi part figure into single parts.
-        /// Some figures have several possabilities where to split, the algorithm chooses the biggest possible figure.
-        /// See Combinations.png: The original figure on top has four combinations (because of the Switch Points). In this example Figure a is choosen as final figure.
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <param name="obstacles"></param>
-        protected virtual void Split(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
+        protected virtual List<VerticesEx> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
         {
-            //var startPoint = sourceSegments.First().Start; //ToDo: if the start point does not lie on the output figure, this method returns a wrong result
-
-            var figureSplitters = new List<SplitterFigure>();
-
-            var startPoints = GetStartPoints(sourceSegments);
-            var startPointIndex = 0;
-
-            do
+            //Debug.SaveSegmentsPicture(sourceSegments, "current");
+            var verticesCombinations = new List<VerticesEx>();
+            var polygonLinesDict = new Dictionary<VerticesEx, List<LineSegment>>();
+            foreach (var switchPoint in SwitchPoints)
             {
-                //var startPoint = GetStartPoint(sourceSegments);
-                if (startPointIndex >= startPoints.Count - 1)
-                    throw new NotSupportedException();
-                var startPoint = startPoints[startPointIndex];
-                startPointIndex++;
-                var relevantSwitchPoints = new List<Vector2>();
-                int previousSwitchPointCount;
-                do
+                foreach (var endPoint in switchPoint.Value.EndPoints)
                 {
-                    previousSwitchPointCount = relevantSwitchPoints.Count;
-                    var switchPointValues = new List<List<Vector2>>();
-                    var switchPointList = new List<KeyValuePair<Vector2, SwitchPoint>>();
-                    foreach (var foundSwitchPoint in relevantSwitchPoints)
-                    {
-                        var switchPoint = SwitchPoints[foundSwitchPoint];
-                        switchPointValues.Add(switchPoint.EndPoints);
-                        switchPointList.Add(new KeyValuePair<Vector2, SwitchPoint>(foundSwitchPoint, switchPoint));
-                    }
-                    var combinations = Combinations.GetCombinations(switchPointValues);
+                    var startPoint = switchPoint.Key;
+                    var polygon = new VerticesEx();
+                    
+                    var polygonLines = new List<LineSegment>();
 
-                    foreach (var combination in combinations)
+                    var remainingLines = new List<LineSegment>(sourceSegments);
+                    var currentItem = startPoint;
+                    var currentDirection = Direction.None;
+                    do
                     {
-                        var lineSegments = new List<LineSegment>(sourceSegments);
-                        var currentItem = startPoint;
-                        var currentDirection = Direction.None;
-                        var visitedItems = new List<Vector2>();
-                        var currentFigureSplitter = new SplitterFigure(Map, Layer);
-                        var foundSwitchPoints = new List<Vector2>(relevantSwitchPoints);
-
-                        while (true)
+                        if (currentItem == startPoint && polygon.Count > 0)
                         {
-                            if (currentFigureSplitter.Lines.Count > 0 && startPoint == currentItem)
+                            //Debug.SavePolygonPicture(polygon);
+                            if (!verticesCombinations.Contains(polygon))
                             {
-                                foreach (var switchPointKey in foundSwitchPoints)
-                                {
-                                    if (!relevantSwitchPoints.Contains(switchPointKey))
-                                        relevantSwitchPoints.Add(switchPointKey);
-                                }
-                                currentFigureSplitter.RemainingLines = lineSegments;
-                                if (!figureSplitters.Contains(currentFigureSplitter))
-                                    figureSplitters.Add(currentFigureSplitter);
-                                break;
+                                verticesCombinations.Add(polygon);
+                                polygonLinesDict.Add(polygon, polygonLines);
                             }
-                            if (visitedItems.Contains(currentItem))
-                                break;
-                            visitedItems.Add(currentItem);
-
-                            SwitchPoint switchPoint;
-                            LineSegment preferedLine;
-                            if (SwitchPoints.TryGetValue(currentItem, out switchPoint))
-                            {
-                                var switchPointIndex = GetSwitchPointIndex(currentItem, switchPointList);
-                                if (switchPointIndex > -1)
-                                {
-                                    var nextItem = combination[switchPointIndex];
-                                    preferedLine = GetLine(currentItem, nextItem, true);
-                                }
-                                else
-                                {
-                                    preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection, true);
-                                    if (preferedLine == null)
-                                        break;
-                                    if (!foundSwitchPoints.Contains(currentItem))
-                                        foundSwitchPoints.Add(currentItem);
-                                }
-                                currentFigureSplitter.SwitchPointKeys.Add(currentItem);
-                                if (!lineSegments.Contains(preferedLine))
-                                    break;
-                            }
-                            else
-                            {
-                                preferedLine = ChooseNextLine(currentItem, lineSegments, currentDirection);
-                                if (preferedLine == null)
-                                    break;
-                            }
-                            lineSegments.Remove(preferedLine);
-                            currentItem = preferedLine.End;
-                            currentDirection = preferedLine.Direction;
-                            currentFigureSplitter.Lines.Add(preferedLine);
+                            break;
                         }
-                    }
-                } while (previousSwitchPointCount < relevantSwitchPoints.Count);
+                        if (polygon.Contains(currentItem))
+                            break;
+                        polygon.Add(currentItem);
+                        LineSegment preferedLine;
+                        if (currentItem == startPoint)
+                            preferedLine = GetLine(currentItem, endPoint, true);
+                        else
+                            preferedLine = ChooseNextLine(currentItem, remainingLines, currentDirection);
+                        if (preferedLine == null)
+                            break;
+                        currentItem = preferedLine.End;
+                        currentDirection = preferedLine.Direction;
+                        polygonLines.Add(preferedLine);
+                        remainingLines.Remove(preferedLine);
+                    } while (true);
+                }
+            }
 
-            } while (figureSplitters.Count == 0);
-            var choosenFigure = FigureSolver.Solve(figureSplitters);
-            choosenFigure.SeparateSwitchPoints(SwitchPoints);
-            UpdateSwitchPoints();
-            var polygon = new Polygon(Map, Layer);
-            polygon.AddPolygonObstacle(choosenFigure.Polygon, choosenFigure.IsRectangle, obstacles);
-            Lines = choosenFigure.RemainingLines;
-            Tokenize(obstacles);
+            verticesCombinations = RemoveUnnecessaryPolygons(verticesCombinations);
+
+            var forlornLines = GetPolygonForlornLines(sourceSegments, verticesCombinations, polygonLinesDict);
+            obstacles.AddRange(forlornLines.Select(forlornLine => new LineObstacle(forlornLine.Start, forlornLine.End, Layer)));
+
+            return verticesCombinations;
+        }
+
+        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<VerticesEx> verticesCombinations, IDictionary<VerticesEx, List<LineSegment>> polygonLinesDict)
+        {
+            //Find lines which belongs to no polygon i.e. are forlorn
+            var forlornLines = new List<LineSegment>(sourceSegments);
+            var linesToRemove = new List<LineSegment>();
+            foreach (var vertices in verticesCombinations)
+            {
+                List<LineSegment> polygonLines;
+                if (!polygonLinesDict.TryGetValue(vertices, out polygonLines))
+                    continue;
+                foreach (var line in polygonLines.Where(line => !linesToRemove.Contains(line)))
+                    linesToRemove.Add(line);
+            }
+            foreach (var lineSegment in linesToRemove)
+                forlornLines.Remove(lineSegment);
+            return forlornLines;
+        }
+        
+        /// <summary>
+        /// Removes vertices combinations which contain other vertices. We need the smallest possible combination.
+        /// </summary>
+        /// <param name="verticesCombinations"></param>
+        /// <returns></returns>
+        private static List<VerticesEx> RemoveUnnecessaryPolygons(List<VerticesEx> verticesCombinations)
+        {
+            var itemsToRemove = new List<VerticesEx>();
+            foreach (var verticesCombination in verticesCombinations)
+            {
+                foreach (var verticesCombination2 in verticesCombinations)
+                {
+                    if (verticesCombination == verticesCombination2)
+                        continue;
+                    var contains = verticesCombination.Contains(verticesCombination2);
+                    if (contains && !itemsToRemove.Contains(verticesCombination))
+                        itemsToRemove.Add(verticesCombination);
+                }
+            }
+            foreach (var item in itemsToRemove)
+                verticesCombinations.Remove(item);
+            return verticesCombinations;
         }
 
         protected internal static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection)
         {
-            return ChooseNextLine(currentItem, lineSegments, currentDirection, false);
-        }
-
-        protected internal static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection, bool invertPriority)
-        {
             var currentLines = GetLines(currentItem, lineSegments);
             if (currentLines.Count == 0)
                 return null;
-            var priority = invertPriority ? int.MinValue : int.MaxValue;
+            var priority = int.MinValue;
             LineSegment tempLine = null;
             LineSegment preferedLine = null;
             foreach (var currentLine in currentLines)
@@ -445,52 +454,13 @@ namespace Hiale.GTA2NET.Core.Collision
                 else if (currentItem == currentLine.Start)
                     tempLine = currentLine;
                 var currentPriority = currentLines.Count == 1 ? 1 : GetLinePriority(currentDirection, tempLine);
-                if (invertPriority)
-                {
-                    if (currentPriority <= priority)
-                        continue;
-                }
-                else
-                {
-                    if (currentPriority >= priority)
-                        continue;
-                }
+                if (currentPriority <= priority)
+                    continue;
                 priority = currentPriority;
                 preferedLine = tempLine;
             }
             return preferedLine;
         }
-
-        //protected virtual void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles)
-        //{
-        //    if (isRectangle)
-        //    {
-        //        var minX = float.MaxValue;
-        //        var maxX = float.MinValue;
-        //        var minY = float.MaxValue;
-        //        var maxY = float.MinValue;
-        //        foreach (var polygonVertex in polygonVertices)
-        //        {
-        //            if (polygonVertex.X < minX)
-        //                minX = polygonVertex.X;
-        //            if (polygonVertex.X > maxX)
-        //                maxX = polygonVertex.X;
-        //            if (polygonVertex.Y < minY)
-        //                minY = polygonVertex.Y;
-        //            if (polygonVertex.Y > maxY)
-        //                maxY = polygonVertex.Y;
-        //        }
-        //        var width = maxX - minX;
-        //        var height = maxY - minY;
-        //        var rectangle = new RectangleObstacle(new Vector2(minX, minY), Layer, width, height);
-        //        obstacles.Add(rectangle);
-        //    }
-        //    else
-        //    {
-        //        var polygonObstacle = new PolygonObstacle(Layer) { Vertices = polygonVertices };
-        //        obstacles.Add(polygonObstacle);
-        //    }
-        //}
 
         protected static int GetLinePriority(Direction baseDirection, LineSegment line)
         {
