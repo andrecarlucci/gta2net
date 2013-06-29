@@ -334,12 +334,12 @@ namespace Hiale.GTA2NET.Core.Collision
 
         /// <summary>
         /// Splites a multi part figure into single parts.
+        /// See Polygon Split.png.
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <param name="obstacles"></param>
         protected virtual List<Polygon> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
         {
-            //Debug.SaveSegmentsPicture(sourceSegments, "current");
             var verticesCombinations = new List<Polygon>();
             var polygonLinesDict = new Dictionary<Polygon, List<LineSegment>>();
             foreach (var switchPoint in SwitchPoints)
@@ -348,9 +348,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 {
                     var startPoint = switchPoint.Key;
                     var polygon = new Polygon();
-                    
                     var polygonLines = new List<LineSegment>();
-
                     var remainingLines = new List<LineSegment>(sourceSegments);
                     var currentItem = startPoint;
                     var currentDirection = Direction.None;
@@ -358,7 +356,6 @@ namespace Hiale.GTA2NET.Core.Collision
                     {
                         if (currentItem == startPoint && polygon.Count > 0)
                         {
-                            //Debug.SavePolygonPicture(polygon);
                             if (!verticesCombinations.Contains(polygon))
                             {
                                 verticesCombinations.Add(polygon);
@@ -383,7 +380,6 @@ namespace Hiale.GTA2NET.Core.Collision
                     } while (true);
                 }
             }
-
             verticesCombinations = RemoveUnnecessaryPolygons(verticesCombinations);
 
             var forlornLines = GetPolygonForlornLines(sourceSegments, verticesCombinations, polygonLinesDict);
@@ -411,7 +407,8 @@ namespace Hiale.GTA2NET.Core.Collision
         }
         
         /// <summary>
-        /// Removes vertices combinations which contain other vertices. We need the smallest possible combination.
+        /// Removes vertices combinations which contain other smaller vertices. Only the smallest possible combinations are needed.
+        /// See Polygon Combinations.png: The blue outline shows the source figure. The red polygon gets removed because it contains other polygons.
         /// </summary>
         /// <param name="verticesCombinations"></param>
         /// <returns></returns>
