@@ -79,12 +79,17 @@ namespace Hiale.GTA2NET.Core.Collision
             if (Lines.Count == 0)
                 return;
 
-            List<Polygon> polygons;
             if (SwitchPoints.Count > 0)
-                polygons = SplitPolygon(Lines, obstacles);
+            {
+                var polygons = SplitPolygon(Lines, obstacles);
+                foreach (var polygon in polygons)
+                    polygon.Tokenize(Map, Layer, obstacles);
+            }
             else
-                polygons = new List<Polygon> {CreatePolygon(Lines)};
-            ProcessPolygons(polygons, obstacles);
+            {
+                var polygon = CreatePolygon(Lines);
+                polygon.Tokenize(Map, Layer, obstacles);
+            }
         }
 
         protected static void PrepareBasePriorityTable()
@@ -273,17 +278,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 SwitchPoints.Remove(key);
         }
 
-        //PolygonOLD
-
-        //Work-in-Progress method
-        protected void ProcessPolygons(List<Polygon> polygons, List<IObstacle> obstacles)
-        {
-            foreach (var polygon in polygons)
-            {
-                polygon.AddToObstacles(Map, Layer, obstacles);
-                //obstacles.Add(new PolygonObstacle(polygon, Layer));
-            }
-        }
+        //Polygon
 
         /// <summary>
         /// Creates a polygon out of a List of Lines.

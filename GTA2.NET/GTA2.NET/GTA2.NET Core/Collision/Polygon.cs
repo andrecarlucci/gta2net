@@ -36,41 +36,51 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class Polygon : VerticesEx
     {
-        public void AddToObstacles(Map.Map map, int layer, List<IObstacle> obstacles)
+        public void Tokenize(Map.Map map, int layer, List<IObstacle> obstacles)
         {
-            //debug
-            //if (layer >= 4 && Contains(new Vector2(69, 194)))
-            //    Console.WriteLine();
             var convexPolygons = BayazitDecomposer.ConvexPartition(this);
-            var blocks = GetAssociatedBlocks(convexPolygons, map, layer);
-            var fill = CheckLid(blocks, map, layer, obstacles);
+            var blockPointsDictionary = new Dictionary<Block, List<Vector2>>();
+            var blocks = GetAssociatedBlocks(convexPolygons, map, layer, blockPointsDictionary);
+            var layerObstacles = CreateLayerObstacles(layer, obstacles);
+            var fill = CheckLid(blocks, map, layer, layerObstacles, blockPointsDictionary);
             if (fill)
             {
                 foreach (var convexPolygon in convexPolygons)
-                    AddPolygonObstacle(convexPolygon, false, obstacles, layer);
+                    AddPolygonObstacle(convexPolygon, false, obstacles, layer); //ToDo Rectangle
             }
             else
             {
                 foreach (var convexPolygon in convexPolygons)
-                    CreateLineSegments(convexPolygon, obstacles, layer);
+                    AddLineObstacles(convexPolygon, obstacles, layer);
             }
         }
 
-        private bool CheckLid(IEnumerable<Block> blocks, Map.Map map, int layer, List<IObstacle> obstacles)
+        private Dictionary<int, List<IObstacle>> CreateLayerObstacles(int layer, List<IObstacle> obstacles)
+        {
+            var dict = new Dictionary<int, List<IObstacle>>();
+            for (var z = layer + 1; z < 8; z++)
+            {
+                var layerObstacles = obstacles.Where(obstacle => obstacle.Z == z && (obstacle is PolygonObstacle || obstacle is RectangleObstacle)).ToList();
+                dict.Add(z, layerObstacles);
+            }
+            return dict;
+        }
+
+        private static bool CheckLid(IEnumerable<Block> blocks, Map.Map map, int layer, Dictionary<int, List<IObstacle>> layerObstacles, Dictionary<Block, List<Vector2>> blockPointsDictionary)
         {
             var openBlocks = 0;
             foreach (var block in blocks)
             {
                 if (block.Lid)
                     continue;
-                var blocksAbove = CheckBlocksAbove(block, map, layer, obstacles);
+                var blocksAbove = CheckBlocksAbove(block, map, layer, layerObstacles, blockPointsDictionary);
                 if (!blocksAbove)
                     openBlocks++;
             }
-            return openBlocks <= 0;
+            return openBlocks == 0;
         }
 
-        private static IEnumerable<Block> GetAssociatedBlocks(List<Vertices> convexPolygons, Map.Map map, int layer)
+        private static IEnumerable<Block> GetAssociatedBlocks(IEnumerable<Vertices> convexPolygons, Map.Map map, int layer, Dictionary<Block, List<Vector2>> blockPointsDictionary)
         {
             var blocks = new List<Block>();
             foreach (var convexPolygon in convexPolygons)
@@ -89,15 +99,19 @@ namespace Hiale.GTA2NET.Core.Collision
                     for (var x = (int)minX; x < maxX; x++)
                     {
                         var block = map.CityBlocks[x, y, layer];
-                        var blockPoints = GetBlockPoints(block, layer);
-
+                        List<Vector2> blockPoints;
+                        if (!blockPointsDictionary.TryGetValue(block, out blockPoints))
+                        {
+                            blockPoints = GetBlockPoints(block, layer);
+                            blockPointsDictionary.Add(block, blockPoints);
+                        }
                         var addBlock = false;
                         foreach (var blockPoint in blockPoints)
                         {
                             bool isOnPolygon;
                             if (pointsCache.TryGetValue(blockPoint, out isOnPolygon))
                                 continue;
-                            isOnPolygon = VerticesEx.IsPointInPolygonOrEdge(convexPolygon, blockPoint);
+                            isOnPolygon = IsPointInPolygonOrEdge(convexPolygon, blockPoint);
                             pointsCache.Add(blockPoint, isOnPolygon);
                             if (!isOnPolygon)
                                 continue;
@@ -109,75 +123,41 @@ namespace Hiale.GTA2NET.Core.Collision
                     }
                 }
             }
-            Debug.SavePolygonWithBlocksPicture(convexPolygons, blocks);
             return blocks;
         }
 
-        private bool CheckBlocksAbove(Block block, Map.Map map, int layer, List<IObstacle> obstacles)
+        private static bool CheckBlocksAbove(Block block, Map.Map map, int layer, Dictionary<int, List<IObstacle>> layerObstacles, Dictionary<Block, List<Vector2>> blockPointsDictionary)
         {
-            var blockPoints = GetBlockPoints(block, layer); //ToDo: dictionary
+            List<Vector2> blockPoints;
+            if (!blockPointsDictionary.TryGetValue(block, out blockPoints))
+            {
+                blockPoints = GetBlockPoints(block, layer);
+                blockPointsDictionary.Add(block, blockPoints);
+            }
             for (var z = (int)block.Position.Z + 1; z < 8; z++)
             {
-                try
-                {
-                    if (map.CityBlocks[(int)block.Position.X, (int)block.Position.Y, z].Lid)
-                        return true;
-                }
-                catch (Exception e)
-                {
-                    
-                    System.Diagnostics.Debug.WriteLine(e);
-                }
-                
+                if (map.CityBlocks[(int)block.Position.X, (int)block.Position.Y, z].Lid)
+                    return true;
 
                 var blockFilled = false;
-
-                //ToDo: optimize!
-                var layerObstacles = obstacles.Where(obstacle => obstacle.Z == z && (obstacle is PolygonObstacle || obstacle is RectangleObstacle)).ToList();
-
-                foreach (var layerObstacle in layerObstacles)
+                foreach (var layerObstacle in layerObstacles[z])
                 {
-                    var containAll = true;
-                    foreach (var blockPoint in blockPoints)
-                    {
-                        if (!layerObstacle.Bounds.Contains(blockPoint))
-                        {
-                            containAll = false;
-                            break;
-                        }
-                        //
-                    }
-                    if (containAll)
-                    {
-                        if (layerObstacle is RectangleObstacle)
-                        {
-                            //bound check of rectangle obstacles is enough, block is ok
-                            blockFilled = true;
-                            break;
-                        }
+                    var containAll = false;
 
-                        var polygonObstacle = layerObstacle as PolygonObstacle;
-                        if (polygonObstacle == null)
-                            break;
-                        containAll = true;
-                        foreach (var blockPoint in blockPoints)
-                        {
-                            if (!polygonObstacle.Contains(blockPoint))
-                            {
-                                containAll = false;
-                                break;
-                            }
-                            //
-                        }
-                        if (containAll)
-                        {
-                            //all points are within the polygon, block is ok
-                            blockFilled = true;
-                            break;
-                        }
-                    }
+                    var polygonObstacle = layerObstacle as PolygonObstacle;
+                    if (polygonObstacle != null)
+                        containAll = blockPoints.All(polygonObstacle.Contains);
+
+                    var rectangleObstacle = layerObstacle as RectangleObstacle;
+                    if (rectangleObstacle != null)
+                        containAll = blockPoints.All(rectangleObstacle.Contains);
+
+                    if (!containAll)
+                        continue;
+                    //all points are within the polygon, block is ok
+                    blockFilled = true;
+                    break;
                 }
-                //Console.WriteLine(blockFilled);
                 if (blockFilled)
                     return true;
             }
@@ -235,7 +215,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return blockPoints;
         }
 
-        private static void CreateLineSegments(IList<Vector2> polygonVertices, ICollection<IObstacle> obstacles, int layer)
+        private static void AddLineObstacles(IList<Vector2> polygonVertices, ICollection<IObstacle> obstacles, int layer)
         {
             for (int i = 0, j = polygonVertices.Count - 1; i < polygonVertices.Count; j = i++)
                 obstacles.Add(new LineObstacle(polygonVertices[i], polygonVertices[j], layer));
@@ -262,7 +242,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
                 var width = maxX - minX;
                 var height = maxY - minY;
-                var rectangle = new RectangleObstacle(new Vector2(minX, minY), layer, width, height);
+                var rectangle = new RectangleObstacle(minX, minY, width, height, layer);
                 obstacles.Add(rectangle);
             }
             else

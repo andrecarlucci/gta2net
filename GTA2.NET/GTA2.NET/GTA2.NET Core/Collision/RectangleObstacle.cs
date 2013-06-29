@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Obstacle.cs
-// Created: 09.03.2013
+// File: RectangleObstacle.cs
+// Created: 30.06.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,50 +23,37 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-
 using System;
-using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public interface IObstacle
-    {
-        int Z { get; set; }
-
-        RectangleF Bounds { get; }
-    }
-
     [Serializable]
     public class RectangleObstacle : IObstacle
     {
         public int Z { get; set; }
 
-        public RectangleF Bounds
-        {
-            get
-            {
-                return new RectangleF(Position.X, Position.Y, Width, Length);
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public float X;
 
-        public Vector2 Position;
+        public float Y;
 
         public float Width;
 
         public float Length;
 
-        public RectangleObstacle(Vector2 position, int z, float width, float length)
+        public bool Contains(Vector2 point)
         {
-            Z = z;
-            Position = position;
+            return new RectangleF(X, Y, Width, Length).Contains(point);
+        }
+
+        public RectangleObstacle(float x, float y, float width, float length, int z)
+        {
+            X = x;
+            Y = y;
             Width = width;
             Length = length;
+            Z = z;
         }
     }
 }
