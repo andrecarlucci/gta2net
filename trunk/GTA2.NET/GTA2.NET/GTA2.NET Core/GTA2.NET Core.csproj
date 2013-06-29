@@ -58,6 +58,7 @@
     <Compile Include="Collision\LineObstacle.cs" />
     <Compile Include="Collision\LineSegment.cs" />
     <Compile Include="Collision\MapCollision.cs" />
+    <Compile Include="Collision\RectangleObstacle.cs" />
     <Compile Include="Collision\SwitchPoint.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
@@ -153,7 +154,7 @@
     <Compile Include="Map\Light.cs" />
     <Compile Include="Map\Map.cs" />
     <Compile Include="Map\MapObject.cs" />
-    <Compile Include="Collision\Obstacle.cs" />
+    <Compile Include="Collision\IObstacle.cs" />
     <Compile Include="Map\RoadTrafficType.cs" />
     <Compile Include="Map\SlopeType.cs" />
     <Compile Include="Map\TileAnimation.cs" />

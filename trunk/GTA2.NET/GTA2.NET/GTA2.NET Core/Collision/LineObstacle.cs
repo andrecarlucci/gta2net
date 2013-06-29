@@ -24,7 +24,6 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -39,16 +38,10 @@ namespace Hiale.GTA2NET.Core.Collision
     public class LineObstacle : ILineObstacle
     {
         public int Z { get; set; }
-        public RectangleF Bounds
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+
         public Vector2 Start { get; set; }
+
         public Vector2 End { get; set; }
-        
 
         public LineObstacle(Vector2 start, Vector2 end)
         {
@@ -60,8 +53,6 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             Z = z;
         }
-
-
 
         public static LineObstacle DefaultLeft(int x, int y, int z)
         {

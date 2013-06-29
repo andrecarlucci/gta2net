@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: PolygonObstacle.cs
-// Created: 23.06.2013
+// File: Obstacle.cs
+// Created: 09.03.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,6 +23,7 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Helper;
@@ -30,27 +31,8 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    [Serializable]
-    public class PolygonObstacle : IObstacle
+    public interface IObstacle
     {
-        public int Z { get; set; }
-
-        public List<Vector2> Vertices { get; set; }
-
-        public PolygonObstacle(int z) : this(new List<Vector2>(), z)
-        {
-            //
-        }
-
-        public PolygonObstacle(List<Vector2> vertices, int z)
-        {
-            Z = z;
-            Vertices = vertices;
-        }
-
-        public bool Contains(Vector2 point)
-        {
-            return VerticesEx.IsPointInPolygonOrEdge(Vertices, point);
-        }
+        int Z { get; set; }
     }
 }

@@ -31,7 +31,7 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public class LineSegment : LineObstacle //, IEquatable<LineSegment>
+    public class LineSegment : LineObstacle
     {
         public new Vector2 Start
         {
@@ -148,38 +148,5 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             return Start + " - " + End;
         }
-
-        //public override int GetHashCode()
-        //{
-        //    return Start.GetHashCode() ^ End.GetHashCode();
-        //}
-
-        //public override bool Equals(object obj)
-        //{
-        //    return Equals((LineSegment)obj);
-        //}
-
-        //public bool Equals(LineSegment other)
-        //{
-        //    if (ReferenceEquals(null, other))
-        //        return false;
-        //    if (ReferenceEquals(this, other))
-        //        return true;
-        //    if (other.GetType() != GetType())
-        //        return false;
-        //    return Start == other.Start && End == other.End;
-        //}
-
-        //public static bool operator ==(LineSegment a, LineSegment b)
-        //{
-        //    if (((object)a == null) || ((object)b == null))
-        //        return false;
-        //    return a.Equals(b);
-        //}
-
-        //public static bool operator !=(LineSegment a, LineSegment b)
-        //{
-        //    return !(a == b);
-        //}
     }
 }

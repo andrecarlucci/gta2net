@@ -84,7 +84,7 @@ namespace Hiale.GTA2NET.Core.Helper
                     if (obstacle is RectangleObstacle)
                     {
                         var rectObstacle = (RectangleObstacle)obstacle;
-                        g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), rectObstacle.Position.X * 10, rectObstacle.Position.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
+                        g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
                     }
                     else if (obstacle is LineObstacle)
                     {
