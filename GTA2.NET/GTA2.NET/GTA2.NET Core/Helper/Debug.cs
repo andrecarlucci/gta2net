@@ -28,7 +28,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
 using FarseerPhysics.Common;
 using Hiale.GTA2NET.Core.Collision;
 using Hiale.GTA2NET.Core.Map;
