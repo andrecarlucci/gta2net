@@ -26,7 +26,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FarseerPhysics.Common;
 using FarseerPhysics.Common.Decomposition;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
@@ -46,16 +45,15 @@ namespace Hiale.GTA2NET.Core.Collision
             if (fill)
             {
                 foreach (var convexPolygon in convexPolygons)
-                    AddPolygonObstacle(convexPolygon, false, obstacles, layer); //ToDo Rectangle
+                    AddPolygonObstacle(convexPolygon, IsRectangleObstacle(convexPolygon), obstacles, layer);
             }
             else
             {
-                foreach (var convexPolygon in convexPolygons)
-                    AddLineObstacles(convexPolygon, obstacles, layer);
+                AddLineObstacles(this, obstacles, layer);
             }
         }
 
-        private Dictionary<int, List<IObstacle>> CreateLayerObstacles(int layer, List<IObstacle> obstacles)
+        private static Dictionary<int, List<IObstacle>> CreateLayerObstacles(int layer, List<IObstacle> obstacles)
         {
             var dict = new Dictionary<int, List<IObstacle>>();
             for (var z = layer + 1; z < 8; z++)
@@ -80,7 +78,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return openBlocks == 0;
         }
 
-        private static IEnumerable<Block> GetAssociatedBlocks(IEnumerable<Vertices> convexPolygons, Map.Map map, int layer, Dictionary<Block, List<Vector2>> blockPointsDictionary)
+        private static IEnumerable<Block> GetAssociatedBlocks(IEnumerable<List<Vector2>> convexPolygons, Map.Map map, int layer, Dictionary<Block, List<Vector2>> blockPointsDictionary)
         {
             var blocks = new List<Block>();
             foreach (var convexPolygon in convexPolygons)
@@ -221,7 +219,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 obstacles.Add(new LineObstacle(polygonVertices[i], polygonVertices[j], layer));
         }
 
-        public void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles, int layer)
+        public static void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles, int layer)
         {
             if (isRectangle)
             {
@@ -250,6 +248,18 @@ namespace Hiale.GTA2NET.Core.Collision
                 var polygonObstacle = new PolygonObstacle(layer) { Vertices = polygonVertices };
                 obstacles.Add(polygonObstacle);
             }
+        }
+
+        private static bool IsRectangleObstacle(IList<Vector2> polygonVertices)
+        {
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            for (int i = 0, j = polygonVertices.Count - 1; i < polygonVertices.Count; j = i++)
+            {
+                if (polygonVertices[i].X != polygonVertices[j].X && polygonVertices[i].Y != polygonVertices[j].Y)
+                    return false;
+            }
+            return true;
+            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
     }
 }

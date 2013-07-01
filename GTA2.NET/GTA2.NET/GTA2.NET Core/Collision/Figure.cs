@@ -311,16 +311,8 @@ namespace Hiale.GTA2NET.Core.Collision
                 directions.Add(currentDirection);
             }
             FixPolygonStartPoint(polygon, directions);
-            //isRectangle = IsRectangleObstacle(polygon, directions);
             return polygon;
         }
-
-        //private static bool IsRectangleObstacle(ICollection<Vector2> polygon, ICollection<Direction> directions)
-        //{
-        //    if (polygon.Count != 4 || directions.Count != 4)
-        //        return false;
-        //    return directions.Contains(Direction.Down) && directions.Contains(Direction.Right) && directions.Contains(Direction.Up) && directions.Contains(Direction.Left);
-        //}
 
         private static void FixPolygonStartPoint(IList<Vector2> polygon, IList<Direction> directions)
         {
@@ -329,7 +321,6 @@ namespace Hiale.GTA2NET.Core.Collision
             if (directions.First() != directions.Last())
                 return;
             polygon.RemoveAt(0);
-            directions.RemoveAt(0);
         }
 
         /// <summary>
@@ -384,6 +375,8 @@ namespace Hiale.GTA2NET.Core.Collision
 
             var forlornLines = GetPolygonForlornLines(sourceSegments, verticesCombinations, polygonLinesDict);
             obstacles.AddRange(forlornLines.Select(forlornLine => new LineObstacle(forlornLine.Start, forlornLine.End, Layer)));
+
+            //ToDo: FixPolygonStartPoint
 
             return verticesCombinations;
         }
