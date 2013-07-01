@@ -35,7 +35,12 @@ namespace Hiale.GTA2NET.Core.Helper
     {
         public override int GetHashCode()
         {
-            return base.GetHashCode(); //ToDo
+            unchecked
+            {
+                // ReSharper disable NonReadonlyFieldInGetHashCode
+                return this.Aggregate(397, (current, vector) => current*29 + vector.X.GetHashCode()*vector.Y.GetHashCode());
+                // ReSharper restore NonReadonlyFieldInGetHashCode
+            }
         }
 
         public bool Equals(VerticesEx other)
