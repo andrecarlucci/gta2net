@@ -331,8 +331,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// <param name="obstacles"></param>
         protected virtual List<Polygon> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
         {
-            var verticesCombinations = new List<Polygon>();
-            var polygonLinesDict = new Dictionary<Polygon, List<LineSegment>>();
+            var verticesCombinations = new Dictionary<Polygon, List<LineSegment>>();
             foreach (var switchPoint in SwitchPoints)
             {
                 foreach (var endPoint in switchPoint.Value.EndPoints)
@@ -347,11 +346,8 @@ namespace Hiale.GTA2NET.Core.Collision
                     {
                         if (currentItem == startPoint && polygon.Count > 0)
                         {
-                            if (!verticesCombinations.Contains(polygon))
-                            {
-                                verticesCombinations.Add(polygon);
-                                polygonLinesDict.Add(polygon, polygonLines);
-                            }
+                            if (!verticesCombinations.ContainsKey(polygon))
+                                verticesCombinations.Add(polygon, polygonLines);
                             break;
                         }
                         if (polygon.Contains(currentItem))
@@ -371,27 +367,24 @@ namespace Hiale.GTA2NET.Core.Collision
                     } while (true);
                 }
             }
-            verticesCombinations = RemoveUnnecessaryPolygons(verticesCombinations);
+            RemoveUnnecessaryPolygons(verticesCombinations);
 
-            var forlornLines = GetPolygonForlornLines(sourceSegments, verticesCombinations, polygonLinesDict);
+            var forlornLines = GetPolygonForlornLines(sourceSegments, verticesCombinations);
             obstacles.AddRange(forlornLines.Select(forlornLine => new LineObstacle(forlornLine.Start, forlornLine.End, Layer)));
 
             //ToDo: FixPolygonStartPoint
 
-            return verticesCombinations;
+            return verticesCombinations.Keys.ToList();
         }
 
-        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<Polygon> verticesCombinations, IDictionary<Polygon, List<LineSegment>> polygonLinesDict)
+        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<KeyValuePair<Polygon, List<LineSegment>>> verticesCombinations)
         {
             //Find lines which belongs to no polygon i.e. are forlorn
             var forlornLines = new List<LineSegment>(sourceSegments);
             var linesToRemove = new List<LineSegment>();
             foreach (var vertices in verticesCombinations)
             {
-                List<LineSegment> polygonLines;
-                if (!polygonLinesDict.TryGetValue(vertices, out polygonLines))
-                    continue;
-                foreach (var line in polygonLines.Where(line => !linesToRemove.Contains(line)))
+                foreach (var line in vertices.Value.Where(line => !linesToRemove.Contains(line)))
                     linesToRemove.Add(line);
             }
             foreach (var lineSegment in linesToRemove)
@@ -404,24 +397,22 @@ namespace Hiale.GTA2NET.Core.Collision
         /// See Polygon Combinations.png: The blue outline shows the source figure. The red polygon gets removed because it contains other polygons.
         /// </summary>
         /// <param name="verticesCombinations"></param>
-        /// <returns></returns>
-        private static List<Polygon> RemoveUnnecessaryPolygons(List<Polygon> verticesCombinations)
+        private static void RemoveUnnecessaryPolygons(IDictionary<Polygon, List<LineSegment>> verticesCombinations)
         {
             var itemsToRemove = new List<Polygon>();
             foreach (var verticesCombination in verticesCombinations)
             {
                 foreach (var verticesCombination2 in verticesCombinations)
                 {
-                    if (verticesCombination == verticesCombination2)
+                    if (verticesCombination.Key == verticesCombination2.Key)
                         continue;
-                    var contains = verticesCombination.Contains(verticesCombination2);
-                    if (contains && !itemsToRemove.Contains(verticesCombination))
-                        itemsToRemove.Add(verticesCombination);
+                    var contains = verticesCombination.Key.Contains(verticesCombination2.Key);
+                    if (contains && !itemsToRemove.Contains(verticesCombination.Key))
+                        itemsToRemove.Add(verticesCombination.Key);
                 }
             }
             foreach (var item in itemsToRemove)
                 verticesCombinations.Remove(item);
-            return verticesCombinations;
         }
 
         protected internal static LineSegment ChooseNextLine(Vector2 currentItem, IEnumerable<LineSegment> lineSegments, Direction currentDirection)
