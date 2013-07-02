@@ -35,14 +35,23 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class Polygon : VerticesEx
     {
+        public List<LineSegment> LineSegments { get; private set; }
+
+        public bool Filled { get; private set; }
+
+        public Polygon()
+        {
+            LineSegments = new List<LineSegment>();
+        }
+
         public void Tokenize(Map.Map map, int layer, List<IObstacle> obstacles)
         {
             var convexPolygons = BayazitDecomposer.ConvexPartition(this);
             var blockPointsDictionary = new Dictionary<Block, List<Vector2>>();
             var blocks = GetAssociatedBlocks(convexPolygons, map, layer, blockPointsDictionary);
             var layerObstacles = CreateLayerObstacles(layer, obstacles);
-            var fill = CheckLid(blocks, map, layer, layerObstacles, blockPointsDictionary);
-            if (fill)
+            Filled = CheckLid(blocks, map, layer, layerObstacles, blockPointsDictionary);
+            if (Filled)
             {
                 foreach (var convexPolygon in convexPolygons)
                     AddPolygonObstacle(convexPolygon, IsRectangleObstacle(convexPolygon), obstacles, layer);

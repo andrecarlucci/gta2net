@@ -329,16 +329,15 @@ namespace Hiale.GTA2NET.Core.Collision
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <param name="obstacles"></param>
-        protected virtual List<Polygon> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
+        protected virtual ICollection<Polygon> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
         {
-            var verticesCombinations = new Dictionary<Polygon, List<LineSegment>>();
+            var verticesCombinations = new HashSet<Polygon>();
             foreach (var switchPoint in SwitchPoints)
             {
                 foreach (var endPoint in switchPoint.Value.EndPoints)
                 {
                     var startPoint = switchPoint.Key;
                     var polygon = new Polygon();
-                    var polygonLines = new List<LineSegment>();
                     var remainingLines = new List<LineSegment>(sourceSegments);
                     var currentItem = startPoint;
                     var currentDirection = Direction.None;
@@ -346,8 +345,8 @@ namespace Hiale.GTA2NET.Core.Collision
                     {
                         if (currentItem == startPoint && polygon.Count > 0)
                         {
-                            if (!verticesCombinations.ContainsKey(polygon))
-                                verticesCombinations.Add(polygon, polygonLines);
+                            if (!verticesCombinations.Contains(polygon))
+                                verticesCombinations.Add(polygon);
                             break;
                         }
                         if (polygon.Contains(currentItem))
@@ -362,7 +361,7 @@ namespace Hiale.GTA2NET.Core.Collision
                             break;
                         currentItem = preferedLine.End;
                         currentDirection = preferedLine.Direction;
-                        polygonLines.Add(preferedLine);
+                        polygon.LineSegments.Add(preferedLine);
                         remainingLines.Remove(preferedLine);
                     } while (true);
                 }
@@ -374,41 +373,41 @@ namespace Hiale.GTA2NET.Core.Collision
 
             //ToDo: FixPolygonStartPoint
 
-            return verticesCombinations.Keys.ToList();
+            return verticesCombinations;
         }
 
-        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<KeyValuePair<Polygon, List<LineSegment>>> verticesCombinations)
+        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<Polygon> verticesCombinations)
         {
             //Find lines which belongs to no polygon i.e. are forlorn
             var forlornLines = new List<LineSegment>(sourceSegments);
             var linesToRemove = new List<LineSegment>();
             foreach (var vertices in verticesCombinations)
             {
-                foreach (var line in vertices.Value.Where(line => !linesToRemove.Contains(line)))
+                foreach (var line in vertices.LineSegments.Where(line => !linesToRemove.Contains(line)))
                     linesToRemove.Add(line);
             }
             foreach (var lineSegment in linesToRemove)
                 forlornLines.Remove(lineSegment);
             return forlornLines;
         }
-        
+
         /// <summary>
         /// Removes vertices combinations which contain other smaller vertices. Only the smallest possible combinations are needed.
         /// See Polygon Combinations.png: The blue outline shows the source figure. The red polygon gets removed because it contains other polygons.
         /// </summary>
         /// <param name="verticesCombinations"></param>
-        private static void RemoveUnnecessaryPolygons(IDictionary<Polygon, List<LineSegment>> verticesCombinations)
+        private static void RemoveUnnecessaryPolygons(ICollection<Polygon> verticesCombinations)
         {
             var itemsToRemove = new List<Polygon>();
             foreach (var verticesCombination in verticesCombinations)
             {
                 foreach (var verticesCombination2 in verticesCombinations)
                 {
-                    if (verticesCombination.Key == verticesCombination2.Key)
+                    if (verticesCombination == verticesCombination2)
                         continue;
-                    var contains = verticesCombination.Key.Contains(verticesCombination2.Key);
-                    if (contains && !itemsToRemove.Contains(verticesCombination.Key))
-                        itemsToRemove.Add(verticesCombination.Key);
+                    var contains = verticesCombination.Contains(verticesCombination2);
+                    if (contains && !itemsToRemove.Contains(verticesCombination))
+                        itemsToRemove.Add(verticesCombination);
                 }
             }
             foreach (var item in itemsToRemove)
