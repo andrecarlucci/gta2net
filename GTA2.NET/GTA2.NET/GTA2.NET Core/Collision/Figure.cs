@@ -288,7 +288,6 @@ namespace Hiale.GTA2NET.Core.Collision
         public Polygon CreatePolygon(IEnumerable<LineSegment> sourceSegments)
         {
             var polygon = new Polygon();
-            var directions = new List<Direction>();
             var lineSegments = new List<LineSegment>(sourceSegments);
 
             var currentItem = lineSegments.First().Start;
@@ -308,17 +307,17 @@ namespace Hiale.GTA2NET.Core.Collision
                     continue;
                 currentDirection = preferedLine.Direction;
                 polygon.Add(previousItem);
-                directions.Add(currentDirection);
+                polygon.Lines.Add(preferedLine);
             }
-            FixPolygonStartPoint(polygon, directions);
+            FixPolygonStartPoint(polygon);
             return polygon;
         }
 
-        private static void FixPolygonStartPoint(IList<Vector2> polygon, IList<Direction> directions)
+        private static void FixPolygonStartPoint(Polygon polygon)
         {
-            if (polygon.Count != directions.Count || polygon.Count < 3)
+            if (polygon.Count < 3)
                 return;
-            if (directions.First() != directions.Last())
+            if (polygon.Lines.First().Direction != polygon.Lines.Last().Direction)
                 return;
             polygon.RemoveAt(0);
         }
@@ -361,7 +360,7 @@ namespace Hiale.GTA2NET.Core.Collision
                             break;
                         currentItem = preferedLine.End;
                         currentDirection = preferedLine.Direction;
-                        polygon.LineSegments.Add(preferedLine);
+                        polygon.Lines.Add(preferedLine);
                         remainingLines.Remove(preferedLine);
                     } while (true);
                 }
@@ -371,7 +370,8 @@ namespace Hiale.GTA2NET.Core.Collision
             var forlornLines = GetPolygonForlornLines(sourceSegments, verticesCombinations);
             obstacles.AddRange(forlornLines.Select(forlornLine => new LineObstacle(forlornLine.Start, forlornLine.End, Layer)));
 
-            //ToDo: FixPolygonStartPoint
+            foreach (var verticesCombination in verticesCombinations)
+                FixPolygonStartPoint(verticesCombination);
 
             return verticesCombinations;
         }
@@ -383,7 +383,7 @@ namespace Hiale.GTA2NET.Core.Collision
             var linesToRemove = new List<LineSegment>();
             foreach (var vertices in verticesCombinations)
             {
-                foreach (var line in vertices.LineSegments.Where(line => !linesToRemove.Contains(line)))
+                foreach (var line in vertices.Lines.Where(line => !linesToRemove.Contains(line)))
                     linesToRemove.Add(line);
             }
             foreach (var lineSegment in linesToRemove)
