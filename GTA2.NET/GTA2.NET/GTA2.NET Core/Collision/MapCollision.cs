@@ -26,9 +26,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -42,9 +40,17 @@ namespace Hiale.GTA2NET.Core.Collision
             _map = map;
         }
 
-        public void GetObstacles(int currentLayer,  List<IObstacle> obstacles)
+        public List<IObstacle> GetObstacles()
         {
-            //var obstacles = new List<IObstacle>();
+            var obstacles = new List<IObstacle>();
+            for (var i = 7; i >= 0; i--)
+                GetObstaclesPerLayer(i, obstacles);
+            RemoveUnnecessaryObstacles(obstacles);
+            return obstacles;
+        }
+
+        private void GetObstaclesPerLayer(int currentLayer, List<IObstacle> obstacles)
+        {
             var rawObstacles = GetBlockObstacles(currentLayer);
             var nodes = new LineNodeDictionary(rawObstacles);
 
@@ -53,7 +59,6 @@ namespace Hiale.GTA2NET.Core.Collision
                 var currentFigure = new RawFigure(_map, currentLayer, nodes);
                 nodes.Purge(currentFigure.Lines);
                 currentFigure.Optimize();
-
                 currentFigure.Tokenize(obstacles);
             }
         }
@@ -69,6 +74,69 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
             }
             return obstacles;
+        }
+
+        /// <summary>
+        /// Removes obstacles which are within other obstacles
+        /// </summary>
+        /// <param name="obstacles"></param>
+        private static void RemoveUnnecessaryObstacles(ICollection<IObstacle> obstacles)
+        {
+            var itemsToRemove = new List<IObstacle>();
+            foreach (var target in obstacles)
+            {
+                foreach (var source in obstacles)
+                {
+                    if (source == target)
+                        continue;
+
+                    if (source.Z != target.Z)
+                        continue;
+
+                    var targetPolygon = target as PolygonObstacle;
+                    var targetRectangle = target as RectangleObstacle;
+                    if (targetPolygon == null && targetRectangle == null)
+                        break;
+
+                    var sourcePoints = new List<Vector2>();
+
+                    var sourceLine = source as LineObstacle;
+                    if (sourceLine != null)
+                    {
+                        sourcePoints.Add(sourceLine.Start);
+                        sourcePoints.Add(sourceLine.End);
+                    }
+                    var sourceRectangle = source as RectangleObstacle;
+                    if (sourceRectangle != null)
+                    {
+                        sourcePoints.Add(new Vector2(sourceRectangle.X, sourceRectangle.Y));
+                        sourcePoints.Add(new Vector2(sourceRectangle.X + sourceRectangle.Width, sourceRectangle.Y));
+                        sourcePoints.Add(new Vector2(sourceRectangle.X, sourceRectangle.Y + sourceRectangle.Length));
+                        sourcePoints.Add(new Vector2(sourceRectangle.X + sourceRectangle.Width, sourceRectangle.Y + sourceRectangle.Length));
+                    }
+                    var sourcePolygon = source as PolygonObstacle;
+                    if (sourcePolygon != null)
+                    {
+                        sourcePoints.AddRange(sourcePolygon.Vertices);
+                    }
+
+                    var containsAll = true;
+                    if (targetPolygon != null)
+                    {
+                        if (sourcePoints.Any(sourcePoint => !targetPolygon.Contains(sourcePoint)))
+                            containsAll = false;
+                    }
+                    if (targetRectangle != null)
+                    {
+                        if (sourcePoints.Any(sourcePoint => !targetRectangle.Contains(sourcePoint)))
+                            containsAll = false;
+                    }
+                    if (containsAll && !itemsToRemove.Contains(source))
+                        itemsToRemove.Add(source);
+                }
+            }
+            foreach (var item in itemsToRemove)
+                obstacles.Remove(item);
         }
     }
 }
