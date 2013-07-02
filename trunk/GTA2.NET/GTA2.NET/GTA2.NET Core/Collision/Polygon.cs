@@ -35,13 +35,13 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class Polygon : VerticesEx
     {
-        public List<LineSegment> LineSegments { get; private set; }
+        public List<LineSegment> Lines { get; private set; }
 
         public bool Filled { get; private set; }
 
         public Polygon()
         {
-            LineSegments = new List<LineSegment>();
+            Lines = new List<LineSegment>();
         }
 
         public void Tokenize(Map.Map map, int layer, List<IObstacle> obstacles)
@@ -49,7 +49,7 @@ namespace Hiale.GTA2NET.Core.Collision
             var convexPolygons = BayazitDecomposer.ConvexPartition(this);
             var blockPointsDictionary = new Dictionary<Block, List<Vector2>>();
             var blocks = GetAssociatedBlocks(convexPolygons, map, layer, blockPointsDictionary);
-            var layerObstacles = CreateLayerObstacles(layer, obstacles);
+            var layerObstacles = CreateLayerObstacles(layer, obstacles); //ToDo: Don't call this method every time, the result does not change...
             Filled = CheckLid(blocks, map, layer, layerObstacles, blockPointsDictionary);
             if (Filled)
             {
@@ -87,7 +87,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return openBlocks == 0;
         }
 
-        private static IEnumerable<Block> GetAssociatedBlocks(IEnumerable<List<Vector2>> convexPolygons, Map.Map map, int layer, Dictionary<Block, List<Vector2>> blockPointsDictionary)
+        private static IEnumerable<Block> GetAssociatedBlocks(IEnumerable<List<Vector2>> convexPolygons, Map.Map map, int layer, IDictionary<Block, List<Vector2>> blockPointsDictionary)
         {
             var blocks = new List<Block>();
             foreach (var convexPolygon in convexPolygons)
