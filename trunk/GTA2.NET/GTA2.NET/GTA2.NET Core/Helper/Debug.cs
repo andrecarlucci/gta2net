@@ -37,6 +37,8 @@ namespace Hiale.GTA2NET.Core.Helper
 {
     public static class Debug
     {
+        private const bool UseRandomColor = false;
+
         public static void Run()
         {
             DebugObstacles();
@@ -46,14 +48,10 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             try
             {
-                var map = new Map.Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
-                //var map = new Map.Map(Globals.MapsSubDir + "\\bil.gmp");
+                //var map = new Map.Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
+                var map = new Map.Map(Globals.MapsSubDir + "\\bil.gmp");
                 var collision = new MapCollision(map);
-                var obstacles = new List<IObstacle>();
-                for (var i = 7; i >= 0; i--)
-                {
-                    collision.GetObstacles(i, obstacles);
-                }
+                var obstacles = collision.GetObstacles();
                 DisplayCollision(obstacles);
             }
             catch (Exception e)
@@ -107,7 +105,7 @@ namespace Hiale.GTA2NET.Core.Helper
                         var points = new System.Drawing.Point[polygonObstacle.Vertices.Count];
                         for (var i = 0; i < polygonObstacle.Vertices.Count; i++)
                             points[i] = new System.Drawing.Point((int)polygonObstacle.Vertices[i].X * 10, (int)polygonObstacle.Vertices[i].Y * 10);
-                        g.FillPolygon(new SolidBrush(System.Drawing.Color.OrangeRed), points);
+                        g.FillPolygon(new SolidBrush(System.Drawing.Color.FromArgb(128, UseRandomColor ? GetRandomColor() : System.Drawing.Color.OrangeRed)), points);
                     }
 
                 }
@@ -118,6 +116,15 @@ namespace Hiale.GTA2NET.Core.Helper
                 pair.Value.Save(pair.Key + ".png", ImageFormat.Png);
                 pair.Value.Dispose();
             }
+        }
+
+        private static Random _random;
+
+        private static System.Drawing.Color GetRandomColor()
+        {
+            if (_random == null)
+                _random = new Random();
+            return System.Drawing.Color.FromArgb(128, _random.Next(256), _random.Next(256), _random.Next(256));
         }
 
         public static void SaveSegmentsPicture(List<LineSegment> segments, Stream outputStream, string name)
