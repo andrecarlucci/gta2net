@@ -28,9 +28,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using FarseerPhysics.Common;
 using Hiale.GTA2NET.Core.Collision;
-using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Helper
@@ -81,12 +79,16 @@ namespace Hiale.GTA2NET.Core.Helper
                     {
                         var rectObstacle = (RectangleObstacle)obstacle;
                         g.FillRectangle(new SolidBrush(System.Drawing.Color.FromArgb(128, System.Drawing.Color.Red)), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
-                        g.DrawRectangle(new Pen(System.Drawing.Color.Red), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
+                        g.DrawRectangle(new Pen(System.Drawing.Color.FromArgb(192, System.Drawing.Color.Red)), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
+                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), rectObstacle.X * 10 - 2, rectObstacle.Y * 10 - 2, 4, 4);
+                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), (rectObstacle.X + rectObstacle.Width) * 10 - 2, rectObstacle.Y * 10 - 2, 4, 4);
+                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), (rectObstacle.X + rectObstacle.Width) * 10 - 2, (rectObstacle.Y + rectObstacle.Length) * 10 - 2, 4, 4);
+                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), rectObstacle.X * 10 - 2, (rectObstacle.Y + rectObstacle.Length) * 10 - 2, 4, 4);
                     }
                     else if (obstacle is LineObstacle)
                     {
                         var lineObstacle = (LineObstacle)obstacle;
-                        g.DrawLine(new Pen(System.Drawing.Color.FromArgb(128,System.Drawing.Color.Magenta)), new System.Drawing.Point((int)lineObstacle.Start.X * 10, (int)lineObstacle.Start.Y * 10), new System.Drawing.Point((int)lineObstacle.End.X * 10, (int)lineObstacle.End.Y * 10));
+                        g.DrawLine(new Pen(System.Drawing.Color.FromArgb(192,System.Drawing.Color.Magenta)), new System.Drawing.Point((int)lineObstacle.Start.X * 10, (int)lineObstacle.Start.Y * 10), new System.Drawing.Point((int)lineObstacle.End.X * 10, (int)lineObstacle.End.Y * 10));
                         g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.Start.X * 10 - 2, lineObstacle.Start.Y * 10 - 2, 4, 4);
                         g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.End.X * 10 - 2, lineObstacle.End.Y * 10 - 2, 4, 4);
                     }
@@ -105,9 +107,12 @@ namespace Hiale.GTA2NET.Core.Helper
                         var polygonObstacle = (PolygonObstacle)obstacle;
                         var points = new System.Drawing.Point[polygonObstacle.Vertices.Count];
                         for (var i = 0; i < polygonObstacle.Vertices.Count; i++)
-                            points[i] = new System.Drawing.Point((int)polygonObstacle.Vertices[i].X * 10, (int)polygonObstacle.Vertices[i].Y * 10);
+                        {
+                            points[i] = new System.Drawing.Point((int) polygonObstacle.Vertices[i].X*10, (int) polygonObstacle.Vertices[i].Y*10);
+                            g.DrawEllipse(new Pen(System.Drawing.Color.OrangeRed), points[i].X - 2, points[i].Y - 2, 4, 4);
+                        }
                         g.FillPolygon(new SolidBrush(System.Drawing.Color.FromArgb(128, System.Drawing.Color.OrangeRed)), points);
-                        g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed), points);
+                        g.DrawPolygon(new Pen(System.Drawing.Color.FromArgb(192, System.Drawing.Color.OrangeRed)), points);
                     }
 
                 }
