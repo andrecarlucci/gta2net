@@ -37,6 +37,11 @@ namespace Hiale.GTA2NET.Core.Collision
     [Serializable]
     public class LineObstacle : ILineObstacle
     {
+        public ObstacleType Type
+        {
+            get { return ObstacleType.Line; }
+        }
+
         public int Z { get; set; }
 
         public Vector2 Start { get; set; }

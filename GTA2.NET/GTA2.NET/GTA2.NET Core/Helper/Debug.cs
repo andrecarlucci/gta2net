@@ -37,8 +37,6 @@ namespace Hiale.GTA2NET.Core.Helper
 {
     public static class Debug
     {
-        private const bool UseRandomColor = false;
-
         public static void Run()
         {
             DebugObstacles();
@@ -82,12 +80,15 @@ namespace Hiale.GTA2NET.Core.Helper
                     if (obstacle is RectangleObstacle)
                     {
                         var rectObstacle = (RectangleObstacle)obstacle;
-                        g.FillRectangle(new SolidBrush(System.Drawing.Color.Red), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
+                        g.FillRectangle(new SolidBrush(System.Drawing.Color.FromArgb(128, System.Drawing.Color.Red)), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
+                        g.DrawRectangle(new Pen(System.Drawing.Color.Red), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
                     }
                     else if (obstacle is LineObstacle)
                     {
                         var lineObstacle = (LineObstacle)obstacle;
-                        g.DrawLine(new Pen(System.Drawing.Color.Magenta), new System.Drawing.Point((int)lineObstacle.Start.X * 10, (int)lineObstacle.Start.Y * 10), new System.Drawing.Point((int)lineObstacle.End.X * 10, (int)lineObstacle.End.Y * 10));
+                        g.DrawLine(new Pen(System.Drawing.Color.FromArgb(128,System.Drawing.Color.Magenta)), new System.Drawing.Point((int)lineObstacle.Start.X * 10, (int)lineObstacle.Start.Y * 10), new System.Drawing.Point((int)lineObstacle.End.X * 10, (int)lineObstacle.End.Y * 10));
+                        g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.Start.X * 10 - 2, lineObstacle.Start.Y * 10 - 2, 4, 4);
+                        g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.End.X * 10 - 2, lineObstacle.End.Y * 10 - 2, 4, 4);
                     }
                     //else if (obstacle is FallEdge)
                     //{
@@ -105,7 +106,8 @@ namespace Hiale.GTA2NET.Core.Helper
                         var points = new System.Drawing.Point[polygonObstacle.Vertices.Count];
                         for (var i = 0; i < polygonObstacle.Vertices.Count; i++)
                             points[i] = new System.Drawing.Point((int)polygonObstacle.Vertices[i].X * 10, (int)polygonObstacle.Vertices[i].Y * 10);
-                        g.FillPolygon(new SolidBrush(System.Drawing.Color.FromArgb(128, UseRandomColor ? GetRandomColor() : System.Drawing.Color.OrangeRed)), points);
+                        g.FillPolygon(new SolidBrush(System.Drawing.Color.FromArgb(128, System.Drawing.Color.OrangeRed)), points);
+                        g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed), points);
                     }
 
                 }
@@ -118,14 +120,6 @@ namespace Hiale.GTA2NET.Core.Helper
             }
         }
 
-        private static Random _random;
-
-        private static System.Drawing.Color GetRandomColor()
-        {
-            if (_random == null)
-                _random = new Random();
-            return System.Drawing.Color.FromArgb(128, _random.Next(256), _random.Next(256), _random.Next(256));
-        }
 
         public static void SaveSegmentsPicture(List<LineSegment> segments, Stream outputStream, string name)
         {
@@ -167,69 +161,23 @@ namespace Hiale.GTA2NET.Core.Helper
             SavePolygonPicture(points);
         }
 
-        public static void SavePolygonPicture(Vertices vertices)
-        {
-            var points = new PointF[vertices.Count];
-            for (var i = 0; i < vertices.Count; i++)
-                points[i] = new PointF(vertices[i].X * 10, vertices[i].Y * 10);
-            SavePolygonPicture(points);
-        }
-
         public static void SavePolygonPicture(PointF[] points)
         {
-            using (var bmp = new Bitmap(2560, 2560))
+            try
             {
-                using (var g = Graphics.FromImage(bmp))
+                using (var bmp = new Bitmap(2560, 2560))
                 {
-                    g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
-                }
-                bmp.Save("debug\\polygon.png", ImageFormat.Png);
-            }
-        }
-
-        public static void SavePolygonWithBlocksPicture(List<Vertices> convexPolygons, List<Block> blocks )
-        {
-            using (var bmp = new Bitmap(2560, 2560))
-            {
-                using (var g = Graphics.FromImage(bmp))
-                {
-                    foreach (var block in blocks)
+                    using (var g = Graphics.FromImage(bmp))
                     {
-                        g.FillRectangle(new SolidBrush(System.Drawing.Color.Aqua), block.Position.X*10, block.Position.Y*10, 10, 10);
-                    }
-                    foreach (var convexPolygon in convexPolygons)
-                    {
-                        var points = new PointF[convexPolygon.Count];
-                        for (var i = 0; i < convexPolygon.Count; i++)
-                            points[i] = new PointF(convexPolygon[i].X * 10, convexPolygon[i].Y * 10);
                         g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
                     }
+                    bmp.Save("debug\\polygon.png", ImageFormat.Png);
                 }
-                bmp.Save("debug\\polygonBlocks.png", ImageFormat.Png);
             }
-        }
-
-        public static void SavePolygonWithPointsPicture(List<Vector2> polygon, Dictionary<Vector2, bool> pointsCache)
-        {
-            var points = new PointF[polygon.Count];
-            for (var i = 0; i < polygon.Count; i++)
-                points[i] = new PointF(polygon[i].X * 10, polygon[i].Y * 10);
-            
-            using (var bmp = new Bitmap(2560, 2560))
+            catch (Exception)
             {
-                using (var g = Graphics.FromImage(bmp))
-                {
-                    g.DrawPolygon(new Pen(System.Drawing.Color.OrangeRed, 1), points);
-
-                    foreach (var point in pointsCache)
-                    {
-                        System.Drawing.Color color = point.Value ? System.Drawing.Color.Green : System.Drawing.Color.DarkRed;
-                        g.DrawRectangle(new Pen(color), point.Key.X*10, point.Key.Y*10, 0.5f, 0.5f);
-                    }
-                }
-                bmp.Save("debug\\polygonPoints.png", ImageFormat.Png);
+                //ignore
             }
         }
-
     }
 }

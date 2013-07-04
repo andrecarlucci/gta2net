@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Obstacle.cs
-// Created: 09.03.2013
+// File: ObstacleType.cs
+// Created: 03.07.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,19 +23,19 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public interface IObstacle
+    [Flags]
+    public enum ObstacleType
     {
-        /// <summary>
-        /// The type of this obstacle.
-        /// </summary>
-        ObstacleType Type { get; }
-
-        /// <summary>
-        /// The layer this obstacle is on.
-        /// </summary>
-        int Z { get; set; }
+        Other = 0,
+        Line,
+        Polygon,
+        Rectangle,
     }
 }

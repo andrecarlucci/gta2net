@@ -32,6 +32,11 @@ namespace Hiale.GTA2NET.Core.Collision
     [Serializable]
     public class RectangleObstacle : IObstacle
     {
+        public ObstacleType Type
+        {
+            get { return ObstacleType.Rectangle; }
+        }
+
         public int Z { get; set; }
 
         public float X;
