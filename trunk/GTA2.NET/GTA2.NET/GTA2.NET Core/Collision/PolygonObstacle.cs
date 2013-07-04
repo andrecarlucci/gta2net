@@ -33,6 +33,11 @@ namespace Hiale.GTA2NET.Core.Collision
     [Serializable]
     public class PolygonObstacle : IObstacle
     {
+        public ObstacleType Type
+        {
+            get { return ObstacleType.Polygon; }
+        }
+
         public int Z { get; set; }
 
         public List<Vector2> Vertices { get; set; }

@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Obstacle.cs
-// Created: 09.03.2013
+// File: ObstacleCollection.cs
+// Created: 03.07.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,19 +23,34 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
-    public interface IObstacle
+    public class ObstacleCollection : List<IObstacle>
     {
-        /// <summary>
-        /// The type of this obstacle.
-        /// </summary>
-        ObstacleType Type { get; }
+        public List<IObstacle> GetObstacles(int layer)
+        {
+            return this.Where(obstacle => obstacle.Z == layer).ToList();
+        }
 
-        /// <summary>
-        /// The layer this obstacle is on.
-        /// </summary>
-        int Z { get; set; }
+        //public List<IObstacle> GetObstacles(int layerRangeMin, int layerRangeMax)
+        //{
+        //    return this.Where(obstacle => obstacle.Z == layer).ToList();
+        //}
+
+        public List<IObstacle> GetObstacles(ObstacleType type)
+        {
+            return this.Where(obstacle => (type & obstacle.Type) == obstacle.Type).ToList();
+        }
+
+        public List<IObstacle> GetObstacles(int layer, ObstacleType type)
+        {
+            return this.Where(obstacle => (type & obstacle.Type) == obstacle.Type && obstacle.Z == layer).ToList();
+        }
+
+        
     }
 }

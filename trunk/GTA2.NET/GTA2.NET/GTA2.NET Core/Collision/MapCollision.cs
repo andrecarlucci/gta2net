@@ -40,16 +40,16 @@ namespace Hiale.GTA2NET.Core.Collision
             _map = map;
         }
 
-        public List<IObstacle> GetObstacles()
+        public ObstacleCollection GetObstacles()
         {
-            var obstacles = new List<IObstacle>();
+            var obstacles = new ObstacleCollection();
             for (var i = 7; i >= 0; i--)
                 GetObstaclesPerLayer(i, obstacles);
             RemoveUnnecessaryObstacles(obstacles);
             return obstacles;
         }
 
-        private void GetObstaclesPerLayer(int currentLayer, List<IObstacle> obstacles)
+        private void GetObstaclesPerLayer(int currentLayer, ObstacleCollection obstacles)
         {
             var rawObstacles = GetBlockObstacles(currentLayer);
             var nodes = new LineNodeDictionary(rawObstacles);

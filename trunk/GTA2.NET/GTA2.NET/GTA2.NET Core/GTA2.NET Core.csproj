@@ -51,6 +51,8 @@
     <Compile Include="CarPhysics.cs" />
     <Compile Include="Collision\Figure.cs" />
     <Compile Include="Collision\FigureLoadSave.cs" />
+    <Compile Include="Collision\ObstacleCollection.cs" />
+    <Compile Include="Collision\ObstacleType.cs" />
     <Compile Include="Collision\Polygon.cs" />
     <Compile Include="Collision\PolygonObstacle.cs" />
     <Compile Include="Collision\RawFigure.cs" />

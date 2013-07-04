@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using FarseerPhysics.Common.Decomposition;
+using FarseerPhysics.Common.PolygonManipulation;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
 using Microsoft.Xna.Framework;
@@ -37,32 +38,29 @@ namespace Hiale.GTA2NET.Core.Collision
     {
         public List<LineSegment> Lines { get; private set; }
 
-        public bool Filled { get; private set; }
-
         public Polygon()
         {
             Lines = new List<LineSegment>();
         }
 
-        public void Tokenize(Map.Map map, int layer, List<IObstacle> obstacles)
+        public bool CheckIfFilled(Map.Map map, int layer, ObstacleCollection obstacles)
         {
+            Simplify();
             var convexPolygons = BayazitDecomposer.ConvexPartition(this);
             var blockPointsDictionary = new Dictionary<Block, List<Vector2>>();
             var blocks = GetAssociatedBlocks(convexPolygons, map, layer, blockPointsDictionary);
             var layerObstacles = CreateLayerObstacles(layer, obstacles); //ToDo: Don't call this method every time, the result does not change...
-            Filled = CheckLid(blocks, map, layer, layerObstacles, blockPointsDictionary);
-            if (Filled)
-            {
-                foreach (var convexPolygon in convexPolygons)
-                    AddPolygonObstacle(convexPolygon, IsRectangleObstacle(convexPolygon), obstacles, layer);
-            }
-            else
-            {
-                AddLineObstacles(this, obstacles, layer);
-            }
+            return CheckLid(blocks, map, layer, layerObstacles, blockPointsDictionary);
         }
 
-        private static Dictionary<int, List<IObstacle>> CreateLayerObstacles(int layer, List<IObstacle> obstacles)
+        private void Simplify()
+        {
+            var vertices = SimplifyTools.CollinearSimplify(this);
+            Clear();
+            AddRange(vertices);
+        }
+
+        private static Dictionary<int, List<IObstacle>> CreateLayerObstacles(int layer, ObstacleCollection obstacles)
         {
             var dict = new Dictionary<int, List<IObstacle>>();
             for (var z = layer + 1; z < 8; z++)
@@ -220,55 +218,6 @@ namespace Hiale.GTA2NET.Core.Collision
                     blockPoints.Add(lineObstacle.End);
             }
             return blockPoints;
-        }
-
-        private static void AddLineObstacles(IList<Vector2> polygonVertices, ICollection<IObstacle> obstacles, int layer)
-        {
-            for (int i = 0, j = polygonVertices.Count - 1; i < polygonVertices.Count; j = i++)
-                obstacles.Add(new LineObstacle(polygonVertices[i], polygonVertices[j], layer));
-        }
-
-        public static void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, List<IObstacle> obstacles, int layer)
-        {
-            if (isRectangle)
-            {
-                var minX = float.MaxValue;
-                var maxX = float.MinValue;
-                var minY = float.MaxValue;
-                var maxY = float.MinValue;
-                foreach (var polygonVertex in polygonVertices)
-                {
-                    if (polygonVertex.X < minX)
-                        minX = polygonVertex.X;
-                    if (polygonVertex.X > maxX)
-                        maxX = polygonVertex.X;
-                    if (polygonVertex.Y < minY)
-                        minY = polygonVertex.Y;
-                    if (polygonVertex.Y > maxY)
-                        maxY = polygonVertex.Y;
-                }
-                var width = maxX - minX;
-                var height = maxY - minY;
-                var rectangle = new RectangleObstacle(minX, minY, width, height, layer);
-                obstacles.Add(rectangle);
-            }
-            else
-            {
-                var polygonObstacle = new PolygonObstacle(layer) { Vertices = polygonVertices };
-                obstacles.Add(polygonObstacle);
-            }
-        }
-
-        private static bool IsRectangleObstacle(IList<Vector2> polygonVertices)
-        {
-            // ReSharper disable CompareOfFloatsByEqualityOperator
-            for (int i = 0, j = polygonVertices.Count - 1; i < polygonVertices.Count; j = i++)
-            {
-                if (polygonVertices[i].X != polygonVertices[j].X && polygonVertices[i].Y != polygonVertices[j].Y)
-                    return false;
-            }
-            return true;
-            // ReSharper restore CompareOfFloatsByEqualityOperator
         }
     }
 }

@@ -99,5 +99,46 @@ namespace Hiale.GTA2NET.Core.Helper
             var sl = (float)(((endPoint1.Y - point.Y) * (endPoint2.X - endPoint1.X) - (endPoint1.X - point.X) * (endPoint2.Y - endPoint1.Y)) / Math.Sqrt(segmentLengthSqr));
             return -epsilon <= sl && sl <= epsilon;
         }
+
+        public static bool IsPolygonSubsetOf(Vertices polygonA, Vertices polygonB, out Vertices biggerPolygon)
+        {
+            var area = polygonA.GetArea();
+            var area2 = polygonB.GetArea();
+            Vertices smallerPolygon;
+            if (area > area2)
+            {
+                biggerPolygon = polygonA;
+                smallerPolygon = polygonB;
+            }
+            else
+            {
+                biggerPolygon = polygonB;
+                smallerPolygon = polygonA;
+            }
+            var containAll = true;
+            foreach (var vertex in smallerPolygon)
+            {
+                if (IsPointInPolygonOrEdge(biggerPolygon, vertex))
+                    continue;
+                containAll = false;
+                break;
+            }
+            return containAll;
+        }
+
+        public static bool IsRectangle(IList<Vector2> polygon)
+        {
+            if (polygon.Count != 4)
+                return false;
+            // ReSharper disable CompareOfFloatsByEqualityOperator
+            for (int i = 0, j = polygon.Count - 1; i < polygon.Count; j = i++)
+            {
+                if (polygon[i].X != polygon[j].X && polygon[i].Y != polygon[j].Y)
+                    return false;
+            }
+            return true;
+            // ReSharper restore CompareOfFloatsByEqualityOperator
+        }
+
     }
 }

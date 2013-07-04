@@ -26,6 +26,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarseerPhysics.Common;
+using FarseerPhysics.Common.PolygonManipulation;
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
@@ -71,7 +73,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// Creates IObstacle objects of this figure.
         /// </summary>
         /// <returns></returns>
-        public virtual void Tokenize(List<IObstacle> obstacles)
+        public virtual void Tokenize(ObstacleCollection obstacles)
         {
             if (Lines.Count == 0)
                 return;
@@ -82,13 +84,15 @@ namespace Hiale.GTA2NET.Core.Collision
             if (SwitchPoints.Count > 0)
             {
                 var polygons = SplitPolygon(Lines, obstacles);
-                foreach (var polygon in polygons)
-                    polygon.Tokenize(Map, Layer, obstacles);
+                MergePolygons(polygons, obstacles);
             }
             else
             {
                 var polygon = CreatePolygon(Lines);
-                polygon.Tokenize(Map, Layer, obstacles);
+                if (polygon.CheckIfFilled(Map, Layer, obstacles))
+                    AddPolygonObstacle(polygon, VerticesEx.IsRectangle(polygon), obstacles, Layer);
+                else
+                    AddLineObstacles(polygon, obstacles, Layer);
             }
         }
 
@@ -184,7 +188,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// Removes Forlorn out of the figure and converts them to LineObstacles.
         /// </summary>
         /// <param name="obstacles"></param>
-        protected virtual void GetForlorn(List<IObstacle> obstacles)
+        protected virtual void GetForlorn(ObstacleCollection obstacles)
         {
             var forlornNodes = new Queue<Vector2>();
             foreach (var forlornNodeStart in ForlornStartNodes)
@@ -309,17 +313,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 polygon.Add(previousItem);
                 polygon.Lines.Add(preferedLine);
             }
-            FixPolygonStartPoint(polygon);
             return polygon;
-        }
-
-        private static void FixPolygonStartPoint(Polygon polygon)
-        {
-            if (polygon.Count < 3)
-                return;
-            if (polygon.Lines.First().Direction != polygon.Lines.Last().Direction)
-                return;
-            polygon.RemoveAt(0);
         }
 
         /// <summary>
@@ -328,7 +322,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <param name="obstacles"></param>
-        protected virtual ICollection<Polygon> SplitPolygon(List<LineSegment> sourceSegments, List<IObstacle> obstacles)
+        protected virtual ICollection<Polygon> SplitPolygon(List<LineSegment> sourceSegments, ObstacleCollection obstacles)
         {
             var verticesCombinations = new HashSet<Polygon>();
             foreach (var switchPoint in SwitchPoints)
@@ -370,10 +364,64 @@ namespace Hiale.GTA2NET.Core.Collision
             var forlornLines = GetPolygonForlornLines(sourceSegments, verticesCombinations);
             obstacles.AddRange(forlornLines.Select(forlornLine => new LineObstacle(forlornLine.Start, forlornLine.End, Layer)));
 
-            foreach (var verticesCombination in verticesCombinations)
-                FixPolygonStartPoint(verticesCombination);
-
             return verticesCombinations;
+        }
+
+        private void MergePolygons(IEnumerable<Polygon> polygons, ObstacleCollection obstacles)
+        {
+            var filledPolygons = new List<Vertices>();
+            var mergedPolygons = new List<Vertices>();
+
+            foreach (var polygon in polygons)
+            {
+                if (polygon.CheckIfFilled(Map, Layer, obstacles))
+                    filledPolygons.Add(polygon);
+                else
+                    AddLineObstacles(polygon, obstacles, Layer);
+            }
+
+            while (filledPolygons.Count > 0)
+            {
+                var polygon = filledPolygons.First();
+                var changed = true;
+                while (changed)
+                {
+                    changed = false;
+                    var index = 0;
+                    while (index < filledPolygons.Count)
+                    {
+                        var polygon2 = filledPolygons[index];
+                        var error = PolyClipError.None;
+                        var combinedPolygons = polygon == polygon2 ? new List<Vertices> { polygon } : YuPengClipper.Union(polygon2, polygon, out error);
+                        if (combinedPolygons.Count == 0)
+                        {
+                            //sometimes a polygon is a subset of the other polygon. Try to check that...
+                            Vertices biggerPolygon;
+                            if (VerticesEx.IsPolygonSubsetOf(polygon, polygon2, out biggerPolygon))
+                            {
+                                combinedPolygons = new List<Vertices> { biggerPolygon };
+                                error = PolyClipError.None; //we could recover it...
+                            }
+                        }
+                        //if (combinedPolygons.Count > 2)
+                        //    //the polygons intersect at several points, we ignore them as this would lead to holes...
+                        //if (error != PolyClipError.None)
+                        //    //some error occurred, so we igore this union process...
+                        if (combinedPolygons.Count == 1) //they intersect
+                        {
+                            filledPolygons.Remove(polygon2);
+                            changed = true;
+                            polygon = SimplifyTools.CollinearSimplify(combinedPolygons[0]);
+                        }
+                        else //combinedPolygons.Count > 1 --> they don't intersect (or may do at several points, but we ignore it )
+                            index++;
+                    }
+                }
+                mergedPolygons.Add(polygon);
+            }
+
+            foreach (var mergedPolygon in mergedPolygons)
+                AddPolygonObstacle(mergedPolygon, VerticesEx.IsRectangle(mergedPolygon), obstacles, Layer);
         }
 
         private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<Polygon> verticesCombinations)
@@ -448,6 +496,45 @@ namespace Hiale.GTA2NET.Core.Collision
             if (priority > 8)
                 priority = priority - 8;
             return priority;
+        }
+
+        //Add to obstacle
+
+        private static void AddLineObstacles(IList<Vector2> polygonVertices, ICollection<IObstacle> obstacles, int layer)
+        {
+            for (int i = 0, j = polygonVertices.Count - 1; i < polygonVertices.Count; j = i++)
+                obstacles.Add(new LineObstacle(polygonVertices[i], polygonVertices[j], layer));
+        }
+
+        private static void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, ObstacleCollection obstacles, int layer)
+        {
+            if (isRectangle)
+            {
+                var minX = float.MaxValue;
+                var maxX = float.MinValue;
+                var minY = float.MaxValue;
+                var maxY = float.MinValue;
+                foreach (var polygonVertex in polygonVertices)
+                {
+                    if (polygonVertex.X < minX)
+                        minX = polygonVertex.X;
+                    if (polygonVertex.X > maxX)
+                        maxX = polygonVertex.X;
+                    if (polygonVertex.Y < minY)
+                        minY = polygonVertex.Y;
+                    if (polygonVertex.Y > maxY)
+                        maxY = polygonVertex.Y;
+                }
+                var width = maxX - minX;
+                var height = maxY - minY;
+                var rectangle = new RectangleObstacle(minX, minY, width, height, layer);
+                obstacles.Add(rectangle);
+            }
+            else
+            {
+                var polygonObstacle = new PolygonObstacle(layer) { Vertices = polygonVertices };
+                obstacles.Add(polygonObstacle);
+            }
         }
     }
 }
