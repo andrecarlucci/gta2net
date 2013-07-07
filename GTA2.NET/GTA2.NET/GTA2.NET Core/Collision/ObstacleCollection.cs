@@ -36,11 +36,6 @@ namespace Hiale.GTA2NET.Core.Collision
             return this.Where(obstacle => obstacle.Z == layer).ToList();
         }
 
-        //public List<IObstacle> GetObstacles(int layerRangeMin, int layerRangeMax)
-        //{
-        //    return this.Where(obstacle => obstacle.Z == layer).ToList();
-        //}
-
         public List<IObstacle> GetObstacles(ObstacleType type)
         {
             return this.Where(obstacle => (type & obstacle.Type) == obstacle.Type).ToList();
@@ -50,7 +45,5 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             return this.Where(obstacle => (type & obstacle.Type) == obstacle.Type && obstacle.Z == layer).ToList();
         }
-
-        
     }
 }

@@ -38,11 +38,6 @@ namespace Hiale.GTA2NET.Core.Collision
     {
         private LineNodeDictionary Nodes { get; set; }
 
-        private RawFigure() : base()
-        {
-            Nodes = new LineNodeDictionary();
-        }
-
         public RawFigure(Map.Map map, int layer, LineNodeDictionary nodes) : base(map, layer)
         {
             PrepareBasePriorityTable();
@@ -50,7 +45,7 @@ namespace Hiale.GTA2NET.Core.Collision
             Lines = WalkFigure(nodes);
         }
 
-        private List<LineSegment> WalkFigure(LineNodeDictionary nodes)
+        protected List<LineSegment> WalkFigure(LineNodeDictionary nodes)
         {
             var lines = new List<LineSegment>();
             var visitedItems = new List<Vector2>();
@@ -149,7 +144,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return line;
         }
 
-        private void AddToNodes(Vector2 key, LineSegment line)
+        protected void AddToNodes(Vector2 key, LineSegment line)
         {
             List<LineSegment> segments;
             if (Nodes.TryGetValue(key, out segments))
@@ -163,18 +158,7 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
-        private void RemoveNode(Vector2 key, LineSegment line)
-        {
-            List<LineSegment> segments;
-            if (!Nodes.TryGetValue(key, out segments))
-                return;
-            segments.Remove(line);
-            segments.Remove(line.Invert());
-            if (segments.Count == 0)
-                Nodes.Remove(key);
-        }
-
-        private static List<Vector2> GetConnectedNodes(Vector2 origin, IDictionary<Vector2, List<LineSegment>> nodes)
+        protected static List<Vector2> GetConnectedNodes(Vector2 origin, IDictionary<Vector2, List<LineSegment>> nodes)
         {
             List<LineSegment> lineSegments;
             if (nodes.TryGetValue(origin, out lineSegments))

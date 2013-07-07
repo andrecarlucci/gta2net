@@ -88,8 +88,7 @@ namespace Hiale.GTA2NET.Core.Collision
     [Serializable]
     public class SlopeLineObstacle : LineObstacle
     {
-        public SlopeLineObstacle(Vector2 start, Vector2 end, int z)
-            : base(start, end, z)
+        public SlopeLineObstacle(Vector2 start, Vector2 end, int z) : base(start, end, z)
         {
         }
     }

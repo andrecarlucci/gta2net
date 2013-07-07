@@ -61,4 +61,13 @@ namespace Hiale.GTA2NET.Core.Collision
             Z = z;
         }
     }
+
+    [Serializable]
+    public class SlopeRectangleObstacle : RectangleObstacle
+    {
+        public SlopeRectangleObstacle(float x, float y, float width, float length, int z) : base(x, y, width, length, z)
+        {
+        }
+    }
+
 }

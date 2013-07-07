@@ -32,17 +32,17 @@ namespace Hiale.GTA2NET.Core.Collision
 {
     public class LineNodeDictionary : SerializableDictionary<Vector2, List<LineSegment>>
     {
-        internal LineNodeDictionary()
-        {
+        //internal LineNodeDictionary()
+        //{
             
-        }
+        //}
 
-        public LineNodeDictionary(IEnumerable<ILineObstacle> obstacles)
-        {
-            CreateLineNodes(obstacles);
-        }
+        //public LineNodeDictionary(IEnumerable<ILineObstacle> obstacles)
+        //{
+        //    CreateLineNodes(obstacles);
+        //}
 
-        private void CreateLineNodes(IEnumerable<ILineObstacle> obstacles)
+        public virtual void CreateLineNodes(IEnumerable<ILineObstacle> obstacles)
         {
             //var nodes = new Dictionary<Vector2, List<LineSegment>>();
             foreach (var lineObstacle in obstacles)
@@ -60,7 +60,7 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
-        private void InsertLine(LineSegment newLine)
+        protected void InsertLine(LineSegment newLine)
         {
             List<LineSegment> vectorList;
 
@@ -82,5 +82,25 @@ namespace Hiale.GTA2NET.Core.Collision
             }
         }
 
+    }
+
+    public class SlopeLineNodeDictionary : LineNodeDictionary
+    {
+        public override void CreateLineNodes(IEnumerable<ILineObstacle> obstacles)
+        {
+            foreach (var lineObstacle in obstacles)
+            {
+                if (!(lineObstacle is SlopeLineObstacle))
+                    continue;
+                //start point
+                var newLine = new LineSegment(lineObstacle.Start, lineObstacle.End);
+                InsertLine(newLine);
+
+                //end point
+                newLine = new LineSegment(lineObstacle.End, lineObstacle.Start);
+                InsertLine(newLine);
+            }
+        }
+        
     }
 }

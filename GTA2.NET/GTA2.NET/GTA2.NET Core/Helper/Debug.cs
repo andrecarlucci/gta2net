@@ -75,15 +75,13 @@ namespace Hiale.GTA2NET.Core.Helper
 
                 using (var g = Graphics.FromImage(bmp))
                 {
-                    if (obstacle is RectangleObstacle)
+                    if (obstacle is SlopeRectangleObstacle)
                     {
-                        var rectObstacle = (RectangleObstacle)obstacle;
-                        g.FillRectangle(new SolidBrush(System.Drawing.Color.FromArgb(128, System.Drawing.Color.Red)), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
-                        g.DrawRectangle(new Pen(System.Drawing.Color.FromArgb(192, System.Drawing.Color.Red)), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
-                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), rectObstacle.X * 10 - 2, rectObstacle.Y * 10 - 2, 4, 4);
-                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), (rectObstacle.X + rectObstacle.Width) * 10 - 2, rectObstacle.Y * 10 - 2, 4, 4);
-                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), (rectObstacle.X + rectObstacle.Width) * 10 - 2, (rectObstacle.Y + rectObstacle.Length) * 10 - 2, 4, 4);
-                        g.DrawEllipse(new Pen(System.Drawing.Color.Red), rectObstacle.X * 10 - 2, (rectObstacle.Y + rectObstacle.Length) * 10 - 2, 4, 4);
+                        DrawRectangle(obstacle, g, System.Drawing.Color.Blue);
+                    }
+                    else if (obstacle is RectangleObstacle)
+                    {
+                        DrawRectangle(obstacle, g, System.Drawing.Color.Red);
                     }
                     else if (obstacle is LineObstacle)
                     {
@@ -92,27 +90,13 @@ namespace Hiale.GTA2NET.Core.Helper
                         g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.Start.X * 10 - 2, lineObstacle.Start.Y * 10 - 2, 4, 4);
                         g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.End.X * 10 - 2, lineObstacle.End.Y * 10 - 2, 4, 4);
                     }
-                    //else if (obstacle is FallEdge)
-                    //{
-                    //    var fallEdge = (FallEdge)obstacle;
-                    //    g.DrawLine(new Pen(System.Drawing.Color.Turquoise), new System.Drawing.Point((int)fallEdge.Start.X * 10, (int)fallEdge.Start.Y * 10), new System.Drawing.Point((int)fallEdge.End.X * 10, (int)fallEdge.End.Y * 10));
-                    //}
-                    //else if (obstacle is SlopeObstacle)
-                    //{
-                    //    var slopeObstacle = (SlopeObstacle)obstacle;
-                    //    g.FillRectangle(new SolidBrush(System.Drawing.Color.Blue), slopeObstacle.Position.X * 10, slopeObstacle.Position.Y * 10, 10, 10);
-                    //}
+                    else if (obstacle is SlopePolygonObstacle)
+                    {
+                        DrawPolygon(obstacle, g, System.Drawing.Color.Cyan);
+                    }
                     else if (obstacle is PolygonObstacle)
                     {
-                        var polygonObstacle = (PolygonObstacle)obstacle;
-                        var points = new System.Drawing.Point[polygonObstacle.Vertices.Count];
-                        for (var i = 0; i < polygonObstacle.Vertices.Count; i++)
-                        {
-                            points[i] = new System.Drawing.Point((int) polygonObstacle.Vertices[i].X*10, (int) polygonObstacle.Vertices[i].Y*10);
-                            g.DrawEllipse(new Pen(System.Drawing.Color.OrangeRed), points[i].X - 2, points[i].Y - 2, 4, 4);
-                        }
-                        g.FillPolygon(new SolidBrush(System.Drawing.Color.FromArgb(128, System.Drawing.Color.OrangeRed)), points);
-                        g.DrawPolygon(new Pen(System.Drawing.Color.FromArgb(192, System.Drawing.Color.OrangeRed)), points);
+                        DrawPolygon(obstacle, g, System.Drawing.Color.OrangeRed);
                     }
 
                 }
@@ -123,6 +107,30 @@ namespace Hiale.GTA2NET.Core.Helper
                 pair.Value.Save(pair.Key + ".png", ImageFormat.Png);
                 pair.Value.Dispose();
             }
+        }
+
+        private static void DrawPolygon(IObstacle obstacle, Graphics g, System.Drawing.Color color)
+        {
+            var polygonObstacle = (PolygonObstacle) obstacle;
+            var points = new System.Drawing.Point[polygonObstacle.Vertices.Count];
+            for (var i = 0; i < polygonObstacle.Vertices.Count; i++)
+            {
+                points[i] = new System.Drawing.Point((int) polygonObstacle.Vertices[i].X*10, (int) polygonObstacle.Vertices[i].Y*10);
+                g.DrawEllipse(new Pen(color), points[i].X - 2, points[i].Y - 2, 4, 4);
+            }
+            g.FillPolygon(new SolidBrush(System.Drawing.Color.FromArgb(128, color)), points);
+            g.DrawPolygon(new Pen(System.Drawing.Color.FromArgb(192, color)), points);
+        }
+
+        private static void DrawRectangle(IObstacle obstacle, Graphics g, System.Drawing.Color color)
+        {
+            var rectObstacle = (RectangleObstacle) obstacle;
+            g.FillRectangle(new SolidBrush(System.Drawing.Color.FromArgb(128, color)), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
+            g.DrawRectangle(new Pen(System.Drawing.Color.FromArgb(192, color)), rectObstacle.X * 10, rectObstacle.Y * 10, rectObstacle.Width * 10, rectObstacle.Length * 10);
+            g.DrawEllipse(new Pen(color), rectObstacle.X * 10 - 2, rectObstacle.Y * 10 - 2, 4, 4);
+            g.DrawEllipse(new Pen(color), (rectObstacle.X + rectObstacle.Width) * 10 - 2, rectObstacle.Y * 10 - 2, 4, 4);
+            g.DrawEllipse(new Pen(color), (rectObstacle.X + rectObstacle.Width) * 10 - 2, (rectObstacle.Y + rectObstacle.Length) * 10 - 2, 4, 4);
+            g.DrawEllipse(new Pen(color), rectObstacle.X * 10 - 2, (rectObstacle.Y + rectObstacle.Length) * 10 - 2, 4, 4);
         }
 
 

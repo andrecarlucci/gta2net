@@ -42,11 +42,6 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public List<Vector2> Vertices { get; set; }
 
-        public PolygonObstacle(int z) : this(new List<Vector2>(), z)
-        {
-            //
-        }
-
         public PolygonObstacle(List<Vector2> vertices, int z)
         {
             Z = z;
@@ -58,4 +53,13 @@ namespace Hiale.GTA2NET.Core.Collision
             return VerticesEx.IsPointInPolygonOrEdge(Vertices, point);
         }
     }
+
+    [Serializable]
+    public class SlopePolygonObstacle : PolygonObstacle
+    {
+        public SlopePolygonObstacle(List<Vector2> vertices, int z) : base(vertices, z)
+        {
+        }
+    }
+
 }

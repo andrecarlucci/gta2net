@@ -367,7 +367,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return verticesCombinations;
         }
 
-        private void MergePolygons(IEnumerable<Polygon> polygons, ObstacleCollection obstacles)
+        protected void MergePolygons(IEnumerable<Polygon> polygons, ObstacleCollection obstacles)
         {
             var filledPolygons = new List<Vertices>();
             var mergedPolygons = new List<Vertices>();
@@ -424,7 +424,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 AddPolygonObstacle(mergedPolygon, VerticesEx.IsRectangle(mergedPolygon), obstacles, Layer);
         }
 
-        private static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<Polygon> verticesCombinations)
+        protected static IEnumerable<LineSegment> GetPolygonForlornLines(IEnumerable<LineSegment> sourceSegments, IEnumerable<Polygon> verticesCombinations)
         {
             //Find lines which belongs to no polygon i.e. are forlorn
             var forlornLines = new List<LineSegment>(sourceSegments);
@@ -444,7 +444,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// See Polygon Combinations.png: The blue outline shows the source figure. The red polygon gets removed because it contains other polygons.
         /// </summary>
         /// <param name="verticesCombinations"></param>
-        private static void RemoveUnnecessaryPolygons(ICollection<Polygon> verticesCombinations)
+        protected static void RemoveUnnecessaryPolygons(ICollection<Polygon> verticesCombinations)
         {
             var itemsToRemove = new List<Polygon>();
             foreach (var verticesCombination in verticesCombinations)
@@ -500,13 +500,13 @@ namespace Hiale.GTA2NET.Core.Collision
 
         //Add to obstacle
 
-        private static void AddLineObstacles(IList<Vector2> polygonVertices, ICollection<IObstacle> obstacles, int layer)
+        protected static void AddLineObstacles(IList<Vector2> polygonVertices, ICollection<IObstacle> obstacles, int layer)
         {
             for (int i = 0, j = polygonVertices.Count - 1; i < polygonVertices.Count; j = i++)
                 obstacles.Add(new LineObstacle(polygonVertices[i], polygonVertices[j], layer));
         }
 
-        private static void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, ObstacleCollection obstacles, int layer)
+        protected static void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, ObstacleCollection obstacles, int layer)
         {
             if (isRectangle)
             {
@@ -532,7 +532,7 @@ namespace Hiale.GTA2NET.Core.Collision
             }
             else
             {
-                var polygonObstacle = new PolygonObstacle(layer) { Vertices = polygonVertices };
+                var polygonObstacle = new PolygonObstacle(polygonVertices, layer);
                 obstacles.Add(polygonObstacle);
             }
         }
