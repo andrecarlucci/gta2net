@@ -52,7 +52,8 @@ namespace Hiale.GTA2NET.Core.Collision
         private void GetObstaclesPerLayer(int currentLayer, ObstacleCollection obstacles)
         {
             var rawObstacles = GetBlockObstacles(currentLayer);
-            var nodes = new LineNodeDictionary(rawObstacles);
+            var nodes = new LineNodeDictionary();
+            nodes.CreateLineNodes(rawObstacles);
 
             while (nodes.Count > 0)
             {
@@ -61,9 +62,20 @@ namespace Hiale.GTA2NET.Core.Collision
                 currentFigure.Optimize();
                 currentFigure.Tokenize(obstacles);
             }
+
+            var slopeNodes = new SlopeLineNodeDictionary();
+            slopeNodes.CreateLineNodes(rawObstacles);
+
+            while (slopeNodes.Count > 0)
+            {
+                var currentFigure = new SlopeFigure(_map, currentLayer, slopeNodes);
+                slopeNodes.Purge(currentFigure.Lines);
+                currentFigure.Optimize();
+                currentFigure.Tokenize(obstacles);
+            }
         }
 
-        private IEnumerable<ILineObstacle> GetBlockObstacles(int z)
+        private IList<ILineObstacle> GetBlockObstacles(int z)
         {
             var obstacles = new List<ILineObstacle>();
             for (var x = 0; x < _map.Width; x++)

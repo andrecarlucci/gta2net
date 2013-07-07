@@ -231,7 +231,9 @@ namespace Hiale.GTA2NET.Core.Map
             var arguments = new object[2];
             arguments[0] = blockStructure;
             arguments[1] = pos;
-            return (Block) Activator.CreateInstance(GetType(), arguments);
+            var block = (Block) Activator.CreateInstance(GetType(), arguments);
+            block.SlopeType = SlopeType;
+            return block;
         }
 
         /// <summary>
