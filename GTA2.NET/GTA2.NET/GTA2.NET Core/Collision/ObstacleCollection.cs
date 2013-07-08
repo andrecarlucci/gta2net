@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
@@ -64,11 +65,96 @@ namespace Hiale.GTA2NET.Core.Collision
             return this.Where(obstacle => (type & obstacle.Type) == obstacle.Type && obstacle.Z == layer && obstacle.IsSlope == isSlope).ToList();
         }
 
+        private void RemoveCollinearLines()
+        {
+            var objectReferenceComparer = new ObjectReferenceEqualityComparer<LineObstacle>();
+            for (var i = 0; i < 8; i++)
+            {
+                var points = new Dictionary<Vector2, List<LineObstacle>>();
+                var lines = GetObstacles(i, ObstacleType.Line);
+                foreach (LineObstacle obstacle in lines)
+                {
+                    AddLine(obstacle.Start, obstacle, points);
+                    AddLine(obstacle.End, obstacle, points);
+                }
+                foreach (var point in points.Where(point => point.Value.Count > 1))
+                {
+                    var angles = new List<KeyValuePair<double, LineObstacle>>();
+                    foreach (var lineObstacle in point.Value)
+                    {
+                        var angle = Math.Abs(Math.Atan2(lineObstacle.End.Y - lineObstacle.Start.Y, lineObstacle.End.X - lineObstacle.Start.X));
+                        angles.Add(new KeyValuePair<double, LineObstacle>(angle, lineObstacle));
+                    }
+                    var groups = angles.GroupBy(x => x.Key).ToDictionary(g => g.Key, g => g.ToList());
+                    foreach (var group in groups)
+                    {
+                        var lineList = group.Value.Select(groupValue => groupValue.Value).Distinct(objectReferenceComparer).ToList();
+                        if (lineList.Count > 1)
+                        {
+                            var newLine = MergeLines(lineList, i);
+                            foreach (var lineObstacle in lineList)
+                            {
+                                Remove(lineObstacle);
+                            }
+                            Add(newLine);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static LineObstacle MergeLines(IEnumerable<LineObstacle> lines, int z)
+        {
+            var minX = float.MaxValue;
+            var maxX = float.MinValue;
+            var minY = float.MaxValue;
+            var maxY = float.MinValue;
+            foreach (var lineObstacle in lines)
+            {
+                if (lineObstacle.Start.X < minX)
+                    minX = lineObstacle.Start.X;
+                if (lineObstacle.Start.X > maxX)
+                    maxX = lineObstacle.Start.X;
+
+                if (lineObstacle.Start.Y < minY)
+                    minY = lineObstacle.Start.Y;
+                if (lineObstacle.Start.Y > maxY)
+                    maxY = lineObstacle.Start.Y;
+
+                if (lineObstacle.End.X < minX)
+                    minX = lineObstacle.End.X;
+                if (lineObstacle.End.X > maxX)
+                    maxX = lineObstacle.End.X;
+
+                if (lineObstacle.End.Y < minY)
+                    minY = lineObstacle.End.Y;
+                if (lineObstacle.End.Y > maxY)
+                    maxY = lineObstacle.End.Y;
+            }
+            return new LineObstacle(new Vector2(minX, minY), new Vector2(maxX, maxY), z);
+        }
+
+        private static void AddLine(Vector2 key, LineObstacle line, IDictionary<Vector2, List<LineObstacle>> points)
+        {
+            List<LineObstacle> segments;
+            if (points.TryGetValue(key, out segments))
+            {
+                if (!segments.Contains(line))
+                    segments.Add(line);
+            }
+            else
+            {
+                segments = new List<LineObstacle> { line };
+                points.Add(key, segments);
+            }
+        }
+
         /// <summary>
         /// Removes obstacles which are within other obstacles
         /// </summary>
         public void RemoveUnnecessary()
         {
+            RemoveCollinearLines();
             var itemsToRemove = new List<IObstacle>();
             foreach (var target in this)
             {
