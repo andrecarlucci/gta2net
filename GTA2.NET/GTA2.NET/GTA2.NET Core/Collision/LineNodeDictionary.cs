@@ -40,14 +40,22 @@ namespace Hiale.GTA2NET.Core.Collision
         //public LineNodeDictionary(IEnumerable<ILineObstacle> obstacles)
         //{
         //    CreateLineNodes(obstacles);
-        //}
+        
 
         public virtual void CreateLineNodes(IEnumerable<ILineObstacle> obstacles)
+        {
+            CreateLineNodes(obstacles, false);
+        }
+
+        public virtual void CreateLineNodes(IEnumerable<ILineObstacle> obstacles, bool slopeMode)
         {
             //var nodes = new Dictionary<Vector2, List<LineSegment>>();
             foreach (var lineObstacle in obstacles)
             {
-                if (lineObstacle is SlopeLineObstacle)
+                var isSlope = lineObstacle.IsSlope;
+                if (slopeMode)
+                    isSlope = !isSlope;
+                if (isSlope)
                     continue;
 
                 //start point
@@ -81,26 +89,6 @@ namespace Hiale.GTA2NET.Core.Collision
                 Remove(line.End);
             }
         }
-
     }
 
-    public class SlopeLineNodeDictionary : LineNodeDictionary
-    {
-        public override void CreateLineNodes(IEnumerable<ILineObstacle> obstacles)
-        {
-            foreach (var lineObstacle in obstacles)
-            {
-                if (!(lineObstacle is SlopeLineObstacle))
-                    continue;
-                //start point
-                var newLine = new LineSegment(lineObstacle.Start, lineObstacle.End);
-                InsertLine(newLine);
-
-                //end point
-                newLine = new LineSegment(lineObstacle.End, lineObstacle.Start);
-                InsertLine(newLine);
-            }
-        }
-        
-    }
 }

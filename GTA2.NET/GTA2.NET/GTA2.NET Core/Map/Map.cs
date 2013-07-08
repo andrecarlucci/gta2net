@@ -40,6 +40,8 @@ namespace Hiale.GTA2NET.Core.Map
         public const int MaxLength = 256;
         public const int MaxHeight = 8;
 
+        public string Filename { get; private set; }
+
         private bool _loaded;
         private Block[, ,] _cityBlocks;
 
@@ -67,6 +69,8 @@ namespace Hiale.GTA2NET.Core.Map
         {
             _cityBlocks = new Block[MaxWidth, MaxLength, MaxHeight];
 
+            Filename = string.Empty;
+
             Zones = new List<Zone>();
             Objects = new List<MapObject>();
             Animations = new List<TileAnimation>();
@@ -87,6 +91,7 @@ namespace Hiale.GTA2NET.Core.Map
         public Map(string fileName) : this()
         {
             ReadFromFile(fileName);
+            Filename = fileName;
             LoadTexture();
         }
 

@@ -59,7 +59,7 @@
     <Compile Include="Collision\LineNodeDictionary.cs" />
     <Compile Include="Collision\LineObstacle.cs" />
     <Compile Include="Collision\LineSegment.cs" />
-    <Compile Include="Collision\MapCollision.cs" />
+    <Compile Include="Collision\CollisionMap.cs" />
     <Compile Include="Collision\RectangleObstacle.cs" />
     <Compile Include="Collision\SlopeFigure.cs" />
     <Compile Include="Collision\SwitchPoint.cs" />
@@ -85,6 +85,7 @@
     <Compile Include="Map\Blocks\PartialTopRightBlock.cs" />
     <Compile Include="Map\DiagonalBlock.cs" />
     <Compile Include="Map\SlopeBlock.cs" />
+    <Compile Include="Orientation.cs" />
     <Compile Include="Style\DeltaItem.cs" />
     <Compile Include="Style\DeltaSubItem.cs" />
     <Compile Include="Style\Remap.cs" />
@@ -96,7 +97,6 @@
     <Compile Include="Helper\FileConverter.cs" />
     <Compile Include="Helper\BitHelper.cs" />
     <Compile Include="Helper\Extensions.cs" />
-    <Compile Include="Helper\LoadSave.cs" />
     <Compile Include="Helper\Threading\ProgressMessageChangedEventArgs.cs" />
     <Compile Include="Helper\ZipStorer.cs" />
     <Compile Include="Map\BlockFace.cs" />

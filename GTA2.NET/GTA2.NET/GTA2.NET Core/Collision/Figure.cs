@@ -289,7 +289,7 @@ namespace Hiale.GTA2NET.Core.Collision
         /// </summary>
         /// <param name="sourceSegments"></param>
         /// <returns></returns>
-        public Polygon CreatePolygon(IEnumerable<LineSegment> sourceSegments)
+        public virtual Polygon CreatePolygon(IEnumerable<LineSegment> sourceSegments)
         {
             var polygon = new Polygon();
             var lineSegments = new List<LineSegment>(sourceSegments);
@@ -367,7 +367,7 @@ namespace Hiale.GTA2NET.Core.Collision
             return verticesCombinations;
         }
 
-        protected void MergePolygons(IEnumerable<Polygon> polygons, ObstacleCollection obstacles)
+        protected virtual void MergePolygons(IEnumerable<Polygon> polygons, ObstacleCollection obstacles)
         {
             var filledPolygons = new List<Vertices>();
             var mergedPolygons = new List<Vertices>();
