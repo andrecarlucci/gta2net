@@ -44,9 +44,16 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public int Z { get; set; }
 
+        public bool IsSlope { get; set; }
+
         public Vector2 Start { get; set; }
 
         public Vector2 End { get; set; }
+
+        public LineObstacle()
+        {
+            
+        }
 
         public LineObstacle(Vector2 start, Vector2 end)
         {
@@ -82,14 +89,6 @@ namespace Hiale.GTA2NET.Core.Collision
         public override string ToString()
         {
             return Start + " - " + End;
-        }
-    }
-
-    [Serializable]
-    public class SlopeLineObstacle : LineObstacle
-    {
-        public SlopeLineObstacle(Vector2 start, Vector2 end, int z) : base(start, end, z)
-        {
         }
     }
 }

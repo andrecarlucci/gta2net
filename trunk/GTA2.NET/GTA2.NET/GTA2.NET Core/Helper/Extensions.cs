@@ -93,11 +93,13 @@ namespace Hiale.GTA2NET.Core.Helper
             if (info1.Length != info2.Length)
                 return false;
             var hashAlgorithm = MD5.Create();
-            var hash1 = hashAlgorithm.ComputeHash(info1.OpenRead());
-            var hash2 = hashAlgorithm.ComputeHash(info2.OpenRead());
-            if (hash1.Where((t, i) => t != hash2[i]).Any())
-                return false;
-            return true;
+            using (var stream1 = info1.OpenRead())
+            using (var stream2 = info2.OpenRead())
+            {
+                var hash1 = hashAlgorithm.ComputeHash(stream1);
+                var hash2 = hashAlgorithm.ComputeHash(stream2);
+                return !hash1.Where((t, i) => t != hash2[i]).Any();
+            }
         }
     }
 }

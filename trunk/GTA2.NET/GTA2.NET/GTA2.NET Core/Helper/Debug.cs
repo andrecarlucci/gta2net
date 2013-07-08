@@ -46,8 +46,11 @@ namespace Hiale.GTA2NET.Core.Helper
             {
                 var map = new Map.Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
                 //var map = new Map.Map(Globals.MapsSubDir + "\\bil.gmp");
-                var collision = new MapCollision(map);
+                var collision = new CollisionMap(map);
                 var obstacles = collision.GetObstacles();
+                //obstacles.Save(map);
+                //var newObstacles = ObstacleCollection.Load(map);
+
                 DisplayCollision(obstacles);
             }
             catch (Exception e)
@@ -75,13 +78,9 @@ namespace Hiale.GTA2NET.Core.Helper
 
                 using (var g = Graphics.FromImage(bmp))
                 {
-                    if (obstacle is SlopeRectangleObstacle)
+                    if (obstacle is RectangleObstacle)
                     {
-                        DrawRectangle(obstacle, g, System.Drawing.Color.Blue);
-                    }
-                    else if (obstacle is RectangleObstacle)
-                    {
-                        DrawRectangle(obstacle, g, System.Drawing.Color.Red);
+                        DrawRectangle(obstacle, g, obstacle.IsSlope ? System.Drawing.Color.Blue : System.Drawing.Color.Red);
                     }
                     else if (obstacle is LineObstacle)
                     {
@@ -90,13 +89,9 @@ namespace Hiale.GTA2NET.Core.Helper
                         g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.Start.X * 10 - 2, lineObstacle.Start.Y * 10 - 2, 4, 4);
                         g.DrawEllipse(new Pen(System.Drawing.Color.Magenta), lineObstacle.End.X * 10 - 2, lineObstacle.End.Y * 10 - 2, 4, 4);
                     }
-                    else if (obstacle is SlopePolygonObstacle)
-                    {
-                        DrawPolygon(obstacle, g, System.Drawing.Color.Cyan);
-                    }
                     else if (obstacle is PolygonObstacle)
                     {
-                        DrawPolygon(obstacle, g, System.Drawing.Color.OrangeRed);
+                        DrawPolygon(obstacle, g, obstacle.IsSlope ? System.Drawing.Color.Cyan : System.Drawing.Color.OrangeRed);
                     }
 
                 }

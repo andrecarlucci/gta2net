@@ -85,6 +85,12 @@ namespace Hiale.GTA2NET.Core.Collision
             return openBlocks == 0;
         }
 
+        public static IEnumerable<Block> GetAssociatedBlocks(IEnumerable<List<Vector2>> convexPolygons, Map.Map map, int layer)
+        {
+            var blockPointsDictionary = new Dictionary<Block, List<Vector2>>();
+            return GetAssociatedBlocks(convexPolygons, map, layer, blockPointsDictionary);
+        }
+
         private static IEnumerable<Block> GetAssociatedBlocks(IEnumerable<List<Vector2>> convexPolygons, Map.Map map, int layer, IDictionary<Block, List<Vector2>> blockPointsDictionary)
         {
             var blocks = new List<Block>();
@@ -198,7 +204,7 @@ namespace Hiale.GTA2NET.Core.Collision
             maxY = (float)Math.Ceiling(maxY);
         }
 
-        private static List<Vector2> GetBlockPoints(Block block, int layer)
+        public static List<ILineObstacle> GetBlockLines(Block block, int layer)
         {
             var obstacles = new List<ILineObstacle>();
             block.GetCollision(obstacles, false);
@@ -209,6 +215,12 @@ namespace Hiale.GTA2NET.Core.Collision
                 obstacles.Add(LineObstacle.DefaultRight((int)block.Position.X, (int)block.Position.Y, layer));
                 obstacles.Add(LineObstacle.DefaultBottom((int)block.Position.X, (int)block.Position.Y, layer));
             }
+            return obstacles;
+        }
+
+        private static List<Vector2> GetBlockPoints(Block block, int layer)
+        {
+            var obstacles = GetBlockLines(block, layer);
             var blockPoints = new List<Vector2>();
             foreach (var lineObstacle in obstacles)
             {

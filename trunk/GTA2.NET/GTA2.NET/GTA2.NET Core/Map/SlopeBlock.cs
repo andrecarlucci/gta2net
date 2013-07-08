@@ -25,8 +25,6 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Hiale.GTA2NET.Core.Collision;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -356,22 +354,30 @@ namespace Hiale.GTA2NET.Core.Map
 
         protected override ILineObstacle GetDefaultLeftCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X, Position.Y + 1), (int)Position.Z);
+            var lineObstacle = base.GetDefaultLeftCollison();
+            lineObstacle.IsSlope = true;
+            return lineObstacle;
         }
 
         protected override ILineObstacle GetDefaultTopCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X, Position.Y), new Vector2(Position.X + 1, Position.Y), (int)Position.Z);
+            var lineObstacle = base.GetDefaultTopCollison();
+            lineObstacle.IsSlope = true;
+            return lineObstacle;
         }
 
         protected override ILineObstacle GetDefaultRightCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X + 1, Position.Y), new Vector2(Position.X + 1, Position.Y + 1), (int)Position.Z);
+            var lineObstacle = base.GetDefaultRightCollison();
+            lineObstacle.IsSlope = true;
+            return lineObstacle;
         }
 
         protected override ILineObstacle GetDefaultBottomCollison()
         {
-            return new SlopeLineObstacle(new Vector2(Position.X + 1, Position.Y + 1), new Vector2(Position.X, Position.Y + 1), (int)Position.Z);
+            var lineObstacle = base.GetDefaultBottomCollison();
+            lineObstacle.IsSlope = true;
+            return lineObstacle;
         }
 
         public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)

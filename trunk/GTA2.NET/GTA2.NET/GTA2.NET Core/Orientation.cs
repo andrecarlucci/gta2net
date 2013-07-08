@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: RectangleObstacle.cs
-// Created: 30.06.2013
+// File: Orientation.cs
+// Created: 08.07.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -24,48 +24,13 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
-using Hiale.GTA2NET.Core.Helper;
-using Microsoft.Xna.Framework;
 
-namespace Hiale.GTA2NET.Core.Collision
+namespace Hiale.GTA2NET.Core
 {
-    [Serializable]
-    public class RectangleObstacle : IObstacle
+    public enum Orientation
     {
-        public ObstacleType Type
-        {
-            get { return ObstacleType.Rectangle; }
-        }
-
-        public int Z { get; set; }
-
-        public bool IsSlope { get; set; }
-
-        public float X { get; set; }
-
-        public float Y { get; set; }
-
-        public float Width { get; set; }
-
-        public float Length { get; set; }
-
-        public bool Contains(Vector2 point)
-        {
-            return new RectangleF(X, Y, Width, Length).Contains(point);
-        }
-
-        public RectangleObstacle()
-        {
-            
-        }
-
-        public RectangleObstacle(float x, float y, float width, float length, int z)
-        {
-            X = x;
-            Y = y;
-            Width = width;
-            Length = length;
-            Z = z;
-        }
+        Other,
+        Horizontal,
+        Vertical,
     }
 }

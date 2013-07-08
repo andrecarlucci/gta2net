@@ -37,5 +37,10 @@ namespace Hiale.GTA2NET.Core.Collision
         /// The layer this obstacle is on.
         /// </summary>
         int Z { get; set; }
+
+        /// <summary>
+        /// If this obstacle needs special behaviour because it's a slope.
+        /// </summary>
+        bool IsSlope { get; set; }
     }
 }
