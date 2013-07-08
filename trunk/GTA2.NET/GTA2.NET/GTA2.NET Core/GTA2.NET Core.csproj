@@ -68,6 +68,7 @@
     <Compile Include="Helper\Combinations.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
     <Compile Include="Helper\Debug.cs" />
+    <Compile Include="Helper\ObjectReferenceEqualityComparer.cs" />
     <Compile Include="Helper\RectangleF.cs" />
     <Compile Include="Helper\VerticesEx.cs" />
     <Compile Include="Map\Blocks\DiagonalSlopeFacingDownLeftBlock.cs" />
