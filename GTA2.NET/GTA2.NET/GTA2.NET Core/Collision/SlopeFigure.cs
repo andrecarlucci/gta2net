@@ -52,6 +52,10 @@ namespace Hiale.GTA2NET.Core.Collision
             }
             var intersectionLines = polygonEdges.GroupBy(x => x).Where(group => group.Count() > 1).Select(group => group.Key).ToList(); //finds duplicated items
 
+            var blockLines = new Dictionary<Block, List<LineSegment>>(); //create a dictionary of block which intersection line they belong to. Because if the intersection line does not match,
+                                                                         //all intersecting lines of that block must be set invalid. Otherwise they engine would not not create a separate polygon.
+            var mismatchBlocks = new List<Block>();
+
             foreach (var intersectionLine in intersectionLines)
             {
                 Block blockX;
@@ -62,6 +66,24 @@ namespace Hiale.GTA2NET.Core.Collision
                 {
                     Lines.Remove(intersectionLine);
                 }
+                else
+                {
+                    if (!mismatchBlocks.Contains(blockX))
+                        mismatchBlocks.Add(blockX);
+                    if (!mismatchBlocks.Contains(blockY))
+                        mismatchBlocks.Add(blockY);
+                }
+                AddBlockLines(blockLines, blockX, intersectionLine);
+                AddBlockLines(blockLines, blockY, intersectionLine);
+            }
+            foreach (var mismatchBlock in mismatchBlocks)
+            {
+                //Restore all lines of the mismatched blocks
+                List<LineSegment> blockLineSegments;
+                if (!blockLines.TryGetValue(mismatchBlock, out blockLineSegments))
+                    continue;
+                foreach (var blockSegment in blockLineSegments.Where(blockSegment => !Lines.Contains(blockSegment)))
+                    Lines.Add(blockSegment);
             }
 
             polygons.Clear();
@@ -70,6 +92,20 @@ namespace Hiale.GTA2NET.Core.Collision
             {
                 var simplePolygon = SimplifyTools.CollinearSimplify(polygon);
                 AddSlopeObstacle(simplePolygon, VerticesEx.IsRectangle(simplePolygon), obstacles, Layer);
+            }
+        }
+
+        private static void AddBlockLines(IDictionary<Block, List<LineSegment>> blockLines, Block block, LineSegment intersectionLine)
+        {
+            List<LineSegment> blockLineSegments;
+            if (blockLines.TryGetValue(block, out blockLineSegments))
+            {
+                blockLineSegments.Add(intersectionLine);
+            }
+            else
+            {
+                blockLineSegments = new List<LineSegment> {intersectionLine};
+                blockLines.Add(block, blockLineSegments);
             }
         }
 
