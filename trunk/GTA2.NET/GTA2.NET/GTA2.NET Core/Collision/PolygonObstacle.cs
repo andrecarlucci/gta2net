@@ -42,6 +42,11 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public bool IsSlope { get; set; }
 
+        public bool CollideWithBullets
+        {
+            get { return true; }
+        }
+
         public List<Vector2> Vertices { get; set; }
 
         public PolygonObstacle()

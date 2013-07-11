@@ -78,31 +78,6 @@ namespace Hiale.GTA2NET.Core.Helper
             if (!allPointsInPolygon)
                 return false;
             return GetArea() >= polygon.GetArea();
-
-            //var intersectionPoints = new List<Vector2>();
-            //for (var i = 0; i < polygon.Count; i++)
-            //{
-            //    Vector2 start = polygon[i];
-            //    Vector2 end = polygon[polygon.NextIndex(i)];
-            //    LineTools.LineSegmentVerticesIntersect(ref start, ref end, this, ref intersectionPoints);
-            //}
-
-            //intersectionPoints = intersectionPoints.Distinct().ToList();
-
-            //List<Vector2> itemsToRemove = new List<Vector2>();
-            //foreach (var intersectionPoint in intersectionPoints)
-            //{
-            //    if (polygon.Contains(intersectionPoint))
-            //        itemsToRemove.Add(intersectionPoint);
-            //}
-            //foreach (var vector2 in itemsToRemove)
-            //{
-            //    intersectionPoints.Remove(vector2);
-            //}
-
-            //return intersectionPoints.Count == 0;
-
-            //return polygon.All(point => IsPointInPolygonOrEdge(this, point)) && IsPointInPolygonOrEdge(this, polygon.GetCentroid()); //ToDo: Does not work in every case
         }
 
         public static bool IsPointInPolygonOrEdge(List<Vector2> vertices, Vector2 point)

@@ -46,6 +46,11 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public bool IsSlope { get; set; }
 
+        public bool CollideWithBullets
+        {
+            get { return true; }
+        }
+
         public Vector2 Start { get; set; }
 
         public Vector2 End { get; set; }
