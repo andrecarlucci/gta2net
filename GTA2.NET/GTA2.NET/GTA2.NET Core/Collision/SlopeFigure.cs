@@ -68,9 +68,9 @@ namespace Hiale.GTA2NET.Core.Collision
                 }
                 else
                 {
-                    if (!mismatchBlocks.Contains(blockX))
+                    if (blockX != null & !mismatchBlocks.Contains(blockX))
                         mismatchBlocks.Add(blockX);
-                    if (!mismatchBlocks.Contains(blockY))
+                    if (blockY != null & !mismatchBlocks.Contains(blockY))
                         mismatchBlocks.Add(blockY);
                 }
                 AddBlockLines(blockLines, blockX, intersectionLine);
@@ -97,6 +97,8 @@ namespace Hiale.GTA2NET.Core.Collision
 
         private static void AddBlockLines(IDictionary<Block, List<LineSegment>> blockLines, Block block, LineSegment intersectionLine)
         {
+            if (block == null)
+                return;
             List<LineSegment> blockLineSegments;
             if (blockLines.TryGetValue(block, out blockLineSegments))
             {
@@ -163,13 +165,13 @@ namespace Hiale.GTA2NET.Core.Collision
         {
             //well, I should do it more dynamically...
             if (blockX == null || blockY == null)
-                return false;
+                return true;
 
             if (blockX.SlopeDirection == blockY.SlopeDirection && blockX.SlopeSubTyp == blockY.SlopeSubTyp)
             {
-                if (blockX.SlopeDirection == SlopeDirection.Up || blockX.SlopeDirection == SlopeDirection.Down && orientation == Orientation.Vertical)
+                if ((blockX.SlopeDirection == SlopeDirection.Up || blockX.SlopeDirection == SlopeDirection.Down) && orientation == Orientation.Vertical)
                     return true;
-                if (blockX.SlopeDirection == SlopeDirection.Right || blockX.SlopeDirection == SlopeDirection.Left && orientation == Orientation.Horizontal)
+                if ((blockX.SlopeDirection == SlopeDirection.Right || blockX.SlopeDirection == SlopeDirection.Left) && orientation == Orientation.Horizontal)
                     return true;
             }
 

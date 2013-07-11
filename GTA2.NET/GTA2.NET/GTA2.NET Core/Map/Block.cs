@@ -277,13 +277,29 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 case SlopeType.DiagonalFacingUpLeft:
                 case SlopeType.DiagonalFacingDownLeft:
-                    Left.Wall = true;
-                    Left.BulletWall = true;
-                    break;
+                case SlopeType.DiagonalSlopeFacingUpLeft:
+                case SlopeType.DiagonalSlopeFacingDownLeft:
                 case SlopeType.DiagonalFacingUpRight:
                 case SlopeType.DiagonalFacingDownRight:
-                    Right.Wall = true;
-                    Right.BulletWall = true;
+                case SlopeType.DiagonalSlopeFacingUpRight:
+                case SlopeType.DiagonalSlopeFacingDownRight:
+                case SlopeType.PartialBlockLeft:
+                case SlopeType.PartialBlockRight:
+                case SlopeType.PartialBlockTop:
+                case SlopeType.PartialBlockBottom:
+                case SlopeType.PartialBlockTopLeft:
+                case SlopeType.PartialBlockTopRight:
+                case SlopeType.PartialBlockBottomRight:
+                case SlopeType.PartialBlockBottomLeft:
+                case SlopeType.PartialCentreBlock:
+                    Top.Wall = Top;
+                    Top.BulletWall = Top;
+                    Bottom.Wall = Bottom;
+                    Bottom.BulletWall = Bottom;
+                    Left.Wall = Left;
+                    Left.BulletWall = Left;
+                    Right.Wall = Right;
+                    Right.BulletWall = Right;
                     break;
             }
         }

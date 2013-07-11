@@ -42,5 +42,10 @@ namespace Hiale.GTA2NET.Core.Collision
         /// If this obstacle needs special behaviour because it's a slope.
         /// </summary>
         bool IsSlope { get; set; }
+
+        /// <summary>
+        /// This obstacle also collide with bullets if set to true. Otherwise they can go through and cars, peds and objects collide only.
+        /// </summary>
+        bool CollideWithBullets { get; }
     }
 }
