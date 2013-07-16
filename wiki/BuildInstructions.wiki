@@ -1,0 +1,14 @@
+#summary How to build the project from source.
+#labels Phase-Deploy
+
+= Introduction =
+
+The following instructions are one way to build the project from source using Visual Studio Express 2010 and TortoiseSVN. Your experience may vary depending on the tools you choose to use.
+
+
+= Details =
+
+  # Download and install the [http://www.monogame.net/downloads MonoGame framework]
+  # Checkout the source code using the URL found on the [https://code.google.com/p/gta2net/source/checkout Source page] using TortoiseSVN to a directory on your local machine.
+  # Download and install GTA2 from [http://gtamp.com/gta2/ here] or [http://www.rockstargames.com/classics/ here].
+  # Compile and run the project. You may be asked to locate the GTA2 assets on the first run.
