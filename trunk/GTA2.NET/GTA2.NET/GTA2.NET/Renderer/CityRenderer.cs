@@ -48,8 +48,8 @@ namespace Hiale.GTA2NET.Renderer
         VertexBuffer _vertexBuffer;
         //VertexDeclaration vertexDeclaration;
         IndexBuffer _indexBuffer;
-        readonly List<int> _indexBufferCollection;
-        readonly List<VertexPositionNormalTexture> _cityVerticesCollection;
+        private  List<int> _indexBufferCollection;
+        private List<VertexPositionNormalTexture> _cityVerticesCollection;
 
         //Options
         private const float UnitSize = 1f;
@@ -67,8 +67,12 @@ namespace Hiale.GTA2NET.Renderer
         public void LoadCity()
         {
             LoadTexture();
+            MainGame.Map.CalcCoord();
+            _indexBufferCollection = MainGame.Map.IndexBufferCollection;
+            _cityVerticesCollection = MainGame.Map.Coors;
+
             //LoadMap();
-            SetUpCity();
+            //SetUpCity();
             CopyToGraphicsDevice();
             SetUpEffect();
         }
