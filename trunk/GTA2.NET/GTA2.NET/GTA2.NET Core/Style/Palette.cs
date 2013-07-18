@@ -23,13 +23,16 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using Hiale.GTA2NET.Core.Helper;
 using Color = Microsoft.Xna.Framework.Color;
 
 namespace Hiale.GTA2NET.Core.Style
 {
+    [NamedVersion("Palette", 0, 1)]
     public class Palette
     {
         public Color[] Colors { get; set; }

@@ -26,6 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using FarseerPhysics.Common;
 using FarseerPhysics.Common.PolygonManipulation;
 using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Map;
@@ -261,28 +262,11 @@ namespace Hiale.GTA2NET.Core.Collision
             return false;
         }
 
-        protected static void AddSlopeObstacle(List<Vector2> polygonVertices, bool isRectangle, ObstacleCollection obstacles, int layer)
+        protected static void AddSlopeObstacle(Vertices polygonVertices, bool isRectangle, ObstacleCollection obstacles, int layer)
         {
             if (isRectangle)
             {
-                var minX = float.MaxValue;
-                var maxX = float.MinValue;
-                var minY = float.MaxValue;
-                var maxY = float.MinValue;
-                foreach (var polygonVertex in polygonVertices)
-                {
-                    if (polygonVertex.X < minX)
-                        minX = polygonVertex.X;
-                    if (polygonVertex.X > maxX)
-                        maxX = polygonVertex.X;
-                    if (polygonVertex.Y < minY)
-                        minY = polygonVertex.Y;
-                    if (polygonVertex.Y > maxY)
-                        maxY = polygonVertex.Y;
-                }
-                var width = maxX - minX;
-                var height = maxY - minY;
-                var rectangle = new RectangleObstacle(minX, minY, width, height, layer) {IsSlope = true};
+                var rectangle = new RectangleObstacle(polygonVertices, layer) {IsSlope = true};
                 obstacles.Add(rectangle);
             }
             else

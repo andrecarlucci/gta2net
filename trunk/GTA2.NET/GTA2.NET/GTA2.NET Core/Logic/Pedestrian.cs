@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: PlayerInput.cs
-// Created: 23.03.2010
+// File: Pedestrian.cs
+// Created: 16.02.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,18 +23,28 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
+
 using System.Collections.Generic;
-using System.Text;
+using Microsoft.Xna.Framework;
 
-namespace Hiale.GTA2NET.Helper
+namespace Hiale.GTA2NET.Core.Logic
 {
-    public struct PlayerInput
+    public class Pedestrian : GameplayObject
     {
-        public float Forward;
+        private Color _color;
 
-        public float Rotation;
+        private bool _isJumping;
 
-        //Add more
+        private int _healthPoint;
+
+        private List<Weapon> _weapons;
+
+        private Weapon _currentWeapon; //selected weapon
+
+        public Pedestrian(Vector3 startUpPosition) : base(startUpPosition, 0, 1, 1)
+        {
+            //Velocity = 1f;
+        }
+        
     }
 }

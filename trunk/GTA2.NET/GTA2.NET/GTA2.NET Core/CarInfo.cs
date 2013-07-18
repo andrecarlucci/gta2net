@@ -36,7 +36,7 @@ namespace Hiale.GTA2NET.Core
     /// <summary>
     /// Various parameters are stored for each car. A car info structure is stored for each distinct type of car. 
     /// </summary>
-    [Serializable]
+    [Serializable, NamedVersion("CarInfo", 0, 1)]
     public class CarInfo
     {
         public CarInfo()
@@ -143,24 +143,24 @@ namespace Hiale.GTA2NET.Core
         public byte Rating { get; set; } //ToDo enum
 
         /// <summary>
-        /// FrontWheelOffset is the distances in pixels from the centre of the car to the front axle.
+        /// FrontWheelOffset is the distances in pixels from the center of the car to the front axle.
         /// </summary>
-        public byte FrontWheelOffset { get; set; }
+        public int FrontWheelOffset { get; set; }
 
         /// <summary>
-        /// RearWheelOffset is the distances in pixels from the centre of the car to the back axle.
+        /// RearWheelOffset is the distances in pixels from the center of the car to the back axle.
         /// </summary>
-        public byte RearWheelOffset { get; set; }
+        public int RearWheelOffset { get; set; }
 
         /// <summary>
-        /// FrontWindowOffset is the distances in pixels from the centre of the car to the front window.
+        /// FrontWindowOffset is the distances in pixels from the center of the car to the front window.
         /// </summary>
-        public byte FrontWindowOffset { get; set; }
+        public int FrontWindowOffset { get; set; }
 
         /// <summary>
-        /// RearWindowOffset is the distances in pixels from the centre of the car to the back window.
+        /// RearWindowOffset is the distances in pixels from the center of the car to the back window.
         /// </summary>
-        public byte RearWindowOffset { get; set; }
+        public int RearWindowOffset { get; set; }
 
         //private byte _NumRemaps;
         ///// <summary>

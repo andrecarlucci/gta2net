@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Car.cs
-// Created: 16.02.2010
+// File: Weapon.cs
+// Created: 24.02.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,31 +23,11 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-using Hiale.GTA2NET.Core;
 
-namespace Hiale.GTA2NET.Logic
+namespace Hiale.GTA2NET.Core.Logic
 {
-    public class Car : GameplayObject
+    public class Weapon
     {
-        public CarInfo CarInfo { get; private set; }
-
-        private List<CarWeapon> _weapons;
-
-        private CarWeapon _currentWeapon; //selected weapon
-
-        public Car(Vector3 startUpPosition, CarInfo carInfo) : base(startUpPosition, carInfo.Width, carInfo.Height)
-        {
-            CarInfo = carInfo;
-            //CreateSprite();
-        }
-
-        public override void Update(float elapsedTime)
-        {
-            //forwardDelta *= CarInfo.Physics.Thrust;
-            //rotationDelta *= CarInfo.Physics.TurnRatio * 2;
-            base.Update(elapsedTime);
-        }
+        private int _ammunition;
     }
 }

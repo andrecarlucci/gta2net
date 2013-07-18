@@ -24,24 +24,25 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
+using FarseerPhysics.Common;
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Collision
 {
     [Serializable]
-    public class RectangleObstacle : IObstacle
+    public class RectangleObstacle : PolygonObstacle
     {
         public ObstacleType Type
         {
             get { return ObstacleType.Rectangle; }
         }
 
-        public int Z { get; set; }
+        public new int Z { get; set; }
 
-        public bool IsSlope { get; set; }
+        public new bool IsSlope { get; set; }
 
-        public bool CollideWithBullets
+        public new bool CollideWithBullets
         {
             get { return true; }
         }
@@ -54,7 +55,7 @@ namespace Hiale.GTA2NET.Core.Collision
 
         public float Length { get; set; }
 
-        public bool Contains(Vector2 point)
+        public new bool Contains(Vector2 point)
         {
             return new RectangleF(X, Y, Width, Length).Contains(point);
         }
@@ -64,13 +65,33 @@ namespace Hiale.GTA2NET.Core.Collision
             
         }
 
-        public RectangleObstacle(float x, float y, float width, float length, int z)
+        public RectangleObstacle(Vertices vertices, int z) : base(vertices, z)
         {
-            X = x;
-            Y = y;
-            Width = width;
-            Length = length;
             Z = z;
+            CalculateBounds();
+        }
+
+        private void CalculateBounds()
+        {
+            var minX = float.MaxValue;
+            var maxX = float.MinValue;
+            var minY = float.MaxValue;
+            var maxY = float.MinValue;
+            foreach (var polygonVertex in Vertices)
+            {
+                if (polygonVertex.X < minX)
+                    minX = polygonVertex.X;
+                if (polygonVertex.X > maxX)
+                    maxX = polygonVertex.X;
+                if (polygonVertex.Y < minY)
+                    minY = polygonVertex.Y;
+                if (polygonVertex.Y > maxY)
+                    maxY = polygonVertex.Y;
+            }
+            X = minX;
+            Y = minY;
+            Width = maxX - minX;
+            Length = maxY - minY;
         }
     }
 }

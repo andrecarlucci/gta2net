@@ -49,16 +49,8 @@
     <Compile Include="GameScreens\IGameScreen.cs" />
     <Compile Include="GameScreens\InGameScreen.cs" />
     <Compile Include="Helper\FaceCoordinates.cs" />
-    <Compile Include="Helper\PlayerInput.cs" />
     <Compile Include="Helper\RandomHelper.cs" />
     <Compile Include="Input.cs" />
-    <Compile Include="Logic\AI.cs" />
-    <Compile Include="Logic\Car.cs" />
-    <Compile Include="Logic\CarWeapon.cs" />
-    <Compile Include="Logic\GameplayObject.cs" />
-    <Compile Include="Logic\Pedestrian.cs" />
-    <Compile Include="Logic\Player.cs" />
-    <Compile Include="Logic\Weapon.cs" />
     <Compile Include="MainGame.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

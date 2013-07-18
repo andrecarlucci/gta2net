@@ -26,10 +26,10 @@
 using System;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core;
+using Hiale.GTA2NET.Core.Logic;
 using Hiale.GTA2NET.Core.Style;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Hiale.GTA2NET.Logic;
 
 namespace Hiale.GTA2NET
 {
@@ -79,7 +79,7 @@ namespace Hiale.GTA2NET
 
         private readonly float _heightHalf;
 
-        public Sprite(GameplayObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
+        public Sprite(GameplayObject baseObjectOld, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
         {
             var item = new SpriteItem(SpriteType.Car);
 
@@ -128,10 +128,10 @@ namespace Hiale.GTA2NET
             BottomRight = (new Vector3(0.5f * Width, -0.5f * Height, 0.0f) + position);
         }
 
-        public void SetPosition(GameplayObject baseObject)
+        public void SetPosition(GameplayObject baseObjectOld)
         {
-            Vector3 center = baseObject.Position3;
-            float rotation = baseObject.RotationAngle;
+            Vector3 center = baseObjectOld.Position3;
+            float rotation = baseObjectOld.RotationAngle;
 
             Vector3 currentPoint = new Vector3(center.X - _widthHalf, center.Y - _heightHalf, center.Z);
             currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);

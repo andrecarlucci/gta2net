@@ -506,28 +506,11 @@ namespace Hiale.GTA2NET.Core.Collision
                 obstacles.Add(new LineObstacle(polygonVertices[i], polygonVertices[j], layer));
         }
 
-        protected static void AddPolygonObstacle(List<Vector2> polygonVertices, bool isRectangle, ObstacleCollection obstacles, int layer)
+        protected static void AddPolygonObstacle(Vertices polygonVertices, bool isRectangle, ObstacleCollection obstacles, int layer)
         {
             if (isRectangle)
             {
-                var minX = float.MaxValue;
-                var maxX = float.MinValue;
-                var minY = float.MaxValue;
-                var maxY = float.MinValue;
-                foreach (var polygonVertex in polygonVertices)
-                {
-                    if (polygonVertex.X < minX)
-                        minX = polygonVertex.X;
-                    if (polygonVertex.X > maxX)
-                        maxX = polygonVertex.X;
-                    if (polygonVertex.Y < minY)
-                        minY = polygonVertex.Y;
-                    if (polygonVertex.Y > maxY)
-                        maxY = polygonVertex.Y;
-                }
-                var width = maxX - minX;
-                var height = maxY - minY;
-                var rectangle = new RectangleObstacle(minX, minY, width, height, layer);
+                var rectangle = new RectangleObstacle(polygonVertices, layer);
                 obstacles.Add(rectangle);
             }
             else

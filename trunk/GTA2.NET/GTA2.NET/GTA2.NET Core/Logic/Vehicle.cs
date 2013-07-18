@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Weapon.cs
-// Created: 24.02.2010
+// File: Vehicle.cs
+// Created: 16.07.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,14 +23,20 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Hiale.GTA2NET.Logic
+using System;
+using FarseerPhysics.Dynamics;
+using Microsoft.Xna.Framework;
+
+namespace Hiale.GTA2NET.Core.Logic
 {
-    public class Weapon
+    public abstract class Vehicle : GameplayObject, IPhysicsBehaviour
     {
-        private int _ammunition;
+        protected Vehicle(Vector3 startUpPosition, float startUpRotation, float width, float height) : base(startUpPosition, startUpRotation, width, height)
+        {
+
+        }
+
+        public abstract void SetWorld(World world);
     }
 }
