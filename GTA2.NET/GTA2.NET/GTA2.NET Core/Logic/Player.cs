@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Combinations.cs
-// Created: 12.06.2013
+// File: Player.cs
+// Created: 24.02.2010
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -23,36 +23,21 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Hiale.GTA2NET.Core.Helper
+namespace Hiale.GTA2NET.Core.Logic
 {
-    public static class Combinations
+    public class Player
     {
-        public static List<List<T>> GetCombinations<T>(ICollection<List<T>> input)
-        {
-            var selected = new T[input.Count];
-            var result = new List<List<T>>();
-            GetCombinations(selected, 0, input, result);
-            return result;
-        }
+        private Car _currentCar;
 
-        private static void GetCombinations<T>(IList<T> selected, int index, IEnumerable<IEnumerable<T>> remaining, ICollection<List<T>> output)
-        {
-            // ReSharper disable PossibleMultipleEnumeration
-            var nextList = remaining.FirstOrDefault();
-            if (nextList == null)
-                output.Add(new List<T>(selected));
-            else
-            {
-                foreach (var i in nextList)
-                {
-                    selected[index] = i;
-                    GetCombinations(selected, index + 1, remaining.Skip(1), output);
-                }
-            }
-            // ReSharper restore PossibleMultipleEnumeration
-        }
+        private Pedestrian _currentPed;
+
+        private bool _inCar;
+
+        private long _points;
+
+        private byte _wantedLevel; //Police level
+
+        private bool _invisible;
     }
 }

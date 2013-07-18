@@ -23,25 +23,20 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Text;
 using FarseerPhysics.Collision.Shapes;
-using FarseerPhysics.Common;
 using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
-using FarseerPhysics.Factories;
 using Hiale.GTA2NET.Core.Collision;
+using Hiale.GTA2NET.Core.Logic;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.GameScreens;
 using Hiale.GTA2NET.Core.Map;
-using Hiale.GTA2NET.Core.Style;
-using Hiale.GTA2NET.Helper;
-using Hiale.GTA2NET.Logic;
 using Microsoft.Xna.Framework.Input;
 
 namespace Hiale.GTA2NET
@@ -211,7 +206,7 @@ namespace Hiale.GTA2NET
 
             //var collision = new MapCollision(Map);
             //collision.CollisionMap(new Vector2(73,192));
-            //SetupPhysics();
+            SetupPhysics();
 
             var carPhysics = CarPhysicReader.ReadFromFile();
             CarInfoList = CarInfo.CreateCarInfoCollection(carInfo, carPhysics);
@@ -219,7 +214,7 @@ namespace Hiale.GTA2NET
             Cars = new ObservableCollection<Car>();
             Pedestrians = new ObservableCollection<Car>();
 
-            ChasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), CarInfoList[9]);
+            ChasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), 0, CarInfoList[9]);
             ChasingObject.PlayerControlled = true;
             //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
             Cars.Add((Car) ChasingObject);
@@ -227,58 +222,46 @@ namespace Hiale.GTA2NET
             GameScreens.Push(new InGameScreen());
         }
 
-        //private void SetupPhysics()
-        //{
-        //    if (_world == null)
-        //        _world = new World(new Vector2(0, 10f));
-        //    else
-        //        _world.Clear();
-            
-        //    var collision = new MapCollisionOld(Map);
-        //    var obstacles = collision.CollisionMap(new Vector2(73, 192));
-        //    foreach (var obstacle in obstacles)
-        //    {
-        //        Body body = null;
-        //        if (obstacle is RectangleObstacle)
-        //        {
-        //            var rectObstacle = (RectangleObstacle)obstacle;
-        //            //BIG HACK....
-        //            if (rectObstacle.Position.X == 49 && rectObstacle.Position.Y == 181)
-        //            {
-        //                continue;
-        //            }
-        //            //END BIG HACK
-        //            body = BodyFactory.CreateRectangle(_world, rectObstacle.Width, rectObstacle.Length, 1,
-        //                                               new Vector2(
-        //                                                   rectObstacle.Position.X + ((float) rectObstacle.Width/2),
-        //                                                   rectObstacle.Position.Y + (float) rectObstacle.Length/2));
-        //        }
-        //        else if (obstacle is PolygonObstacle)
-        //        {
-        //            var polygonObstacle = (PolygonObstacle) obstacle;
-        //            try
-        //            {
-        //                var verticesList = BayazitDecomposer.ConvexPartition(new Vertices(polygonObstacle.Vertices));
-        //                body = BodyFactory.CreateCompoundPolygon(_world, verticesList, 1f);
-        //            }
-        //            catch (Exception e)
-        //            {
-        //                System.Diagnostics.Debug.WriteLine(e.StackTrace);
-        //            }
-        //        }
-        //        else if (obstacle is LineObstacle)
-        //        {
-        //            var lineObstacle = (LineObstacle) obstacle;
-        //            body = BodyFactory.CreateEdge(_world, lineObstacle.Start, lineObstacle.End);
+        private void SetupPhysics()
+        {
+            var collision = new CollisionMap(Map);
+            if (_world == null)
+                _world = new World(new Vector2(0, 10f));
+            else
+                _world.Clear();
 
-        //        }
-        //        if (body != null)
-        //            body.BodyType = BodyType.Static;
-        //    }
-        //}
+            var obstacles = collision.GetObstacles();
+            var layer2Obstacles = obstacles.GetObstacles(2);
+            foreach (var obstacle in layer2Obstacles)
+            {
+                var body = new Body(_world) {BodyType = BodyType.Static};
+                Shape shape;
+                switch (obstacle.Type)
+                {
+                    case ObstacleType.Line:
+                        var lineObstacle = (LineObstacle) obstacle;
+                        shape = new EdgeShape(lineObstacle.Start, lineObstacle.End);
+                        body.CreateFixture(shape);
+                        break;
+                    case ObstacleType.Polygon:
+                        var polygonObstacle = (PolygonObstacle) obstacle;
+                        var convexPolygons = BayazitDecomposer.ConvexPartition(polygonObstacle.Vertices);
+                        foreach (var convexPolygon in convexPolygons)
+                        {
+                            shape = new PolygonShape(convexPolygon, 1);
+                            body.CreateFixture(shape);
+                        }
+                        break;
+                    case ObstacleType.Rectangle:
+                        var rectangleObstacle = (RectangleObstacle) obstacle;
+                        shape = new PolygonShape(rectangleObstacle.Vertices, 1);
+                        body.CreateFixture(shape);
+                        break;
+                }
 
+            }
+        }
 
-        private bool leftClicked;
 
         /// <summary>
         /// Update
@@ -296,7 +279,7 @@ namespace Hiale.GTA2NET
 
             var input = new PlayerInput();
             HandleInput(ref input);
-            ChasingObject.SetPlayerInput(input, elapsedGameTime);
+            ChasingObject.Update(input, elapsedGameTime);
             
 
             UpdateObjects(elapsedGameTime);
@@ -311,13 +294,14 @@ namespace Hiale.GTA2NET
                 ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
             }
 
-            if (mouseState.LeftButton == ButtonState.Pressed && !leftClicked)
-            {
-                System.Diagnostics.Debug.WriteLine(FindWhereClicked(mouseState));
-                leftClicked = true;
-            }
-            else if (mouseState.LeftButton == ButtonState.Released)
-                leftClicked = false;
+            //if (mouseState.LeftButton == ButtonState.Pressed && !leftClicked)
+            //{
+            //    System.Diagnostics.Debug.WriteLine(FindWhereClicked(mouseState));
+            //    leftClicked = true;
+            //}
+            //else if (mouseState.LeftButton == ButtonState.Released)
+            //    leftClicked = false;
+            _world.Step(Math.Min((float)gameTime.ElapsedGameTime.TotalMilliseconds * 0.001f, (1f / 60f)));
 
 
             Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString(CultureInfo.InvariantCulture) + " fps";
@@ -327,15 +311,16 @@ namespace Hiale.GTA2NET
         private void UpdateObjects(float elapsedGameTime)
         {
             //Update all cars
-            for (int i = 0; i < Cars.Count; i++)
+            var input = new ParticipantInput();
+            for (var i = 0; i < Cars.Count; i++)
             {
-                Cars[i].Update(elapsedGameTime);
+                Cars[i].Update(input, elapsedGameTime);
             }
 
             //Update all pedestrians
-            for (int i = 0; i < Pedestrians.Count; i++)
+            for (var i = 0; i < Pedestrians.Count; i++)
             {
-                Pedestrians[i].Update(elapsedGameTime);
+                Pedestrians[i].Update(input, elapsedGameTime);
             }
         }
 
@@ -394,45 +379,6 @@ namespace Hiale.GTA2NET
 
             //_playerForwardDelta = 0;
             //_playerRotationDelta = 0;
-        }
-
-        public static Ray ClickRay;
-
-        private Ray FindWhereClicked(MouseState ms)
-        {
-            var nearScreenPoint = new Vector3(ms.X, ms.Y, 0);
-            var farScreenPoint = new Vector3(ms.X, ms.Y, 1);
-            var nearWorldPoint = Device.Viewport.Unproject(nearScreenPoint, ProjectionMatrix, ViewMatrix, Matrix.Identity);
-            var farWorldPoint = Device.Viewport.Unproject(farScreenPoint, ProjectionMatrix, ViewMatrix, Matrix.Identity);
-
-            var direction = farWorldPoint - nearWorldPoint;
-            direction.Normalize();
-
-            var ray = new Ray(nearWorldPoint, direction);
-
-            ClickRay = ray;
-
-            //var xmin = Math.Min(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X));
-            //var xmax = Math.Max(Math.Abs(nearWorldPoint.X), Math.Abs(farWorldPoint.X)) + 1;
-            //var ymin = Math.Min(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y));
-            //var ymax = Math.Max(Math.Abs(nearWorldPoint.Y), Math.Abs(farWorldPoint.Y)) + 1;
-            //var zmin = Math.Min(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z));
-            //zmin = 0;
-            //var zmax = Math.Max(Math.Abs(nearWorldPoint.Z), Math.Abs(farWorldPoint.Z)) + 1;
-
-            //for (int z = (int) zmax; z >= zmin; z-- )
-            //{
-            //    for (int x = (int) xmin; x <= xmax; x++)
-            //    {
-            //        for (int y = (int) ymin; y <= ymax; y++)
-            //        {
-            //            BoundingBox box = new BoundingBox(new Vector3(x,y,z), new Vector3(x+1,y+1,z+1));
-            //            if (ray.Intersects(box).HasValue)
-            //                System.Diagnostics.Debug.WriteLine("OK");
-            //        }
-            //    }
-            //}
-            return ray;
         }
 
         //protected override void Draw(GameTime gameTime)
@@ -591,8 +537,7 @@ namespace Hiale.GTA2NET
         }
 
         /// <summary>
-        /// Rotate a point from a given location and adjust using the Origin we
-        /// are rotating around
+        /// Rotate a point from a given location and adjust using the Origin we are rotating around
         /// </summary>
         /// <param name="point">The point to rotate.</param>
         /// <param name="origin">Used origin for the rotation.</param>

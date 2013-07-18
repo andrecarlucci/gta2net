@@ -513,6 +513,7 @@ namespace Hiale.GTA2NET.Core.Helper
 
     }
 
+    [NamedVersion("TextureAtlasTiles", 0, 1)]
     public class TextureAtlasTiles : TextureAtlas
     {
         public SerializableDictionary<int, CompactRectangle> TileDictionary { get; set; }
@@ -575,6 +576,7 @@ namespace Hiale.GTA2NET.Core.Helper
         }
     }
 
+    [NamedVersion("TextureAtlasSprites", 0, 1)]
     public class TextureAtlasSprites : TextureAtlas
     {
         public SerializableDictionary<int, SpriteItem> SpriteDictionary { get; set; }
@@ -670,6 +672,7 @@ namespace Hiale.GTA2NET.Core.Helper
         }
     }
 
+    [NamedVersion("TextureAtlasDeltas", 0, 1)]
     public class TextureAtlasDeltas : TextureAtlas
     {
         private struct ItemToRemove

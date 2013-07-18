@@ -30,6 +30,8 @@ namespace Hiale.GTA2NET.Core
     {
         public const bool SaveZipFiles = true;
 
+        public const string IndexFile = "index.dat";
+
         public const string GraphicsSubDir = "gfx";
         public const string MapsSubDir = "maps";
         public const string MiscSubDir = "misc";
@@ -44,7 +46,6 @@ namespace Hiale.GTA2NET.Core
 
         //Original game files
         public static readonly string[] StyleMapFiles = { "bil", "ste", "wil" };
-        //public static readonly string[] StyleMapFiles = { "bil" }; //Debug
         public static readonly string[] MapFilesMultiplayer = { "MP1-comp", "MP2-comp", "MP5-comp", "bil-multi", "wil-multi" };
         public static readonly string[] MiscFiles = {"nyc.gci"};
         public const string StyleFileExtension = ".sty";

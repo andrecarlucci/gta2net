@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Player.cs
-// Created: 24.02.2010
+// File: IPhysicsBehaviour.cs
+// Created: 17.07.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -25,22 +25,14 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using FarseerPhysics.Dynamics;
 
-namespace Hiale.GTA2NET.Logic
+namespace Hiale.GTA2NET.Core.Logic
 {
-    public class Player
+    interface IPhysicsBehaviour
     {
-        private Car _currentCar;
-
-        private Pedestrian _currentPed;
-
-        private bool _inCar;
-
-        private long _points;
-
-        private byte _wantedLevel; //Police level
-
-        private bool _invisible;
+        void SetWorld(World world);
     }
 }

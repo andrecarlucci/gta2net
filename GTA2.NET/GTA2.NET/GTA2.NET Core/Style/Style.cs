@@ -529,10 +529,10 @@ namespace Hiale.GTA2NET.Core.Style
                 carInfo.Passengers = reader.ReadByte();
                 carInfo.Wreck = reader.ReadByte();
                 carInfo.Rating = reader.ReadByte();
-                carInfo.FrontWheelOffset = reader.ReadByte();
-                carInfo.RearWheelOffset = reader.ReadByte();
-                carInfo.FrontWindowOffset = reader.ReadByte();
-                carInfo.RearWindowOffset = reader.ReadByte();
+                carInfo.FrontWheelOffset = reader.ReadSByte();
+                carInfo.RearWheelOffset = reader.ReadSByte();
+                carInfo.FrontWindowOffset = reader.ReadSByte();
+                carInfo.RearWindowOffset = reader.ReadSByte();
                 var infoFlag = reader.ReadByte();
                 carInfo.InfoFlags = (CarInfoFlags)infoFlag;
                 var infoFlag2 = reader.ReadByte();
@@ -547,7 +547,7 @@ namespace Hiale.GTA2NET.Core.Style
                 var numDoors = reader.ReadByte();
                 for (var i = 0; i < numDoors; i++)
                 {
-                    var door = new DoorInfo { X = reader.ReadByte(), Y = reader.ReadByte() };
+                    var door = new DoorInfo { X = reader.ReadSByte(), Y = reader.ReadSByte() };
                     carInfo.Doors.Add(door);
                 }
                 if (!carInfoDict.Keys.Contains(carInfo.Model))

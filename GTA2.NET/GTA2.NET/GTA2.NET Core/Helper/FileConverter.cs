@@ -87,6 +87,8 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public static bool CheckConvertedAssets(string path)
         {
+            if (!IndexFile.Vertify())
+                return false;
             if (Globals.StyleMapFiles.Any(styleFile => !File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleFile + Globals.TilesSuffix + Globals.XmlFormat))) //Texture Atlas Tiles
                 return false;
             if (!File.Exists(path + Path.DirectorySeparatorChar + Globals.GraphicsSubDir + Path.DirectorySeparatorChar + Globals.SpritesSuffix + Globals.XmlFormat)) //Texture Atlas Sprites
@@ -198,6 +200,7 @@ namespace Hiale.GTA2NET.Core.Helper
             }
 
             WaitHandle.WaitOne();
+            IndexFile.Save();
             cancelled = WaitHandle.Value;
         }
 

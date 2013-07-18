@@ -23,6 +23,7 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Helper
