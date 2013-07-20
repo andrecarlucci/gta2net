@@ -216,6 +216,7 @@ namespace Hiale.GTA2NET
 
             ChasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), 0, CarInfoList[9]);
             ChasingObject.PlayerControlled = true;
+            ((IPhysicsBehaviour)ChasingObject).SetWorld(_world);
             //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
             Cars.Add((Car) ChasingObject);
 
