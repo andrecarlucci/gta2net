@@ -31,7 +31,7 @@ using FarseerPhysics.Dynamics;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
-    interface IPhysicsBehaviour
+    public interface IPhysicsBehaviour
     {
         void SetWorld(World world);
     }

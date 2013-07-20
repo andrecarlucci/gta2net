@@ -60,11 +60,15 @@ namespace Hiale.GTA2NET.Core.Logic
         {
             Body = new Body(world) { BodyType = BodyType.Dynamic, AngularDamping = 5 };
 
+            float halfWidth = Width/2;
+            float halfHeight = Height/2;
+
             var vertices = new Vertices(4);
-            vertices.Add(new Vector2(1.5f, 0));
-            vertices.Add(new Vector2(3, 2.5f));
-            vertices.Add(new Vector2(2.8f, 5.5f));
-            vertices.Add(new Vector2(1, 10));
+            vertices.Add(new Vector2(Position3.X - halfWidth, Position3.Y - halfHeight)); //Top-Left
+            vertices.Add(new Vector2(Position3.X + halfWidth, Position3.Y - halfHeight)); //Top-Right
+            vertices.Add(new Vector2(Position3.X + halfWidth, Position3.Y + halfHeight)); //Bottom-Right
+            vertices.Add(new Vector2(Position3.X - halfWidth, Position3.Y + halfHeight)); //Bottom-Left
+
             var fixture = Body.CreateFixture(new PolygonShape(vertices, 0.1f)); //shape, density
 
             float maxForwardSpeed = 300;
@@ -73,9 +77,6 @@ namespace Hiale.GTA2NET.Core.Logic
             float frontTireMaxDriveForce = 400;
             float backTireMaxLateralImpulse = 9;
             float frontTireMaxLateralImpulse = 9;
-
-            float halfWidth = Width/2;
-            float halfHeight = Height/2;
 
             //back left tire
             var tire = new Wheel(world);
@@ -111,6 +112,34 @@ namespace Hiale.GTA2NET.Core.Logic
             joint.UpperLimit = 0;
             world.AddJoint(joint);
             return joint;
+        }
+
+        public override void Update(ParticipantInput input, float elapsedTime)
+        {
+            System.Diagnostics.Debug.WriteLine(Body.Position);
+            foreach (var tire in _wheels)
+            {
+                tire.UpdateFriction();
+                tire.UpdateDrive(input.Forward, input.Rotation);
+            }
+
+            //control steering
+            var lockAngle = MathHelper.ToRadians(35);
+            var turnSpeedPerSec = MathHelper.ToRadians(320); //from lock to lock in 0.25s
+            var turnPerTimeSpep = turnSpeedPerSec / 60f;
+            var desiredAngle = 0f;
+            if (input.Rotation < 0)
+                desiredAngle = lockAngle;
+            else if (input.Rotation > 0)
+                desiredAngle = -lockAngle;
+            var angleNow = _frontLeftJoint.JointAngle;
+            var angleToTurn = desiredAngle - angleNow;
+            angleToTurn = MathHelper.Clamp(angleToTurn, -turnPerTimeSpep, turnPerTimeSpep);
+            var newAngle = angleNow + angleToTurn;
+            _frontLeftJoint.LowerLimit = newAngle;
+            _frontLeftJoint.UpperLimit = newAngle;
+            _frontRightJoint.LowerLimit = newAngle;
+            _frontRightJoint.UpperLimit = newAngle;
         }
     }
 }
