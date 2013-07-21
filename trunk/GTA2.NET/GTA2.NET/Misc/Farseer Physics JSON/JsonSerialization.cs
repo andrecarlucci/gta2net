@@ -219,8 +219,9 @@ namespace Hiale.FarseerPhysicsJSON
             if (value == 0)
                 return 0;
             // ReSharper restore CompareOfFloatsByEqualityOperator
-            var bytes = BitConverter.GetBytes(value);
-            return BitConverter.ToString(bytes).Replace("-", "");
+            byte[] bytes = BitConverter.GetBytes(value);
+            Array.Reverse(bytes);
+            return BitConverter.ToString(bytes).Replace("-", string.Empty);
         }
     }
 
