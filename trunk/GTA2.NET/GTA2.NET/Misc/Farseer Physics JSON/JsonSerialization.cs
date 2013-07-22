@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common;
@@ -72,12 +73,39 @@ namespace Hiale.FarseerPhysicsJSON
             jsonWorld.Add("gravity", (JToken)ToJsonObject(world.Gravity));
             jsonWorld.Add("autoClearForces", world.AutoClearForces);
             jsonWorld.Add("enableSubStepping", world.EnableSubStepping);
+            
             var bodiesArray = new JArray();
+            var bodyDictionary = new Dictionary<Body, int>();
             foreach ( var body in world.BodyList)
             {
                 bodiesArray.Add(SerializeBody(body));
+                bodyDictionary.Add(body, bodiesArray.Count - 1);
+            }
+            var addedBodies = (HashSet<Body>) GetInstanceField(typeof (World), world, "_bodyAddList");
+            if (addedBodies != null)
+            {
+                foreach (var body in addedBodies)
+                {
+                    bodiesArray.Add(SerializeBody(body));
+                    bodyDictionary.Add(body, bodiesArray.Count - 1);
+                }
             }
             jsonWorld.Add(new JProperty("body", bodiesArray));
+
+            var jointArray = new JArray();
+            foreach (var joint in world.JointList)
+            {
+                jointArray.Add(SerializeJoint(joint, bodyDictionary));
+            }
+            var addedJoints = (HashSet<Joint>) GetInstanceField(typeof (World), world, "_jointAddList");
+            if (addedJoints != null)
+            {
+                foreach (var joint in addedJoints)
+                {
+                    jointArray.Add(SerializeJoint(joint, bodyDictionary));
+                }
+            }
+            jsonWorld.Add((new JProperty("joint", jointArray)));
 
             using (var writer = new StreamWriter(stream))
             {
@@ -140,7 +168,7 @@ namespace Hiale.FarseerPhysicsJSON
                     jsonFixture.Add(new JProperty("chain", SerializeLoopShape((LoopShape) fixture.Shape)));
                     break;
                 case ShapeType.Edge:
-                    jsonFixture.Add(new JProperty("chain", SerializeEdgeShape((EdgeShape) fixture.Shape)));
+                    jsonFixture.Add(new JProperty("edge", SerializeEdgeShape((EdgeShape) fixture.Shape)));
                     break;
                 default:
                     throw new NotSupportedException();
@@ -171,12 +199,53 @@ namespace Hiale.FarseerPhysicsJSON
 
         private static JObject SerializeEdgeShape(EdgeShape shape)
         {
-            throw new NotImplementedException();
+            var jsonEdgeShape = new JObject();
+            jsonEdgeShape.Add(new JProperty("vertex1", ToJsonObject(shape.Vertex1)));
+            jsonEdgeShape.Add(new JProperty("vertex2", ToJsonObject(shape.Vertex2)));
+            if (shape.HasVertex0)
+            {
+                jsonEdgeShape.Add(new JProperty("hasVertex0", true));
+                jsonEdgeShape.Add(new JProperty("vertex0", ToJsonObject(shape.Vertex0)));
+            }
+            if (shape.HasVertex3)
+            {
+                jsonEdgeShape.Add(new JProperty("hasVertex3", true));
+                jsonEdgeShape.Add(new JProperty("vertex3", ToJsonObject(shape.Vertex3)));
+            }
+            return jsonEdgeShape;
         }
 
-        private void SerializeJoint(Joint joint)
+        private JObject SerializeJoint(Joint joint, Dictionary<Body, int> bodies)
         {
-            
+            switch (joint.JointType)
+            {
+                case JointType.Revolute:
+                    return SerializeRevoluteJoint((RevoluteJoint) joint, bodies);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private static JObject SerializeRevoluteJoint(RevoluteJoint joint, Dictionary<Body, int> bodies)
+        {
+            var jsonRevoluteJoint = new JObject();
+            //jsonRevoluteJoint.Add(new JProperty("name", "[unknown"));
+            jsonRevoluteJoint.Add(new JProperty("type", "revolute"));
+            jsonRevoluteJoint.Add(new JProperty("anchorA", ToJsonObject(joint.LocalAnchorA)));
+            jsonRevoluteJoint.Add(new JProperty("anchorB", ToJsonObject(joint.LocalAnchorB)));
+            jsonRevoluteJoint.Add(new JProperty("bodyA", bodies[joint.BodyA]));
+            jsonRevoluteJoint.Add(new JProperty("bodyB", bodies[joint.BodyB]));
+            jsonRevoluteJoint.Add(new JProperty("collideConnected", joint.CollideConnected));
+            jsonRevoluteJoint.Add(new JProperty("enableLimit", joint.LimitEnabled));
+            jsonRevoluteJoint.Add(new JProperty("enableMotor", joint.MotorEnabled));
+            jsonRevoluteJoint.Add(new JProperty("jointSpeed", FloatToHex(joint.JointSpeed)));
+            jsonRevoluteJoint.Add(new JProperty("lowerLimit", FloatToHex(joint.LowerLimit)));
+            jsonRevoluteJoint.Add(new JProperty("maxMotorTorque", FloatToHex(joint.MaxMotorTorque)));
+            jsonRevoluteJoint.Add(new JProperty("motorSpeed", FloatToHex(joint.MotorSpeed)));
+            jsonRevoluteJoint.Add(new JProperty("refAngle", FloatToHex(joint.ReferenceAngle)));
+            jsonRevoluteJoint.Add(new JProperty("upperLimit", FloatToHex(joint.UpperLimit)));
+
+            return jsonRevoluteJoint;
         }
 
         private static int ToNumericType(BodyType type)
@@ -219,9 +288,16 @@ namespace Hiale.FarseerPhysicsJSON
             if (value == 0)
                 return 0;
             // ReSharper restore CompareOfFloatsByEqualityOperator
-            byte[] bytes = BitConverter.GetBytes(value);
+            var bytes = BitConverter.GetBytes(value);
             Array.Reverse(bytes);
             return BitConverter.ToString(bytes).Replace("-", string.Empty);
+        }
+
+        private static object GetInstanceField(Type type, object instance, string fieldName)
+        {
+            const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+            var field = type.GetField(fieldName, bindFlags);
+            return field != null ? field.GetValue(instance) : null;
         }
     }
 

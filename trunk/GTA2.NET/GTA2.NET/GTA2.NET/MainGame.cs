@@ -31,6 +31,7 @@ using System.Globalization;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
+using Hiale.FarseerPhysicsJSON;
 using Hiale.GTA2NET.Core.Collision;
 using Hiale.GTA2NET.Core.Logic;
 using Microsoft.Xna.Framework;
@@ -219,6 +220,8 @@ namespace Hiale.GTA2NET
             ((IPhysicsBehaviour)ChasingObject).SetWorld(_world);
             //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
             Cars.Add((Car) ChasingObject);
+
+            JsonWorldSerialization.Serialize(_world, "GTA2NET.json");
 
             GameScreens.Push(new InGameScreen());
         }
