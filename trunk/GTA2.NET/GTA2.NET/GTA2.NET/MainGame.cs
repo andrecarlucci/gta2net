@@ -28,12 +28,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common.Decomposition;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Joints;
 using Hiale.FarseerPhysicsJSON;
 using Hiale.GTA2NET.Core.Collision;
+using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Logic;
+using J2i.Net.XInputWrapper;
 using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core;
 using Hiale.GTA2NET.GameScreens;
@@ -85,6 +89,8 @@ namespace Hiale.GTA2NET
 
         //Physic stuff
         private World _world;
+
+        public static WorldJsonSerializer Json = new WorldJsonSerializer(); //debug
 
         private static string _windowTitle;
         /// <summary>
@@ -221,16 +227,43 @@ namespace Hiale.GTA2NET
             //_chasingObject.RotationAngle = MathHelper.ToRadians(90);
             Cars.Add((Car) ChasingObject);
 
-            JsonWorldSerialization.Serialize(_world, "GTA2NET.json");
+            DebugPhysics();
 
             GameScreens.Push(new InGameScreen());
+        }
+
+        private void DebugPhysics()
+        {
+            var car = (Car)ChasingObject;
+            var carBody = (Body) Extensions.GetPrivateField(car, "_body");
+            Json.SetName(carBody, "Car");
+            Json.SetName(carBody.FixtureList[0], "Car");
+            var wheels = (Wheel[]) Extensions.GetPrivateField(car, "_wheels");
+            Json.SetName(wheels[0].Body, "WheelBackLeft");
+            Json.SetName(wheels[0].Body.FixtureList[0], "WheelBackLeft");
+            Json.SetName(wheels[1].Body, "WheelBackRight");
+            Json.SetName(wheels[1].Body.FixtureList[0], "WheelBackRight");
+            Json.SetName(wheels[2].Body, "WheelFrontLeft");
+            Json.SetName(wheels[2].Body.FixtureList[0], "WheelFrontLeft");
+            Json.SetName(wheels[3].Body, "WheelFrontRight");
+            Json.SetName(wheels[3].Body.FixtureList[0], "WheelFrontRight");
+
+            Json.SetName((Joint) Extensions.GetPrivateField(car, "_backLeftJoint"), "BackLeftJoint");
+            Json.SetName((Joint) Extensions.GetPrivateField(car, "_backRightJoint"), "BackRightJoint");
+            Json.SetName((Joint) Extensions.GetPrivateField(car, "_frontLeftJoint"), "FrontLeftJoint");
+            Json.SetName((Joint) Extensions.GetPrivateField(car, "_frontRightJoint"), "FrontRightJoint");
+
+            using (var fs = new FileStream("GTA2NET.json", FileMode.Create))
+            {
+                Json.Serialize(_world, fs);
+            }
         }
 
         private void SetupPhysics()
         {
             var collision = new CollisionMap(Map);
             if (_world == null)
-                _world = new World(new Vector2(0, 10f));
+                _world = new World(new Vector2(0, 0));
             else
                 _world.Clear();
 
@@ -239,12 +272,13 @@ namespace Hiale.GTA2NET
             foreach (var obstacle in layer2Obstacles)
             {
                 var body = new Body(_world) {BodyType = BodyType.Static};
+                Json.SetName(body, "Building" + obstacle.Z);
                 Shape shape;
                 switch (obstacle.Type)
                 {
                     case ObstacleType.Line:
                         var lineObstacle = (LineObstacle) obstacle;
-                        shape = new EdgeShape(lineObstacle.Start, lineObstacle.End);
+                        shape = new EdgeShape(lineObstacle.Start.ToMeters(), lineObstacle.End.ToMeters());
                         body.CreateFixture(shape);
                         break;
                     case ObstacleType.Polygon:
@@ -252,17 +286,17 @@ namespace Hiale.GTA2NET
                         var convexPolygons = BayazitDecomposer.ConvexPartition(polygonObstacle.Vertices);
                         foreach (var convexPolygon in convexPolygons)
                         {
-                            shape = new PolygonShape(convexPolygon, 1);
+                            shape = new PolygonShape(convexPolygon.ToMeters(), 1);
                             body.CreateFixture(shape);
                         }
                         break;
                     case ObstacleType.Rectangle:
                         var rectangleObstacle = (RectangleObstacle) obstacle;
-                        shape = new PolygonShape(rectangleObstacle.Vertices, 1);
+                        shape = new PolygonShape(rectangleObstacle.Vertices.ToMeters(), 1);
                         body.CreateFixture(shape);
                         break;
                 }
-
+                Json.SetName(body.FixtureList[0], "Building" + obstacle.Z);
             }
         }
 
@@ -275,9 +309,17 @@ namespace Hiale.GTA2NET
             // Update game engine
             base.Update(gameTime);
 
-            //_world.Step((float)(gameTime.ElapsedGameTime.TotalMilliseconds * 0.001));
+            var controller = XboxController.RetrieveController(0);
+            controller.UpdateState();
 
-            var mouseState = Mouse.GetState();
+            if (controller.IsBackPressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            {
+                using (var fs = new FileStream("GTA2NET_update.json", FileMode.Create))
+                {
+                    Json.Serialize(_world, fs);
+                }
+                Exit();
+            }
 
             var elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 

@@ -55,7 +55,7 @@ namespace Hiale.GTA2NET.Core.Logic
             Body = new Body(world) {BodyType = BodyType.Dynamic, IsSensor = true, UserData = this};
 
             var shape = new PolygonShape(1);
-            shape.SetAsBox(0.5f, 1.25f);
+            shape.SetAsBox(Physics.ToMeters(0.03125f), Physics.ToMeters(0.125f));
             var fixture = Body.CreateFixture(shape);
             fixture.UserData = this;
             Body.UserData = this;

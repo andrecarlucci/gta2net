@@ -67,6 +67,17 @@ namespace Hiale.FarseerPhysicsJSON
 
     public class WorldJsonSerializer
     {
+        private readonly Dictionary<Body, string> _namedBodies;
+        private readonly Dictionary<Fixture, string> _namedFixtures;
+        private readonly Dictionary<Joint, string> _namedJoints; 
+
+        public WorldJsonSerializer()
+        {
+            _namedBodies = new Dictionary<Body, string>();
+            _namedFixtures = new Dictionary<Fixture, string>();
+            _namedJoints = new Dictionary<Joint, string>();
+        }
+
         public void Serialize(World world, Stream stream)
         {
             var jsonWorld = new JObject();
@@ -81,7 +92,7 @@ namespace Hiale.FarseerPhysicsJSON
                 bodiesArray.Add(SerializeBody(body));
                 bodyDictionary.Add(body, bodiesArray.Count - 1);
             }
-            var addedBodies = (HashSet<Body>) GetInstanceField(typeof (World), world, "_bodyAddList");
+            var addedBodies = (HashSet<Body>) GetInstanceField(world, "_bodyAddList");
             if (addedBodies != null)
             {
                 foreach (var body in addedBodies)
@@ -97,7 +108,7 @@ namespace Hiale.FarseerPhysicsJSON
             {
                 jointArray.Add(SerializeJoint(joint, bodyDictionary));
             }
-            var addedJoints = (HashSet<Joint>) GetInstanceField(typeof (World), world, "_jointAddList");
+            var addedJoints = (HashSet<Joint>) GetInstanceField(world, "_jointAddList");
             if (addedJoints != null)
             {
                 foreach (var joint in addedJoints)
@@ -113,10 +124,15 @@ namespace Hiale.FarseerPhysicsJSON
             }
         }
 
-        private static JObject SerializeBody(Body body)
+        private JObject SerializeBody(Body body)
         {
             var jsonBody = new JObject();
-            //jsonBody.Add(new JProperty("name", "[unknown]"));
+            string name;
+            if (_namedBodies.TryGetValue(body, out name))
+            {
+                if (!string.IsNullOrEmpty(name))
+                    jsonBody.Add(new JProperty("name", name));
+            }
             jsonBody.Add(new JProperty("type", ToNumericType(body.BodyType)));
             jsonBody.Add(new JProperty("angle", FloatToHex(body.Rotation)));
 
@@ -146,11 +162,16 @@ namespace Hiale.FarseerPhysicsJSON
             return jsonBody;
         }
 
-        private static JObject SerializeFixture(Fixture fixture)
+        private JObject SerializeFixture(Fixture fixture)
         {
             var jsonFixture = new JObject();
 
-            //jsonFixture.Add(new JProperty("name", "[unknown"));
+            string name;
+            if (_namedFixtures.TryGetValue(fixture, out name))
+            {
+                if (!string.IsNullOrEmpty(name))
+                    jsonFixture.Add(new JProperty("name", name));
+            }
             jsonFixture.Add(new JProperty("density", FloatToHex(fixture.Shape.Density)));
             jsonFixture.Add(new JProperty("friction", FloatToHex(fixture.Friction)));
             jsonFixture.Add(new JProperty("restitution", FloatToHex(fixture.Restitution)));
@@ -226,9 +247,15 @@ namespace Hiale.FarseerPhysicsJSON
             }
         }
 
-        private static JObject SerializeRevoluteJoint(RevoluteJoint joint, Dictionary<Body, int> bodies)
+        private JObject SerializeRevoluteJoint(RevoluteJoint joint, Dictionary<Body, int> bodies)
         {
             var jsonRevoluteJoint = new JObject();
+            string name;
+            if (_namedJoints.TryGetValue(joint, out name))
+            {
+                if (!string.IsNullOrEmpty(name))
+                    jsonRevoluteJoint.Add(new JProperty("name", name));
+            }
             //jsonRevoluteJoint.Add(new JProperty("name", "[unknown"));
             jsonRevoluteJoint.Add(new JProperty("type", "revolute"));
             jsonRevoluteJoint.Add(new JProperty("anchorA", ToJsonObject(joint.LocalAnchorA)));
@@ -246,6 +273,45 @@ namespace Hiale.FarseerPhysicsJSON
             jsonRevoluteJoint.Add(new JProperty("upperLimit", FloatToHex(joint.UpperLimit)));
 
             return jsonRevoluteJoint;
+        }
+
+        public void SetName(Body body, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                _namedBodies.Remove(body);
+                return;
+            }
+            if (_namedBodies.ContainsKey(body))
+                _namedBodies[body] = name;
+            else
+                _namedBodies.Add(body, name);
+        }
+
+        public void SetName(Fixture fixture, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                _namedFixtures.Remove(fixture);
+                return;
+            }
+            if (_namedFixtures.ContainsKey(fixture))
+                _namedFixtures[fixture] = name;
+            else
+                _namedFixtures.Add(fixture, name);
+        }
+
+        public void SetName(Joint joint, string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                _namedJoints.Remove(joint);
+                return;
+            }
+            if (_namedJoints.ContainsKey(joint))
+                _namedJoints[joint] = name;
+            else
+                _namedJoints.Add(joint, name);
         }
 
         private static int ToNumericType(BodyType type)
@@ -293,10 +359,10 @@ namespace Hiale.FarseerPhysicsJSON
             return BitConverter.ToString(bytes).Replace("-", string.Empty);
         }
 
-        private static object GetInstanceField(Type type, object instance, string fieldName)
+        private static object GetInstanceField(object instance, string fieldName)
         {
             const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-            var field = type.GetField(fieldName, bindFlags);
+            var field = instance.GetType().GetField(fieldName, bindFlags);
             return field != null ? field.GetValue(instance) : null;
         }
     }

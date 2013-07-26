@@ -166,12 +166,12 @@ namespace Hiale.GTA2NET.Core.Logic
         }
 
         /// <summary>
-        /// Width of the object.
+        /// Width of the object in "block units".
         /// </summary>
         public float Width { get; protected set; }
 
         /// <summary>
-        /// Height of the object.
+        /// Height of the object in "block units.
         /// </summary>
         public float Height { get; protected set; }
 

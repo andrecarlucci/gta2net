@@ -78,6 +78,7 @@
     <Compile Include="Logic\IPhysicsBehaviour.cs" />
     <Compile Include="Logic\ParticipantInput.cs" />
     <Compile Include="Logic\Pedestrian.cs" />
+    <Compile Include="Logic\Physics.cs" />
     <Compile Include="Logic\Player.cs" />
     <Compile Include="Logic\Vehicle.cs" />
     <Compile Include="Logic\Weapon.cs" />
