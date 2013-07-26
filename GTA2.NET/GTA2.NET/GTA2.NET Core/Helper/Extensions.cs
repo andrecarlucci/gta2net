@@ -23,6 +23,7 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -100,6 +101,13 @@ namespace Hiale.GTA2NET.Core.Helper
                 var hash2 = hashAlgorithm.ComputeHash(stream2);
                 return !hash1.Where((t, i) => t != hash2[i]).Any();
             }
+        }
+
+        public static object GetPrivateField(object instance, string fieldName)
+        {
+            const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+            var field = instance.GetType().GetField(fieldName, bindFlags);
+            return field != null ? field.GetValue(instance) : null;
         }
     }
 }

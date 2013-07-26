@@ -38,10 +38,12 @@ namespace Hiale.GTA2NET.Core.Logic
     {
         public CarInfo CarInfo { get; private set; }
 
-        internal Body Body;
+        private Body _body;
 
         private readonly Wheel[] _wheels;
 
+        private RevoluteJoint _backLeftJoint;
+        private RevoluteJoint _backRightJoint;
         private RevoluteJoint _frontLeftJoint;
         private RevoluteJoint _frontRightJoint;
 
@@ -58,10 +60,13 @@ namespace Hiale.GTA2NET.Core.Logic
 
         private void CreateCar(World world)
         {
-            Body = new Body(world) { BodyType = BodyType.Dynamic, AngularDamping = 5 };
+            _body = new Body(world) { BodyType = BodyType.Dynamic, AngularDamping = 5 };
 
-            float halfWidth = Width/2;
-            float halfHeight = Height/2;
+            var halfWidth = Width/2;
+            var halfHeight = Height/2;
+
+            var frontWheelOffset = (float) CarInfo.FrontWheelOffset/64;
+            var rearWheelOffset =  (float) CarInfo.RearWheelOffset/64;
 
             var vertices = new Vertices(4);
             vertices.Add(new Vector2(Position3.X - halfWidth, Position3.Y - halfHeight)); //Top-Left
@@ -69,43 +74,47 @@ namespace Hiale.GTA2NET.Core.Logic
             vertices.Add(new Vector2(Position3.X + halfWidth, Position3.Y + halfHeight)); //Bottom-Right
             vertices.Add(new Vector2(Position3.X - halfWidth, Position3.Y + halfHeight)); //Bottom-Left
 
-            var fixture = Body.CreateFixture(new PolygonShape(vertices, 0.1f)); //shape, density
+            var fixture = _body.CreateFixture(new PolygonShape(vertices.ToMeters(), 0.1f)); //shape, density
 
             float maxForwardSpeed = 300;
             float maxBackwardSpeed = -40;
-            float backTireMaxDriveForce = 950;
-            float frontTireMaxDriveForce = 400;
-            float backTireMaxLateralImpulse = 9;
-            float frontTireMaxLateralImpulse = 9;
+            float backWheelMaxDriveForce = 950;
+            float frontWheelMaxDriveForce = 400;
+            float backWheelMaxLateralImpulse = 9;
+            float fronWheelMaxLateralImpulse = 9;
 
-            //back left tire
-            var tire = new Wheel(world);
-            tire.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, backTireMaxDriveForce, backTireMaxLateralImpulse);
-            _wheels[0] = tire;
-            CreateJoint(Body, tire.Body, new Vector2(-halfWidth, 0.75f), world);
+            //back left wheel
+            var wheel = new Wheel(world);
+            wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, backWheelMaxDriveForce, backWheelMaxLateralImpulse);
+            _wheels[0] = wheel;
+            _backLeftJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X + halfWidth, Position3.Y + rearWheelOffset).ToMeters(), world);
+            wheel.Body.Position = _backLeftJoint.LocalAnchorA;
 
-            //back right tire
-            tire = new Wheel(world);
-            tire.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, backTireMaxDriveForce, backTireMaxLateralImpulse);
-            _wheels[1] = tire;
-            CreateJoint(Body, tire.Body, new Vector2(halfWidth, 0.75f), world);
+            //back right wheel
+            wheel = new Wheel(world);
+            wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, backWheelMaxDriveForce, backWheelMaxLateralImpulse);
+            _wheels[1] = wheel;
+            _backRightJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X - halfWidth, Position3.Y + rearWheelOffset).ToMeters(), world);
+            wheel.Body.Position = _backRightJoint.LocalAnchorA;
 
-            //front left tire
-            tire = new Wheel(world);
-            tire.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, frontTireMaxDriveForce, frontTireMaxLateralImpulse);
-            _wheels[2] = tire;
-            _frontLeftJoint = CreateJoint(Body, tire.Body, new Vector2(-halfWidth, 8.5f), world);
+            //front left wheel
+            wheel = new Wheel(world);
+            wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, frontWheelMaxDriveForce, fronWheelMaxLateralImpulse);
+            _wheels[2] = wheel;
+            _frontLeftJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X + halfWidth, Position3.Y + frontWheelOffset).ToMeters(), world);
+            wheel.Body.Position = _frontLeftJoint.LocalAnchorA;
 
-            //front right tire
-            tire = new Wheel(world);
-            tire.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, frontTireMaxDriveForce, frontTireMaxLateralImpulse);
-            _wheels[3] = tire;
-            _frontRightJoint = CreateJoint(Body, tire.Body, new Vector2(halfWidth, 8.5f), world);
+            //front right wheel
+            wheel = new Wheel(world);
+            wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, frontWheelMaxDriveForce, fronWheelMaxLateralImpulse);
+            _wheels[3] = wheel;
+            _frontRightJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X - halfWidth, Position3.Y + frontWheelOffset).ToMeters(), world);
+            wheel.Body.Position = _frontRightJoint.LocalAnchorA;
         }
 
-        private static RevoluteJoint CreateJoint(Body carBody, Body tireBody, Vector2 anchor, World world)
+        private static RevoluteJoint CreateJoint(Body carBody, Body wheelBody, Vector2 anchor, World world)
         {
-            var joint = JointFactory.CreateRevoluteJoint(carBody, tireBody, Vector2.Zero);
+            var joint = JointFactory.CreateRevoluteJoint(carBody, wheelBody, Vector2.Zero);
             joint.LocalAnchorA = anchor;
             joint.LimitEnabled = true;
             joint.LowerLimit = 0;
@@ -116,11 +125,11 @@ namespace Hiale.GTA2NET.Core.Logic
 
         public override void Update(ParticipantInput input, float elapsedTime)
         {
-            System.Diagnostics.Debug.WriteLine(Body.Position);
-            foreach (var tire in _wheels)
+            System.Diagnostics.Debug.WriteLine(_body.Position);
+            foreach (var wheel in _wheels)
             {
-                tire.UpdateFriction();
-                tire.UpdateDrive(input.Forward, input.Rotation);
+                wheel.UpdateFriction();
+                wheel.UpdateDrive(input.Forward, input.Rotation);
             }
 
             //control steering
