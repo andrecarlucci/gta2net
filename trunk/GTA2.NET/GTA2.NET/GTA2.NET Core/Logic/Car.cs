@@ -30,6 +30,7 @@ using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
+using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Logic
@@ -39,6 +40,7 @@ namespace Hiale.GTA2NET.Core.Logic
         public CarInfo CarInfo { get; private set; }
 
         private Body _body;
+        private PolygonShape _shape;
 
         private readonly Wheel[] _wheels;
 
@@ -46,6 +48,38 @@ namespace Hiale.GTA2NET.Core.Logic
         private RevoluteJoint _backRightJoint;
         private RevoluteJoint _frontLeftJoint;
         private RevoluteJoint _frontRightJoint;
+
+        public new Vector2 TopLeft2
+        {
+            get
+            {
+                return _shape.Vertices[0];
+            }
+        }
+
+        public new Vector2 TopRight2
+        {
+            get
+            {
+                return _shape.Vertices[1];
+            }
+        }
+
+        public new Vector2 BottomLeft2
+        {
+            get
+            {
+                return _shape.Vertices[3];
+            }
+        }
+
+        public new  Vector2 BottomRight2
+        {
+            get
+            {
+                return _shape.Vertices[2];
+            }
+        }
 
         public Car(Vector3 startUpPosition, float startUpRotation, CarInfo carInfo) : base(startUpPosition, startUpRotation, carInfo.Width, carInfo.Height)
         {
@@ -60,7 +94,8 @@ namespace Hiale.GTA2NET.Core.Logic
 
         private void CreateCar(World world)
         {
-            _body = new Body(world) { BodyType = BodyType.Dynamic, AngularDamping = 5 };
+            var carPosition = Position2.ToMeters();
+            _body = new Body(world) {BodyType = BodyType.Dynamic, Position = carPosition, AngularDamping = 5};
 
             var halfWidth = Width/2;
             var halfHeight = Height/2;
@@ -69,12 +104,13 @@ namespace Hiale.GTA2NET.Core.Logic
             var rearWheelOffset =  (float) CarInfo.RearWheelOffset/64;
 
             var vertices = new Vertices(4);
-            vertices.Add(new Vector2(Position3.X - halfWidth, Position3.Y - halfHeight)); //Top-Left
-            vertices.Add(new Vector2(Position3.X + halfWidth, Position3.Y - halfHeight)); //Top-Right
-            vertices.Add(new Vector2(Position3.X + halfWidth, Position3.Y + halfHeight)); //Bottom-Right
-            vertices.Add(new Vector2(Position3.X - halfWidth, Position3.Y + halfHeight)); //Bottom-Left
+            vertices.Add(new Vector2(-halfWidth, -halfHeight)); //Top-Left
+            vertices.Add(new Vector2(halfWidth, -halfHeight)); //Top-Right
+            vertices.Add(new Vector2(halfWidth, halfHeight)); //Bottom-Right
+            vertices.Add(new Vector2(-halfWidth, halfHeight)); //Bottom-Left
 
-            var fixture = _body.CreateFixture(new PolygonShape(vertices.ToMeters(), 0.1f)); //shape, density
+            _shape = new PolygonShape(vertices.ToMeters(), 0.1f);
+            var fixture = _body.CreateFixture(_shape); //shape, density
 
             float maxForwardSpeed = 300;
             float maxBackwardSpeed = -40;
@@ -84,32 +120,32 @@ namespace Hiale.GTA2NET.Core.Logic
             float fronWheelMaxLateralImpulse = 9;
 
             //back left wheel
+            var wheelOffsetPosition = new Vector2(halfWidth, rearWheelOffset).ToMeters();
             var wheel = new Wheel(world);
             wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, backWheelMaxDriveForce, backWheelMaxLateralImpulse);
             _wheels[0] = wheel;
-            _backLeftJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X + halfWidth, Position3.Y + rearWheelOffset).ToMeters(), world);
-            wheel.Body.Position = _backLeftJoint.LocalAnchorA;
+            _backLeftJoint = CreateJoint(_body, wheel.Body, wheelOffsetPosition, world);
 
             //back right wheel
+            wheelOffsetPosition = new Vector2(-halfWidth, rearWheelOffset).ToMeters();
             wheel = new Wheel(world);
             wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, backWheelMaxDriveForce, backWheelMaxLateralImpulse);
             _wheels[1] = wheel;
-            _backRightJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X - halfWidth, Position3.Y + rearWheelOffset).ToMeters(), world);
-            wheel.Body.Position = _backRightJoint.LocalAnchorA;
+            _backRightJoint = CreateJoint(_body, wheel.Body, wheelOffsetPosition, world);
 
             //front left wheel
+            wheelOffsetPosition = new Vector2(halfWidth, frontWheelOffset).ToMeters();
             wheel = new Wheel(world);
             wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, frontWheelMaxDriveForce, fronWheelMaxLateralImpulse);
             _wheels[2] = wheel;
-            _frontLeftJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X + halfWidth, Position3.Y + frontWheelOffset).ToMeters(), world);
-            wheel.Body.Position = _frontLeftJoint.LocalAnchorA;
+            _frontLeftJoint = CreateJoint(_body, wheel.Body, wheelOffsetPosition, world);
 
             //front right wheel
+            wheelOffsetPosition = new Vector2(-halfWidth, frontWheelOffset).ToMeters();
             wheel = new Wheel(world);
             wheel.SetCharacteristics(maxForwardSpeed, maxBackwardSpeed, frontWheelMaxDriveForce, fronWheelMaxLateralImpulse);
             _wheels[3] = wheel;
-            _frontRightJoint = CreateJoint(_body, wheel.Body, new Vector2(Position3.X - halfWidth, Position3.Y + frontWheelOffset).ToMeters(), world);
-            wheel.Body.Position = _frontRightJoint.LocalAnchorA;
+            _frontRightJoint = CreateJoint(_body, wheel.Body, wheelOffsetPosition, world);
         }
 
         private static RevoluteJoint CreateJoint(Body carBody, Body wheelBody, Vector2 anchor, World world)
@@ -120,6 +156,7 @@ namespace Hiale.GTA2NET.Core.Logic
             joint.LowerLimit = 0;
             joint.UpperLimit = 0;
             world.AddJoint(joint);
+            wheelBody.Position = carBody.Position + anchor;
             return joint;
         }
 

@@ -79,6 +79,7 @@
     <Compile Include="Logic\ParticipantInput.cs" />
     <Compile Include="Logic\Pedestrian.cs" />
     <Compile Include="Logic\Physics.cs" />
+    <Compile Include="Logic\PhysicsHelper.cs" />
     <Compile Include="Logic\Player.cs" />
     <Compile Include="Logic\Vehicle.cs" />
     <Compile Include="Logic\Weapon.cs" />
@@ -191,6 +192,10 @@
     <Compile Include="Style\Surface.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Misc\Farseer Physics JSON\Farseer Physics JSON.csproj">
+      <Project>{ed09d20c-1ab5-4ef1-8e3d-114e3f798c03}</Project>
+      <Name>Farseer Physics JSON</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ThirdParty\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
       <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
       <Name>Farseer Physics MonoGame</Name>

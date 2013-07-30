@@ -79,7 +79,7 @@ namespace Hiale.GTA2NET
 
         private readonly float _heightHalf;
 
-        public Sprite(GameplayObject baseObjectOld, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
+        public Sprite(GameplayObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
         {
             var item = new SpriteItem(SpriteType.Car);
 
@@ -106,7 +106,7 @@ namespace Hiale.GTA2NET
             SetNeutralPosition(position);
 
 
-            this.SpriteIndex = spriteIndex;
+            SpriteIndex = spriteIndex;
 
             //Texture
             double pixelPerWidth = 1f / texture.Width;
@@ -128,32 +128,43 @@ namespace Hiale.GTA2NET
             BottomRight = (new Vector3(0.5f * Width, -0.5f * Height, 0.0f) + position);
         }
 
-        public void SetPosition(GameplayObject baseObjectOld)
+        public void SetPosition(GameplayObject baseObject)
         {
-            Vector3 center = baseObjectOld.Position3;
-            float rotation = baseObjectOld.RotationAngle;
+            TopLeft = TranslatePosition(baseObject.TopLeft3);
+            TopRight = TranslatePosition(baseObject.TopRight3);
+            BottomRight = TranslatePosition(baseObject.BottomRight3);
+            BottomLeft = TranslatePosition(baseObject.BottomLeft3);
+
+            Vector3 center = baseObject.Position3;
+            float rotation = baseObject.RotationAngle;
 
             Vector3 currentPoint = new Vector3(center.X - _widthHalf, center.Y - _heightHalf, center.Z);
             currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
             TranslatePosition(ref currentPoint);
-            TopLeft = currentPoint;
+            //TopLeft = currentPoint;
 
             currentPoint = new Vector3(center.X + _widthHalf, center.Y - _heightHalf, center.Z);
             currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
             TranslatePosition(ref currentPoint);
-            TopRight = currentPoint;
+            //TopRight = currentPoint;
 
             currentPoint = new Vector3(center.X + _widthHalf, center.Y + _heightHalf, center.Z);
             currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
             TranslatePosition(ref currentPoint);
-            BottomRight = currentPoint;
+            //BottomRight = currentPoint;
 
             currentPoint = new Vector3(center.X - _widthHalf, center.Y + _heightHalf, center.Z);
             currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
             TranslatePosition(ref currentPoint);
-            BottomLeft = currentPoint;
+            //BottomLeft = currentPoint;
         }
 
+
+        private static Vector3 TranslatePosition(Vector3 position)
+        {
+            TranslatePosition(ref position);
+            return position;
+        }
 
         /// <summary>
         /// Translate a "game position" into a 3d position.
