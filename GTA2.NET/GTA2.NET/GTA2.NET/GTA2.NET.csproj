@@ -71,10 +71,6 @@
       <Project>{4c44529b-f131-4372-94db-540a6fcbd08d}</Project>
       <Name>GTA2.NET WinUI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Misc\Farseer Physics JSON\Farseer Physics JSON.csproj">
-      <Project>{ed09d20c-1ab5-4ef1-8e3d-114e3f798c03}</Project>
-      <Name>Farseer Physics JSON</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ThirdParty\Farseer Physics MonoGame\Farseer Physics MonoGame.csproj">
       <Project>{ea88836e-6c88-423c-bea7-3125077cfa5a}</Project>
       <Name>Farseer Physics MonoGame</Name>
