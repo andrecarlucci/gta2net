@@ -247,7 +247,7 @@ namespace Hiale.FarseerPhysicsJSON
             }
         }
 
-        private JObject SerializeRevoluteJoint(RevoluteJoint joint, Dictionary<Body, int> bodies)
+        private JObject SerializeRevoluteJoint(RevoluteJoint joint, IDictionary<Body, int> bodies)
         {
             var jsonRevoluteJoint = new JObject();
             string name;
@@ -256,7 +256,6 @@ namespace Hiale.FarseerPhysicsJSON
                 if (!string.IsNullOrEmpty(name))
                     jsonRevoluteJoint.Add(new JProperty("name", name));
             }
-            //jsonRevoluteJoint.Add(new JProperty("name", "[unknown"));
             jsonRevoluteJoint.Add(new JProperty("type", "revolute"));
             jsonRevoluteJoint.Add(new JProperty("anchorA", ToJsonObject(joint.LocalAnchorA)));
             jsonRevoluteJoint.Add(new JProperty("anchorB", ToJsonObject(joint.LocalAnchorB)));
@@ -369,17 +368,15 @@ namespace Hiale.FarseerPhysicsJSON
 
     public class WorldJsonDeserializer
     {
-        private readonly Dictionary<string, IList<Body>> _namedBodies;
-        private readonly Dictionary<string, IList<Fixture>> _namedFixtures; 
-        //private List<Body> _bodies = new List<Body>();
-        //private List<Fixture> _fixtures = new List<Fixture>();
-        //private List<Joint> _joints = new List<Joint>();
-        //private List<Shape> _shapes = new List<Shape>();
+        private readonly Dictionary<Body, string> _namedBodies;
+        private readonly Dictionary<Fixture, string> _namedFixtures;
+        private readonly Dictionary<Joint, string> _namedJoints; 
 
         public WorldJsonDeserializer()
         {
-            _namedBodies = new Dictionary<string, IList<Body>>();
-            _namedFixtures = new Dictionary<string, IList<Fixture>>();
+            _namedBodies = new Dictionary<Body, string>();
+            _namedFixtures = new Dictionary<Fixture, string>();
+            _namedJoints = new Dictionary<Joint, string>();
         }
 
         public World Deserialize(string filename)
@@ -399,12 +396,38 @@ namespace Hiale.FarseerPhysicsJSON
 
         public IList<Body> GetBodiesByName(string name)
         {
-            return _namedBodies.Any(namedBody => namedBody.Key == name) ? _namedBodies[name] : new List<Body>();
+            return (from namedBody in _namedBodies where namedBody.Value == name select namedBody.Key).ToList();
         }
 
         public IList<Fixture> GetFixturesByName(string name)
         {
-            return _namedFixtures.Any(namedFixture => namedFixture.Key == name) ? _namedFixtures[name] : new List<Fixture>();
+            return (from namedFixture in _namedFixtures where namedFixture.Value == name select namedFixture.Key).ToList();
+        }
+
+        public IList<Joint> GetJointsByName(string name)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetBodyName(Body body)
+        {
+            string name;
+            _namedBodies.TryGetValue(body, out name);
+            return name;
+        }
+
+        public string GetFixtureName(Fixture fixture)
+        {
+            string name;
+            _namedFixtures.TryGetValue(fixture, out name);
+            return name;
+        }
+
+        public string GetJointName(Joint joint)
+        {
+            string name;
+            _namedJoints.TryGetValue(joint, out name);
+            return name;
         }
 
         public void Deserialize(World world, Stream stream)
@@ -483,13 +506,7 @@ namespace Hiale.FarseerPhysicsJSON
                 {
                     case "name":
                         var value = bodyProperty.Value.ToString();
-                        if (_namedBodies.ContainsKey(value))
-                            _namedBodies[value].Add(body);
-                        else
-                        {
-                            var list = new List<Body> {body};
-                            _namedBodies.Add(value, list);
-                        }
+                        _namedBodies.Add(body, value);
                         break;
                     case "type":
                         body.BodyType = ParseType(bodyProperty);
@@ -642,13 +659,7 @@ namespace Hiale.FarseerPhysicsJSON
                 {
                     case "name":
                         var value = fixtureProperty.Value.ToString();
-                        if (_namedFixtures.ContainsKey(value))
-                            _namedFixtures[value].Add(fixture);
-                        else
-                        {
-                            var list = new List<Fixture> {fixture};
-                            _namedFixtures.Add(value, list);
-                        }
+                        _namedFixtures.Add(fixture, value);
                         break;
                     case "density":
                         shape.Density = HexToFloat(fixtureProperty.Value.ToString());
