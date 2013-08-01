@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: IPhysicsBehaviour.cs
-// Created: 17.07.2013
+// File: ConvertUnits.cs
+// Created: 01.08.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -25,35 +25,46 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
 using System;
-using FarseerPhysics.Dynamics;
+using System.Collections.Generic;
+using System.Linq;
+using FarseerPhysics.Common;
 using Microsoft.Xna.Framework;
 
-namespace Hiale.GTA2NET.Core.Logic
+namespace Hiale.GTA2NET.Core.Helper
 {
-    public interface IPhysicsBehaviour
+    public static class ConvertUnits
     {
-        Vector2 CollisionTopLeft { get; }
+        public const float MetersPerBlock = 3.6f;
+        public const int PixelsPerBlock = 64;
 
-        Vector2 CollisionTopRight { get; }
+        public static float ToMeters(float blockUnits)
+        {
+            return blockUnits * MetersPerBlock;
+        }
 
-        Vector2 CollisionBottomRight { get; }
+        public static Vector2 ToMeters(this Vector2 blockUnits)
+        {
+            return Vector2.Multiply(blockUnits, MetersPerBlock);
+        }
 
-        Vector2 CollisionBottomLeft { get; }
+        public static Vertices ToMeters(this List<Vector2> blockUnits)
+        {
+            return new Vertices(blockUnits.Select(blockUnit => blockUnit.ToMeters()).ToList());
+        }
 
-        /// <summary>
-        /// Width of the object in "block units". This is used for collision detection.
-        /// </summary>
-        float CollisionWidth { get; }
+        public static float ToBlockUnits(int pixels)
+        {
+            return (float) pixels/PixelsPerBlock;
+        }
 
-        /// <summary>
-        /// Height of the object in "block units". This is used for collision detection.
-        /// </summary>
-        float CollisionHeight { get; }
+        public static float ToBlockUnits(float meters)
+        {
+            return meters/MetersPerBlock;
+        }
 
-        //void SetDimensions(float width, float height);
-
-        //void SetWorld(World world);
-
-        void CreateBody(World world, float width, float height);
+        public static Vector2 ToBlockUnits(this Vector2 meters)
+        {
+            return Vector2.Divide(meters, MetersPerBlock);
+        }
     }
 }

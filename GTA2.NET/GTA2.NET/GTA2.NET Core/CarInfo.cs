@@ -103,7 +103,13 @@ namespace Hiale.GTA2NET.Core
         /// <summary>
         /// Sprite number.
         /// </summary>
-        public int Sprite { get; set; }
+        public int SpriteId { get; set; }
+
+        /// <summary>
+        /// Sprite object.
+        /// </summary>
+        [XmlIgnore]
+        public SpriteItem Sprite { get; set; }
 
         /// <summary>
         /// Width of the car in pixels. This is required here because it may be different from the width of the car for collision purposes.
@@ -111,9 +117,7 @@ namespace Hiale.GTA2NET.Core
         public int Width { get; set; }
 
         /// <summary>
-        /// /// <summary>
         /// Height of the car in pixels. This is required here because it may be different from the height of the car for collision purposes.
-        /// </summary>
         /// </summary>
         public int Height { get; set; }
 

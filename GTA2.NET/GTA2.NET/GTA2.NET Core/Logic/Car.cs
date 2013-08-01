@@ -41,6 +41,12 @@ namespace Hiale.GTA2NET.Core.Logic
 
         private Body _body;
         private PolygonShape _shape;
+        private PolygonShape _spriteShape;
+
+        private float _collisionWidth;
+        private float _collisionHeight;
+        private float _spriteWidth;
+        private float _spriteHeight;
 
         private readonly Wheel[] _wheels;
 
@@ -49,68 +55,119 @@ namespace Hiale.GTA2NET.Core.Logic
         private RevoluteJoint _frontLeftJoint;
         private RevoluteJoint _frontRightJoint;
 
-        public new Vector2 TopLeft2
+        public override float CollisionWidth
         {
-            get
-            {
-                return _shape.Vertices[0];
-            }
+            get { return _collisionWidth; }
         }
 
-        public new Vector2 TopRight2
+        public override float CollisionHeight
         {
-            get
-            {
-                return _shape.Vertices[1];
-            }
+            get { return _collisionHeight; }
         }
 
-        public new Vector2 BottomLeft2
+        public override Vector2 CollisionTopLeft
         {
-            get
-            {
-                return _shape.Vertices[3];
-            }
+            get { return _shape.Vertices[0].ToBlockUnits(); }
         }
 
-        public new  Vector2 BottomRight2
+        public override Vector2 CollisionTopRight
         {
-            get
-            {
-                return _shape.Vertices[2];
-            }
+            get { return _shape.Vertices[1].ToBlockUnits(); }
         }
 
-        public Car(Vector3 startUpPosition, float startUpRotation, CarInfo carInfo) : base(startUpPosition, startUpRotation, carInfo.Width, carInfo.Height)
+        public override Vector2 CollisionBottomLeft
+        {
+            get { return _shape.Vertices[3].ToBlockUnits(); }
+        }
+
+        public override Vector2 CollisionBottomRight
+        {
+            get { return _shape.Vertices[2].ToBlockUnits(); }
+        }
+
+
+
+        public override Vector2 SpriteTopLeft
+        {
+            get { return _spriteShape.Vertices[0].ToBlockUnits(); }
+        }
+
+        public override Vector2 SpriteTopRight
+        {
+            get { return _spriteShape.Vertices[1].ToBlockUnits(); }
+        }
+
+        public override Vector2 SpriteBottomLeft
+        {
+            get { return _spriteShape.Vertices[3].ToBlockUnits(); }
+        }
+
+        public override Vector2 SpriteBottomRight
+        {
+            get { return _spriteShape.Vertices[2].ToBlockUnits(); }
+        }
+
+        public override float SpriteWidth
+        {
+            get { return _spriteWidth; }
+        }
+
+        public override float SpriteHeight
+        {
+            get { return _spriteHeight; }
+        }
+
+        public override void SetDimensions(float width, float height)
+        {
+            _spriteWidth = width;
+            _spriteHeight = height;
+        }
+
+        public Car(Vector3 startUpPosition, float startUpRotation, CarInfo carInfo) : base(startUpPosition, startUpRotation)
         {
             CarInfo = carInfo;
             _wheels = new Wheel[4];
         }
 
-        public override void SetWorld(World world)
+        public override void CreateBody(World world, float width, float height)
         {
-            CreateCar(world);
-        }
-
-        private void CreateCar(World world)
-        {
+            _collisionWidth = width;
+            _collisionHeight = height;
             var carPosition = Position2.ToMeters();
             _body = new Body(world) {BodyType = BodyType.Dynamic, Position = carPosition, AngularDamping = 5};
 
-            var halfWidth = Width/2;
-            var halfHeight = Height/2;
+            var halfWidth = width/2;
+            var halfHeight = height/2;
 
             var frontWheelOffset = (float) CarInfo.FrontWheelOffset/64;
             var rearWheelOffset =  (float) CarInfo.RearWheelOffset/64;
 
+            //collision detection Fixture
             var vertices = new Vertices(4);
             vertices.Add(new Vector2(-halfWidth, -halfHeight)); //Top-Left
             vertices.Add(new Vector2(halfWidth, -halfHeight)); //Top-Right
             vertices.Add(new Vector2(halfWidth, halfHeight)); //Bottom-Right
             vertices.Add(new Vector2(-halfWidth, halfHeight)); //Bottom-Left
-
             _shape = new PolygonShape(vertices.ToMeters(), 0.1f);
             var fixture = _body.CreateFixture(_shape); //shape, density
+
+            //SpriteId Fixture
+            //var spriteHalfWidth = (float) CarInfo.Sprite.Rectangle.CollisionWidth/2; //ToDo
+            //var spriteHalfHeight = (float) CarInfo.Sprite.Rectangle.CollisionHeight/2;
+            var spriteHalfWidth = (float) 52/64/2;
+            var spriteHalfHeight = (float) 128/64/2;
+            var spriteVertices = new Vertices(4);
+            spriteVertices.Add(new Vector2(-spriteHalfWidth, -spriteHalfHeight)); //Top-Left
+            spriteVertices.Add(new Vector2(spriteHalfWidth, -spriteHalfHeight)); //Top-Right
+            spriteVertices.Add(new Vector2(spriteHalfWidth, spriteHalfHeight)); //Bottom-Right
+            spriteVertices.Add(new Vector2(-spriteHalfWidth, spriteHalfHeight)); //Bottom-Left
+            _spriteShape = new PolygonShape(spriteVertices.ToMeters(), 0.1f);
+            var spriteFixture = _body.CreateFixture(_spriteShape);
+            spriteFixture.IsSensor = true;
+
+            //Joint
+            //JointFactory.CreateRevoluteJoint(_b)
+
 
             float maxForwardSpeed = 300;
             float maxBackwardSpeed = -40;
@@ -162,11 +219,13 @@ namespace Hiale.GTA2NET.Core.Logic
 
         public override void Update(ParticipantInput input, float elapsedTime)
         {
-            System.Diagnostics.Debug.WriteLine(_body.Position);
+            //System.Diagnostics.Debug.WriteLine(_body.Position);
+            var position = _body.Position.ToBlockUnits();
+            Position3 = new Vector3(position.X, position.Y, Position3.Z);
             foreach (var wheel in _wheels)
             {
                 wheel.UpdateFriction();
-                wheel.UpdateDrive(input.Forward, input.Rotation);
+                wheel.UpdateDrive(input.Forward);
             }
 
             //control steering

@@ -87,7 +87,7 @@ namespace Hiale.GTA2NET.Renderer
             indicesCollection.Clear();
             foreach (var sprite in sprites)
             {
-                sprite.Value.SetPosition(sprite.Key); //Update position
+                sprite.Value.SetPosition((ISprite) sprite.Key); //Update position
                 CreateVertices(sprite.Value);
             }
             if (verticesCollection.Count < 1)

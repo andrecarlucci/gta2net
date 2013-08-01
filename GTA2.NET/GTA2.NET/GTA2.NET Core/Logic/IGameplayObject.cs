@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: IPhysicsBehaviour.cs
-// Created: 17.07.2013
+// File: IGameplayObject.cs
+// Created: 01.08.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -25,35 +25,16 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
 using System;
-using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
-    public interface IPhysicsBehaviour
+    public interface IGameplayObject
     {
-        Vector2 CollisionTopLeft { get; }
+        Vector3 Position3 { get; set; }
 
-        Vector2 CollisionTopRight { get; }
+        Vector2 Position2 { get; set; }
 
-        Vector2 CollisionBottomRight { get; }
-
-        Vector2 CollisionBottomLeft { get; }
-
-        /// <summary>
-        /// Width of the object in "block units". This is used for collision detection.
-        /// </summary>
-        float CollisionWidth { get; }
-
-        /// <summary>
-        /// Height of the object in "block units". This is used for collision detection.
-        /// </summary>
-        float CollisionHeight { get; }
-
-        //void SetDimensions(float width, float height);
-
-        //void SetWorld(World world);
-
-        void CreateBody(World world, float width, float height);
+        float RotationAngle { get; set; }
     }
 }

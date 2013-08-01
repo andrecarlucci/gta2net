@@ -514,13 +514,13 @@ namespace Hiale.GTA2NET.Core.Style
             var modelList = new List<int>();
             while (position < chunkSize)
             {
-                var carInfo = new CarInfo { Model = reader.ReadByte(), Sprite = currentSprite };
+                var carInfo = new CarInfo { Model = reader.ReadByte(), SpriteId = currentSprite };
                 modelList.Add(carInfo.Model);
                 var useNewSprite = reader.ReadByte();
                 if (useNewSprite > 0)
                 {
                     currentSprite++;
-                    carSprites.Add(carInfo.Sprite, modelList);
+                    carSprites.Add(carInfo.SpriteId, modelList);
                     modelList = new List<int>();
                 }
                 carInfo.Width = reader.ReadByte();

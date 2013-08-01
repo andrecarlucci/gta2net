@@ -101,14 +101,22 @@ namespace Hiale.GTA2NET.Core.Logic
 
         public void AddObject(IPhysicsBehaviour gameplayObject)
         {
-            gameplayObject.SetWorld(_world);
+            gameplayObject.CreateBody(_world, -1, -1); //ToDo
+        }
+
+        public void AddObject(Car car)
+        {
+            var widthInBlockUnits = ConvertUnits.ToBlockUnits(car.CarInfo.Width);
+            var heightInBlockUnits = ConvertUnits.ToBlockUnits(car.CarInfo.Height);
+            car.CreateBody(_world, widthInBlockUnits, heightInBlockUnits);
         }
 
         public void Debug(Car car)
         {
             var carBody = (Body)Extensions.GetPrivateField(car, "_body");
             _json.SetName(carBody, "Car");
-            _json.SetName(carBody.FixtureList[0], "Car");
+            _json.SetName(carBody.FixtureList[0], "CarCollision");
+            _json.SetName(carBody.FixtureList[1], "CarSprite");
             var wheels = (Wheel[])Extensions.GetPrivateField(car, "_wheels");
             _json.SetName(wheels[0].Body, "WheelBackLeft");
             _json.SetName(wheels[0].Body.FixtureList[0], "WheelBackLeft");

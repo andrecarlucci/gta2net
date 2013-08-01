@@ -41,7 +41,7 @@ namespace Hiale.GTA2NET.Core.Logic
 
         private Weapon _currentWeapon; //selected weapon
 
-        public Pedestrian(Vector3 startUpPosition) : base(startUpPosition, 0, 1, 1)
+        public Pedestrian(Vector3 startUpPosition) : base(startUpPosition, 0)
         {
             //Velocity = 1f;
         }
