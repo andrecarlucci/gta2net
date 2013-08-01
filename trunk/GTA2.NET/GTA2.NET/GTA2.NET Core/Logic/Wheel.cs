@@ -55,7 +55,7 @@ namespace Hiale.GTA2NET.Core.Logic
             Body = new Body(world) {BodyType = BodyType.Dynamic, IsSensor = true, UserData = this};
 
             var shape = new PolygonShape(1);
-            shape.SetAsBox(PhysicsHelper.ToMeters(0.03125f), PhysicsHelper.ToMeters(0.125f));
+            shape.SetAsBox(ConvertUnits.ToMeters(0.03125f), ConvertUnits.ToMeters(0.125f));
             var fixture = Body.CreateFixture(shape);
             fixture.UserData = this;
             Body.UserData = this;
@@ -126,7 +126,7 @@ namespace Hiale.GTA2NET.Core.Logic
 
         }
 
-        public void UpdateDrive(float acceleration, float steer)
+        public void UpdateDrive(float acceleration)
         {
             //find desired speed
             float desiredSpeed = 0;

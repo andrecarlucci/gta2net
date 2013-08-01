@@ -30,13 +30,39 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
-    public abstract class Vehicle : GameplayObject, IPhysicsBehaviour
+    public abstract class Vehicle : GameplayObject, IPhysicsBehaviour, ISprite
     {
-        protected Vehicle(Vector3 startUpPosition, float startUpRotation, float width, float height) : base(startUpPosition, startUpRotation, width, height)
+        protected Vehicle(Vector3 startUpPosition, float startUpRotation) : base(startUpPosition, startUpRotation)
         {
 
         }
 
-        public abstract void SetWorld(World world);
+        public new virtual Vector3 Position3
+        {
+            get { return base.Position3; }
+            set { base.Position3 = value; }
+        }
+
+        public new virtual Vector2 Position2
+        {
+            get { return base.Position2; }
+            set { throw new NotSupportedException("Set Position3 instead."); }
+        }
+
+        public abstract Vector2 CollisionTopLeft { get; }
+        public abstract Vector2 CollisionTopRight { get; }
+        public abstract Vector2 CollisionBottomRight { get; }
+        public abstract Vector2 CollisionBottomLeft { get; }
+        public abstract float CollisionWidth { get; }
+        public abstract float CollisionHeight { get; }
+        public abstract void CreateBody(World world, float width, float height);
+
+        public abstract Vector2 SpriteTopLeft { get; }
+        public abstract Vector2 SpriteTopRight { get; }
+        public abstract Vector2 SpriteBottomRight { get; }
+        public abstract Vector2 SpriteBottomLeft { get; }
+        public abstract float SpriteWidth { get; }
+        public abstract float SpriteHeight { get; }
+        public abstract void SetDimensions(float width, float height);
     }
 }

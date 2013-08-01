@@ -29,17 +29,17 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
-    public class GameplayObject
+    public abstract class GameplayObject
     {
         /// <summary>
         /// Current position of this object. It represents the center of the object.
         /// </summary>
-        public Vector3 Position3 { get; protected set; }
+        public virtual Vector3 Position3 { get; protected set; }
 
         /// <summary>
         /// 2D position of the object.
         /// </summary>
-        public Vector2 Position2
+        public virtual Vector2 Position2
         {
             get
             {
@@ -53,7 +53,7 @@ namespace Hiale.GTA2NET.Core.Logic
         /// <summary>
         /// Current rotation angle in radians.
         /// </summary>
-        public float RotationAngle
+        public virtual float RotationAngle
         {
             get { return _rotationAngle; }
             set
@@ -66,121 +66,121 @@ namespace Hiale.GTA2NET.Core.Logic
             }
         }
 
-        public bool PlayerControlled { get; set; }
+        public virtual bool PlayerControlled { get; set; }
 
-        /// <summary>
-        /// 2D top left point of the object.
-        /// </summary>
-        public Vector2 TopLeft2
-        {
-            get
-            {
-                var topLeft = new Vector2(Position3.X - (Width / 2), Position3.Y - (Height / 2));
-                return Geometry.RotatePoint(topLeft, Position2, RotationAngle);
-            }
-        }
+        ///// <summary>
+        ///// 2D top left point of the object.
+        ///// </summary>
+        //public abstract Vector2 CollisionTopLeft
+        //{
+        //    get
+        //    {
+        //        var topLeft = new Vector2(Position3.X - (CollisionWidth / 2), Position3.Y - (CollisionHeight / 2));
+        //        return Geometry.RotatePoint(topLeft, Position2, RotationAngle);
+        //    }
+        //}
 
-        /// <summary>
-        /// 3D top left point of the object.
-        /// </summary>
-        public Vector3 TopLeft3
-        {
-            get
-            {
-                var topLeft = TopLeft2;
-                return new Vector3(topLeft.X, topLeft.Y, Position3.Z);
-            }
-        }
+        ///// <summary>
+        ///// 3D top left point of the object.
+        ///// </summary>
+        //public Vector3 TopLeft3
+        //{
+        //    get
+        //    {
+        //        var topLeft = CollisionTopLeft;
+        //        return new Vector3(topLeft.X, topLeft.Y, Position3.Z);
+        //    }
+        //}
 
 
-        /// <summary>
-        /// 2D top right point of the object.
-        /// </summary>
-        public Vector2 TopRight2
-        {
-            get
-            {
-                var topRight = new Vector2(Position3.X + (Width / 2), Position3.Y - (Height / 2));
-                return Geometry.RotatePoint(topRight, Position2, RotationAngle);
-            }
-        }
+        ///// <summary>
+        ///// 2D top right point of the object.
+        ///// </summary>
+        //public Vector2 TopRight2
+        //{
+        //    get
+        //    {
+        //        var topRight = new Vector2(Position3.X + (CollisionWidth / 2), Position3.Y - (CollisionHeight / 2));
+        //        return Geometry.RotatePoint(topRight, Position2, RotationAngle);
+        //    }
+        //}
 
-        /// <summary>
-        /// 3D top right point of the object.
-        /// </summary>
-        public Vector3 TopRight3
-        {
-            get
-            {
-                var topRight = TopRight2;
-                return new Vector3(topRight.X, topRight.Y, Position3.Z);
-            }
-        }
+        ///// <summary>
+        ///// 3D top right point of the object.
+        ///// </summary>
+        //public Vector3 TopRight3
+        //{
+        //    get
+        //    {
+        //        var topRight = TopRight2;
+        //        return new Vector3(topRight.X, topRight.Y, Position3.Z);
+        //    }
+        //}
 
-        /// <summary>
-        /// 2D bottom right point of the object.
-        /// </summary>
-        public Vector2 BottomRight2
-        {
-            get
-            {
-                var bottomRight = new Vector2(Position3.X + (Width / 2), Position3.Y + (Height / 2));
-                return Geometry.RotatePoint(bottomRight, Position2, RotationAngle);
-            }
-        }
+        ///// <summary>
+        ///// 2D bottom right point of the object.
+        ///// </summary>
+        //public Vector2 BottomRight2
+        //{
+        //    get
+        //    {
+        //        var bottomRight = new Vector2(Position3.X + (CollisionWidth / 2), Position3.Y + (CollisionHeight / 2));
+        //        return Geometry.RotatePoint(bottomRight, Position2, RotationAngle);
+        //    }
+        //}
 
-        /// <summary>
-        /// 3D bottom right point of the object.
-        /// </summary>
-        public Vector3 BottomRight3
-        {
-            get
-            {
-                var bottomRight = BottomRight2;
-                return new Vector3(bottomRight.X, bottomRight.Y, Position3.Z);
-            }
-        }
+        ///// <summary>
+        ///// 3D bottom right point of the object.
+        ///// </summary>
+        //public Vector3 BottomRight3
+        //{
+        //    get
+        //    {
+        //        var bottomRight = BottomRight2;
+        //        return new Vector3(bottomRight.X, bottomRight.Y, Position3.Z);
+        //    }
+        //}
 
-        /// <summary>
-        /// 2D bottom left point of the object.
-        /// </summary>
-        public Vector2 BottomLeft2
-        {
-            get
-            {
-                var bottomLeft = new Vector2(Position3.X - (Width / 2), Position3.Y + (Height / 2));
-                return Geometry.RotatePoint(bottomLeft, Position2, RotationAngle);
-            }
-        }
+        ///// <summary>
+        ///// 2D bottom left point of the object.
+        ///// </summary>
+        //public Vector2 BottomLeft2
+        //{
+        //    get
+        //    {
+        //        var bottomLeft = new Vector2(Position3.X - (CollisionWidth / 2), Position3.Y + (CollisionHeight / 2));
+        //        return Geometry.RotatePoint(bottomLeft, Position2, RotationAngle);
+        //    }
+        //}
 
-        /// <summary>
-        /// 3D bottom left point of the object.
-        /// </summary>
-        public Vector3 BottomLeft3
-        {
-            get
-            {
-                var bottomLeft = BottomLeft2;
-                return new Vector3(bottomLeft.X, bottomLeft.Y, Position3.Z);
-            }
-        }
+        ///// <summary>
+        ///// 3D bottom left point of the object.
+        ///// </summary>
+        //public Vector3 BottomLeft3
+        //{
+        //    get
+        //    {
+        //        var bottomLeft = BottomLeft2;
+        //        return new Vector3(bottomLeft.X, bottomLeft.Y, Position3.Z);
+        //    }
+        //}
 
-        /// <summary>
-        /// Width of the object in "block units".
-        /// </summary>
-        public float Width { get; protected set; }
+        ///// <summary>
+        ///// CollisionWidth of the object in "block units".
+        ///// </summary>
+        //public float CollisionWidth { get; protected set; }
 
-        /// <summary>
-        /// Height of the object in "block units.
-        /// </summary>
-        public float Height { get; protected set; }
+        ///// <summary>
+        ///// CollisionHeight of the object in "block units.
+        ///// </summary>
+        //public float CollisionHeight { get; protected set; }
 
-        protected GameplayObject(Vector3 startUpPosition, float startUpRotation, float width, float height)
+        protected GameplayObject(Vector3 startUpPosition, float startUpRotation)
         {
             Position3 = startUpPosition;
             RotationAngle = startUpRotation;
-            Width = width / 64;
-            Height = height / 64;
+            //CollisionWidth = width / 64;
+            //CollisionHeight = height / 64;
         }
 
         public virtual void Update(ParticipantInput input, float elapsedTime)

@@ -1,7 +1,7 @@
 ﻿// GTA2.NET
 // 
-// File: Physics.cs
-// Created: 26.07.2013
+// File: ISprite.cs
+// Created: 01.08.2013
 // 
 // 
 // Copyright (C) 2010-2013 Hiale
@@ -25,34 +25,30 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using FarseerPhysics.Common;
 using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
-    public static class PhysicsHelper
+    public interface ISprite : IGameplayObject
     {
+        Vector2 SpriteTopLeft { get; }
+
+        Vector2 SpriteTopRight { get; }
+
+        Vector2 SpriteBottomRight { get; }
+
+        Vector2 SpriteBottomLeft { get; }
+
         /// <summary>
-        /// Descripes the dimension of one block in meters;
+        /// Width of the sprite in "block units". This is used to draw the sprite. It may contain a transparent margin.
         /// </summary>
-        public const float Scale = 3.6f;
+        float SpriteWidth { get; }
 
-        public static float ToMeters(float blockUnits)
-        {
-            return blockUnits*Scale;
-        }
+        /// <summary>
+        /// Height of the sprite in "block units. This is used to draw the sprite. It may contain a transparent margin.
+        /// </summary>
+        float SpriteHeight { get; }
 
-        public static Vector2 ToMeters(this Vector2 blockUnits)
-        {
-            return Vector2.Multiply(blockUnits, Scale);
-        }
-
-        public static Vertices ToMeters(this List<Vector2> blockUnits)
-        {
-            return new Vertices(blockUnits.Select(blockUnit => blockUnit.ToMeters()).ToList());
-        }
+        void SetDimensions(float width, float height);
     }
 }
