@@ -26,6 +26,7 @@
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Collision;
+using System;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
@@ -60,17 +61,22 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
             PrepareCoordinates(out frontCoordinates, out backCoordinates);
+            Vector2[] texture = textures.GetNormalTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip);
 
-            CreateFrontVertices(frontCoordinates);
+            CreateFrontVertices(frontCoordinates, texture);
 
             // Top face
-            CreateTopVertices(frontCoordinates, backCoordinates);
+            texture = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
+            CreateTopVertices(frontCoordinates, backCoordinates, texture);
             // Bottom face
-            CreateBottomVertices(frontCoordinates, backCoordinates);
+            texture = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
+            CreateBottomVertices(frontCoordinates, backCoordinates, texture);
             // Left face
-            CreateLeftVertices(frontCoordinates, backCoordinates, 0);
+            texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
+            CreateLeftVertices(frontCoordinates, backCoordinates, texture, 0);
             // Right face
-            CreateRightVertices( frontCoordinates, backCoordinates, 0);
+            texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
+            CreateRightVertices(frontCoordinates, backCoordinates, texture, 0);
         }
     }
 }

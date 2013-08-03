@@ -505,19 +505,19 @@ namespace Hiale.GTA2NET.Core.Map
         #region Cube
 
         /// <summary>
-        ///     Creates the Lid vertices Coordinates.
+        /// Creates the Lid vertices Coordinates.
         /// </summary>
         /// <param name="lidCoords">The lid coordinates.</param>
-        protected void CreateFrontVertices(FaceCoordinates lidCoords)
+        /// <param name="texture">The lid texture</param>
+        protected void CreateFrontVertices(FaceCoordinates lidCoords, Vector2[] texture)
         {
             if (!Lid)
                 return;
-
-            Vector2[] texPos = textures.GetNormalTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip);
-            Coors.Add(new VertexPositionNormalTexture(lidCoords.TopRight, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(lidCoords.BottomRight, Vector3.Zero, texPos[1]));
-            Coors.Add(new VertexPositionNormalTexture(lidCoords.TopLeft, Vector3.Zero, texPos[3]));
-            Coors.Add(new VertexPositionNormalTexture(lidCoords.BottomLeft, Vector3.Zero, texPos[0]));
+            
+            Coors.Add(new VertexPositionNormalTexture(lidCoords.TopRight, Vector3.Zero, texture[2]));
+            Coors.Add(new VertexPositionNormalTexture(lidCoords.BottomRight, Vector3.Zero, texture[1]));
+            Coors.Add(new VertexPositionNormalTexture(lidCoords.TopLeft, Vector3.Zero, texture[3]));
+            Coors.Add(new VertexPositionNormalTexture(lidCoords.BottomLeft, Vector3.Zero, texture[0]));
 
             int startIndex = Coors.Count - 4;
             IndexBufferCollection.Add(startIndex);
@@ -529,20 +529,19 @@ namespace Hiale.GTA2NET.Core.Map
         }
 
         /// <summary>
-        ///     Creates the Top vertices Coordinates.
+        /// Creates the Top vertices Coordinates.
         /// </summary>
         /// <param name="frontCoords"></param>
         /// <param name="backCoords"></param>
-        protected void CreateTopVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords)
+        protected void CreateTopVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture)
         {
             if (!Top)
                 return;
 
-            Vector2[] texPos = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[0]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[1]));
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texPos[3]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texture[2]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texture[0]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texture[1]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texture[3]));
 
             int startIndex = Coors.Count - 4;
             IndexBufferCollection.Add(startIndex);
@@ -553,16 +552,15 @@ namespace Hiale.GTA2NET.Core.Map
             IndexBufferCollection.Add(startIndex + 1);
         }
 
-        protected void CreateBottomVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords)
+        protected void CreateBottomVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture)
         {
             if (!Bottom)
                 return;
 
-            Vector2[] texPos = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
-            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
-            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texPos[3]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texture[2]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texture[1]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texture[0]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texture[3]));
 
             int startIndex = Coors.Count - 4;
             IndexBufferCollection.Add(startIndex);
@@ -573,7 +571,7 @@ namespace Hiale.GTA2NET.Core.Map
             IndexBufferCollection.Add(startIndex + 3);
         }
 
-        protected void CreateLeftVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Byte rotation)
+        protected void CreateLeftVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture, Byte rotation)
         {
             if (!Left)
                 return;
@@ -590,11 +588,11 @@ namespace Hiale.GTA2NET.Core.Map
                 newFront = CorrectLeftRightVertices(frontCoords, false);
                 newBack = CorrectLeftRightVertices(backCoords, false);
             }
-            Vector2[] texPos = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
-            Coors.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
-            Coors.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texPos[0]));
+            
+            Coors.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texture[3]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texture[1]));
+            Coors.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texture[2]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texture[0]));
 
             //Left also has a strange index buffer order...
             int startIndex = Coors.Count - 4;
@@ -606,7 +604,7 @@ namespace Hiale.GTA2NET.Core.Map
             IndexBufferCollection.Add(startIndex);
         }
 
-        protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Byte rotation)
+        protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture, Byte rotation)
         {
             if (!Right)
                 return;
@@ -624,11 +622,11 @@ namespace Hiale.GTA2NET.Core.Map
                 newBack = CorrectLeftRightVertices(backCoords, true);
             }
             //ToDo: Add more rotation codes...
-            Vector2[] texPos = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
-            Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
-            Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texPos[1]));
+            
+            Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texture[2]));
+            Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texture[3]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texture[0]));
+            Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texture[1]));
 
             //...
             int startIndex = Coors.Count - 4;
