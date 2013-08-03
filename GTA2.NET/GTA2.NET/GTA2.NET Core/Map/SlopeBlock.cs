@@ -349,7 +349,8 @@ namespace Hiale.GTA2NET.Core.Map
             //ToDo Left face (but probably not supported in GTA2 anyway)
 
             //Right face
-            CreateRightVertices(frontCoordinates, backCoordinates, rotation);
+            Vector2[] texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
+            CreateRightVertices(frontCoordinates, backCoordinates, texture, rotation);
         }
 
         protected override ILineObstacle GetDefaultLeftCollison()

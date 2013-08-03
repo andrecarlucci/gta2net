@@ -130,20 +130,28 @@ namespace Hiale.GTA2NET.Core.Map
             switch (rotation)
             {
                 case 0: //Facing up right
-                    CreateBottomVertices(frontCoordinates, backCoordinates);
-                    CreateLeftVertices(frontCoordinates, backCoordinates, 0);
+                    Vector2[] texture = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
+                    CreateBottomVertices(frontCoordinates, backCoordinates, texture);
+                    texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
+                    CreateLeftVertices(frontCoordinates, backCoordinates, texture, 0);
                     break;
                 case 1: //Facing up left
-                    CreateBottomVertices(frontCoordinates, backCoordinates);
-                    CreateRightVertices(frontCoordinates, backCoordinates, 0);
+                    texture = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
+                    CreateBottomVertices(frontCoordinates, backCoordinates, texture);
+                    texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
+                    CreateRightVertices(frontCoordinates, backCoordinates, texture, 0);
                     break;
                 case 2: //Facing down left --> BUG
-                    CreateTopVertices(frontCoordinates, backCoordinates);
-                    CreateRightVertices(frontCoordinates, backCoordinates, 0);
+                    texture = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
+                    CreateTopVertices(frontCoordinates, backCoordinates, texture);
+                    texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
+                    CreateRightVertices(frontCoordinates, backCoordinates, texture, 0);
                     break;
                 case 3: //Facing down right --> BUG
-                    CreateTopVertices(frontCoordinates, backCoordinates);
-                    CreateLeftVertices(frontCoordinates, backCoordinates, 0);
+                    texture = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
+                    CreateTopVertices(frontCoordinates, backCoordinates, texture);
+                    texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
+                    CreateLeftVertices(frontCoordinates, backCoordinates, texture, 0);
                     break;
             }
         }
