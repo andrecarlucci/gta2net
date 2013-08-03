@@ -571,28 +571,15 @@ namespace Hiale.GTA2NET.Core.Map
             IndexBufferCollection.Add(startIndex + 3);
         }
 
-        protected void CreateLeftVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture, Byte rotation)
+        protected void CreateLeftVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture)
         {
             if (!Left)
                 return;
 
-            var newFront = new FaceCoordinates();
-            var newBack = new FaceCoordinates();
-            if (rotation == 0)
-            {
-                newFront = CorrectLeftRightVertices(frontCoords, true);
-                newBack = CorrectLeftRightVertices(backCoords, true);
-            }
-            else if (rotation == 2)
-            {
-                newFront = CorrectLeftRightVertices(frontCoords, false);
-                newBack = CorrectLeftRightVertices(backCoords, false);
-            }
-            
-            Coors.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texture[3]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texture[1]));
-            Coors.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texture[2]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.TopRight, Vector3.Zero, texture[0]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopLeft, Vector3.Zero, texture[3]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texture[1]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomLeft, Vector3.Zero, texture[2]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texture[0]));
 
             //Left also has a strange index buffer order...
             int startIndex = Coors.Count - 4;
@@ -604,29 +591,15 @@ namespace Hiale.GTA2NET.Core.Map
             IndexBufferCollection.Add(startIndex);
         }
 
-        protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture, Byte rotation)
+        protected void CreateRightVertices(FaceCoordinates frontCoords, FaceCoordinates backCoords, Vector2[] texture)
         {
             if (!Right)
                 return;
 
-            var newFront = new FaceCoordinates();
-            var newBack = new FaceCoordinates();
-            if (rotation == 0)
-            {
-                newFront = CorrectLeftRightVertices(frontCoords, false);
-                newBack = CorrectLeftRightVertices(backCoords, false);
-            }
-            else if (rotation == 2)
-            {
-                newFront = CorrectLeftRightVertices(frontCoords, true);
-                newBack = CorrectLeftRightVertices(backCoords, true);
-            }
-            //ToDo: Add more rotation codes...
-            
-            Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texture[2]));
-            Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texture[3]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texture[0]));
-            Coors.Add(new VertexPositionNormalTexture(newBack.TopLeft, Vector3.Zero, texture[1]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texture[2]));
+            Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texture[3]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texture[0]));
+            Coors.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texture[1]));
 
             //...
             int startIndex = Coors.Count - 4;
@@ -691,34 +664,6 @@ namespace Hiale.GTA2NET.Core.Map
                 }
             }
             return type;
-        }
-
-        protected FaceCoordinates CorrectLeftRightVertices(FaceCoordinates coordinates, Boolean left)
-        {
-            var newCoords = new FaceCoordinates();
-
-            float value;
-            if (left)
-                value = -GlobalScalar.X;
-            else
-                value = GlobalScalar.X;
-
-            newCoords.TopLeft.X = coordinates.TopLeft.X + value;
-            newCoords.TopRight.X = coordinates.TopRight.X + value;
-            newCoords.BottomRight.X = coordinates.BottomRight.X + value;
-            newCoords.BottomLeft.X = coordinates.BottomLeft.X + value;
-
-            newCoords.TopLeft.Y = coordinates.TopLeft.Y;
-            newCoords.TopRight.Y = coordinates.TopRight.Y;
-            newCoords.BottomRight.Y = coordinates.BottomRight.Y;
-            newCoords.BottomLeft.Y = coordinates.BottomLeft.Y;
-
-            newCoords.TopLeft.Z = coordinates.TopLeft.Z;
-            newCoords.TopRight.Z = coordinates.TopRight.Z;
-            newCoords.BottomRight.Z = coordinates.BottomRight.Z;
-            newCoords.BottomLeft.Z = coordinates.BottomLeft.Z;
-
-            return newCoords;
         }
 
         public virtual void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
