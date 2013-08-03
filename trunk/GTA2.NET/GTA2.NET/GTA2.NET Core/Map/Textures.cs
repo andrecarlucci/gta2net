@@ -38,7 +38,7 @@ namespace Hiale.GTA2NET.Core.Map
     public class Textures
     {
         public enum SquareTexturePosition{TopLeft, TopCenter, TopRight, CenterLeft, CenterCenter, CenterRight, BottonLeft, BottonCenter, BottonRight};
-        public enum RectangleTexturePosition{Top, Center, Botton};
+        public enum RectangleTexturePosition{Top, CenterHorizontal, Botton, Left, CenterVertical, Right};
 
         private Dictionary<int, CompactRectangle> tileAtlas;
         private float pixelPerWidth;
@@ -162,13 +162,474 @@ namespace Hiale.GTA2NET.Core.Map
         /// <param name="position">The position of the texture inside the 64px texture.</param>
         /// <param name="vertical">Is a vertical Rectangle.</param>
         /// <returns>A array with 4 positions where each position represent one of the vertices od the texture, it will be a rectangle 64pxX24px.</returns>
-        public Vector2[] GetRectangleTexture(UInt32 tileID, RotationType rotation, Boolean flip, RectangleTexturePosition position, Boolean vertical)
+        public Vector2[] GetRectangleTexture(UInt32 tileID, RotationType rotation, Boolean flip, RectangleTexturePosition position)
         {
             Vector2[] texture = GetNormalTexture(tileID, rotation, flip);
 
+            switch (position)
+            {
+                case RectangleTexturePosition.Botton:
+                    return bottomRectangle(texture, rotation);
+                case RectangleTexturePosition.Top:
+                    return topRectangle(texture, rotation);
+                case RectangleTexturePosition.CenterHorizontal:
+                    break;
+                case RectangleTexturePosition.Left:
+                    return leftRectangle(texture, rotation);
+                case RectangleTexturePosition.Right:
+                    return rightRectangle(texture, rotation);
+            }
             throw new NotImplementedException();
         }
 
+        #region rectangles
+        /// <summary>
+        /// Gets the Top coordinates of a rectangle texture.
+        /// </summary>
+        /// <param name="texture">Original Texture.</param>
+        /// <param name="rotation">The rotation to aply to the texture.</param>
+        /// <returns>A array with 4 positions where each position represent one of the vertices of the texture, it will be a rectangle 64pxX24px.</returns>
+        private Vector2[] topRectangle(Vector2[] texture, RotationType rotation)
+        {
+            Vector2[] newTexture = new Vector2[4];
+            float x, y;
+
+            switch (rotation)
+            {
+                case RotationType.RotateNone:
+                    //LeftBotton
+                    x = texture[0].X;
+                    y = (float)(texture[2].Y + (pixelPerHeight * 24));
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    x = texture[2].X;
+                    y = (float)(texture[2].Y + (pixelPerHeight * 24));
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+
+                case RotationType.Rotate90:
+                    //LeftBotton
+                    x = texture[3].X + (pixelPerWidth * 24);
+                    y = texture[3].Y;
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    x = texture[2].X + (pixelPerWidth * 24);
+                    y = texture[2].Y;
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+
+                case RotationType.Rotate180:
+                    //LeftBotton
+                    x = texture[0].X;
+                    y = (float)(texture[2].Y - (pixelPerHeight * 24));
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    x = texture[2].X;
+                    y = (float)(texture[2].Y - (pixelPerHeight * 24));
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+
+                case RotationType.Rotate270:
+                    //LeftBotton
+                    x = texture[3].X - (pixelPerWidth * 24);
+                    y = texture[3].Y;
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    x = texture[2].X - (pixelPerWidth * 24);
+                    y = texture[2].Y;
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+            }
+            return newTexture;
+        }
+
+        /// <summary>
+        /// Gets the Bottom coordinates of a rectangle texture.
+        /// </summary>
+        /// <param name="texture">Original Texture.</param>
+        /// <param name="rotation">The rotation to aply to the texture.</param>
+        /// <returns>A array with 4 positions where each position represent one of the vertices of the texture, it will be a rectangle 64pxX24px.</returns>
+        private Vector2[] bottomRectangle(Vector2[] texture, RotationType rotation)
+        {
+            Vector2[] newTexture = new Vector2[4];
+            float x, y;
+
+            switch (rotation)
+            {
+                case RotationType.RotateNone:
+                    //LeftBotton
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    x = (float)(texture[1].X);
+                    y = (float)(texture[0].Y - (pixelPerHeight * 24));
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    x = texture[0].X;
+                    y = (float)(texture[0].Y - (pixelPerHeight * 24));
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate90:
+                    //LeftBotton
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    x = (float)(texture[1].X - (pixelPerWidth * 24));
+                    y = (float)(texture[1].Y);
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    x = (float)(texture[0].X - (pixelPerWidth * 24));
+                    y = texture[0].Y;
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate180:
+                    //LeftBotton
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    x = (float)(texture[1].X);
+                    y = (float)(texture[0].Y + (pixelPerHeight * 24));
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    x = texture[0].X;
+                    y = (float)(texture[0].Y + (pixelPerHeight * 24));
+                    newTexture[3] = new Vector2(x, y);                    
+                    break;
+
+                case RotationType.Rotate270:
+                    //LeftBotton
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    x = (float)(texture[1].X + (pixelPerWidth * 24));
+                    y = (float)(texture[1].Y);
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    x = (float)(texture[0].X + (pixelPerWidth * 24));
+                    y = texture[0].Y;
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+            }
+            return newTexture;
+        }
+
+        /// <summary>
+        /// Gets the Right coordinates of a rectangle texture.
+        /// </summary>
+        /// <param name="texture">Original Texture.</param>
+        /// <param name="rotation">The rotation to aply to the texture.</param>
+        /// <returns>A array with 4 positions where each position represent one of the vertices of the texture, it will be a rectangle 64pxX24px.</returns>
+        private Vector2[] rightRectangle(Vector2[] texture, RotationType rotation)
+        {
+            Vector2[] newTexture = new Vector2[4];
+            float x, y;
+
+            switch (rotation)
+            {
+                case RotationType.RotateNone:
+                    //LeftBotton
+                    x = texture[1].X - (pixelPerWidth * 24);
+                    y = texture[1].Y;
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = texture[2].X - (pixelPerWidth * 24);
+                    y = texture[2].Y;
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate90:
+                    //LeftBotton
+                    x = texture[1].X;
+                    y = texture[1].Y + (pixelPerHeight * 24);
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = texture[2].X;
+                    y = texture[2].Y + (pixelPerHeight * 24);
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate180:
+                    //LeftBotton
+                    x = texture[1].X + (pixelPerWidth * 24);
+                    y = texture[1].Y;
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = texture[2].X + (pixelPerWidth * 24);
+                    y = texture[2].Y;
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate270:
+                    //LeftBotton
+                    x = texture[1].X;
+                    y = texture[1].Y - (pixelPerHeight * 24);
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    newTexture[1] = texture[1];
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = texture[2].X;
+                    y = texture[2].Y - (pixelPerHeight * 24);
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+            }
+            return newTexture;
+        }
+
+        /// <summary>
+        /// Gets the Left coordinates of a rectangle texture.
+        /// </summary>
+        /// <param name="texture">Original Texture.</param>
+        /// <param name="rotation">The rotation to aply to the texture.</param>
+        /// <returns>A array with 4 positions where each position represent one of the vertices of the texture, it will be a rectangle 64pxX24px.</returns>
+        private Vector2[] leftRectangle(Vector2[] texture, RotationType rotation)
+        {
+            Vector2[] newTexture = new Vector2[4];
+            float x, y;
+
+            switch (rotation)
+            {
+                case RotationType.RotateNone:
+                    //LeftBotton                    
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    x = (float)(texture[0].X + (pixelPerWidth * 24));
+                    y = (float)(texture[0].Y);
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    x = (float)(texture[0].X + (pixelPerWidth * 24));
+                    y = (float)(texture[2].Y);
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+
+                case RotationType.Rotate90:
+                    //LeftBotton
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    x = texture[0].X;
+                    y = texture[0].Y - (pixelPerHeight * 24);
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    x = texture[3].X;
+                    y = texture[3].Y - (pixelPerHeight * 24);
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+
+                case RotationType.Rotate180:
+                    //LeftBotton                    
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    x = (float)(texture[0].X - (pixelPerWidth * 24));
+                    y = (float)(texture[0].Y);
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    x = (float)(texture[0].X - (pixelPerWidth * 24));
+                    y = (float)(texture[2].Y);
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+
+                case RotationType.Rotate270:
+                    //LeftBotton
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    x = texture[0].X;
+                    y = texture[0].Y + (pixelPerHeight * 24);
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    x = texture[3].X;
+                    y = texture[3].Y + (pixelPerHeight * 24);
+                    newTexture[2] = new Vector2(x, y);
+
+                    //LeftTop
+                    newTexture[3] = texture[3];
+                    break;
+            }
+            return newTexture;
+        }
+
+        /// <summary>
+        /// Gets the Center Vertical coordinates of a rectangle texture.
+        /// </summary>
+        /// <param name="texture">Original Texture.</param>
+        /// <param name="rotation">The rotation to aply to the texture.</param>
+        /// <returns>A array with 4 positions where each position represent one of the vertices of the texture, it will be a rectangle 64pxX24px.</returns>
+        private Vector2[] centerVerticalRectangle(Vector2[] texture, RotationType rotation)
+        {
+            Vector2[] newTexture = new Vector2[4];
+            float x, y;
+
+            switch (rotation)
+            {
+                case RotationType.RotateNone:
+                    //LeftBotton                    
+                    x = (float)(texture[0].X);
+                    y = (float)(texture[0].Y - (pixelPerWidth * 20));
+                    newTexture[0] = new Vector2(x, y);
+
+                    //RightBotton
+                    x = (float)(texture[1].X);
+                    y = (float)(texture[0].Y - (pixelPerWidth * 20));
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    x = (float)(texture[2].X);
+                    y = (float)(texture[2].Y + (pixelPerWidth * 20));
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = (float)(texture[3].X);
+                    y = (float)(texture[2].Y + (pixelPerWidth * 20));
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate90:
+                    //LeftBotton
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    x = (float)(texture[1].X - (pixelPerWidth * 24));
+                    y = (float)(texture[1].Y);
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = (float)(texture[2].X - (pixelPerWidth * 24));
+                    y = (float)(texture[2].Y);
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate180:
+                    //LeftBotton                    
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    x = (float)(texture[1].X - (pixelPerWidth * 24));
+                    y = (float)(texture[1].Y);
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = (float)(texture[2].X - (pixelPerWidth * 24));
+                    y = (float)(texture[2].Y);
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+
+                case RotationType.Rotate270:
+                    //LeftBotton                    
+                    newTexture[0] = texture[0];
+
+                    //RightBotton
+                    x = (float)(texture[1].X - (pixelPerWidth * 24));
+                    y = (float)(texture[1].Y);
+                    newTexture[1] = new Vector2(x, y);
+
+                    //RightTop
+                    newTexture[2] = texture[2];
+
+                    //LeftTop
+                    x = (float)(texture[2].X - (pixelPerWidth * 24));
+                    y = (float)(texture[2].Y);
+                    newTexture[3] = new Vector2(x, y);
+                    break;
+            }
+            return newTexture;
+        }
+
+        #endregion
+
+        #region sqares
         /// <summary>
         /// Gets the BottomLeft coordinates of a texture.
         /// </summary>
@@ -356,5 +817,6 @@ namespace Hiale.GTA2NET.Core.Map
             }
             return newTexture;
         }
+        #endregion
     }
 }

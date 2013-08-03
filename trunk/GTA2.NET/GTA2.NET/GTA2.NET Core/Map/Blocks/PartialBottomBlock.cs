@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Collision;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
@@ -43,10 +44,28 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         }
 
         public override void SetUpCube()
-        {
-            throw new NotImplementedException();
-        }
+        {            
+            FaceCoordinates frontCoordinates;
+            FaceCoordinates backCoordinates;
+            PrepareCoordinates(0, 1 - PartialBlockScalar, 1, PartialBlockScalar, out frontCoordinates, out backCoordinates);
 
+            Vector2[] texture = textures.GetRectangleTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip, Textures.RectangleTexturePosition.Botton);
+            CreateFrontVertices(frontCoordinates, texture);
+
+            // Top face
+            texture = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
+            CreateTopVertices(frontCoordinates, backCoordinates, texture);
+            // Bottom face
+            texture = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
+            CreateBottomVertices(frontCoordinates, backCoordinates, texture);
+            // Left face
+            texture = textures.GetRectangleTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip, Textures.RectangleTexturePosition.Left);
+            CreateLeftVertices(frontCoordinates, backCoordinates, texture);
+            // Right face
+            texture = textures.GetRectangleTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip, Textures.RectangleTexturePosition.Left);
+            CreateRightVertices(frontCoordinates, backCoordinates, texture);
+        }
+        
         public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
             if (DoesWallCollide(Left, bulletWall))
