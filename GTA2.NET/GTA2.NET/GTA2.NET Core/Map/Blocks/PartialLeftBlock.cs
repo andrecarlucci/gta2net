@@ -44,9 +44,30 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
 
         public override void SetUpCube()
         {
-            throw new NotImplementedException();
-        }
+            FaceCoordinates frontCoordinates;
+            FaceCoordinates backCoordinates;
+            PrepareCoordinates(0, 0, PartialBlockScalar, 1, out frontCoordinates, out backCoordinates);
 
+            Vector2[] texture = textures.GetRectangleTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip, Textures.RectangleTexturePosition.Left);
+            CreateFrontVertices(frontCoordinates, texture);
+
+            // Top face
+            texture = textures.GetRectangleTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip, Textures.RectangleTexturePosition.Left);
+            CreateTopVertices(frontCoordinates, backCoordinates, texture);
+
+            // Bottom face
+            texture = textures.GetRectangleTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip, Textures.RectangleTexturePosition.Left);
+            CreateBottomVertices(frontCoordinates, backCoordinates, texture);
+
+            // Left face
+            texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
+            CreateLeftVertices(frontCoordinates, backCoordinates, texture);
+
+            // Right face
+            texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
+            CreateRightVertices(frontCoordinates, backCoordinates, texture);
+        }
+        
         public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
         {
             if (DoesWallCollide(Left, bulletWall))
