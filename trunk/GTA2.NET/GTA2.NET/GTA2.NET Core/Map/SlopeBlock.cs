@@ -350,7 +350,7 @@ namespace Hiale.GTA2NET.Core.Map
 
             //Right face
             Vector2[] texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
-            CreateRightVertices(frontCoordinates, backCoordinates, texture, rotation);
+            CreateRightVertices(frontCoordinates, backCoordinates, texture);
         }
 
         protected override ILineObstacle GetDefaultLeftCollison()

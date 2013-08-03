@@ -133,25 +133,25 @@ namespace Hiale.GTA2NET.Core.Map
                     Vector2[] texture = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
                     CreateBottomVertices(frontCoordinates, backCoordinates, texture);
                     texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
-                    CreateLeftVertices(frontCoordinates, backCoordinates, texture, 0);
+                    CreateLeftVertices(frontCoordinates, backCoordinates, texture);
                     break;
                 case 1: //Facing up left
                     texture = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
                     CreateBottomVertices(frontCoordinates, backCoordinates, texture);
                     texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
-                    CreateRightVertices(frontCoordinates, backCoordinates, texture, 0);
+                    CreateRightVertices(frontCoordinates, backCoordinates, texture);
                     break;
                 case 2: //Facing down left --> BUG
                     texture = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
                     CreateTopVertices(frontCoordinates, backCoordinates, texture);
                     texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
-                    CreateRightVertices(frontCoordinates, backCoordinates, texture, 0);
+                    CreateRightVertices(frontCoordinates, backCoordinates, texture);
                     break;
                 case 3: //Facing down right --> BUG
                     texture = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
                     CreateTopVertices(frontCoordinates, backCoordinates, texture);
                     texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
-                    CreateLeftVertices(frontCoordinates, backCoordinates, texture, 0);
+                    CreateLeftVertices(frontCoordinates, backCoordinates, texture);
                     break;
             }
         }

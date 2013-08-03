@@ -73,10 +73,10 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
             CreateBottomVertices(frontCoordinates, backCoordinates, texture);
             // Left face
             texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
-            CreateLeftVertices(frontCoordinates, backCoordinates, texture, 0);
+            CreateLeftVertices(frontCoordinates, backCoordinates, texture);
             // Right face
             texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
-            CreateRightVertices(frontCoordinates, backCoordinates, texture, 0);
+            CreateRightVertices(frontCoordinates, backCoordinates, texture);
         }
     }
 }
