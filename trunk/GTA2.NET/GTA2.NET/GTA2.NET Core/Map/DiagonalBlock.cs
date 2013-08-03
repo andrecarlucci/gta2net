@@ -79,7 +79,7 @@ namespace Hiale.GTA2NET.Core.Map
                     }
                 }
 
-                Vector2[] texPos = GetTexturePositions(TileAtlas[Lid.TileNumber], lidRotation, Lid.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)Lid.TileNumber, lidRotation, Lid.Flip);
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
@@ -111,7 +111,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Diagonal face
             if (diagonalFace)
             {
-                Vector2[] texPos = GetTexturePositions(TileAtlas[diagonalFace.TileNumber], diagonalFace.Rotation, diagonalFace.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)diagonalFace.TileNumber, diagonalFace.Rotation, diagonalFace.Flip);
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopLeft, Vector3.Zero, texPos[3]));
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[2]));
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
