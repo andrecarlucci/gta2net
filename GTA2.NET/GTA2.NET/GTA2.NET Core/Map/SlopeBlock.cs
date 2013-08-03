@@ -93,7 +93,7 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 RotationType lidRotation = Lid.Rotation;
                 lidRotation = RotateEnum(lidRotation, rotation);
-                Vector2[] texPos = GetTexturePositions(TileAtlas[Lid.TileNumber], lidRotation, Lid.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip);
                 Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, texPos[2]));
                 Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
@@ -138,7 +138,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Top face
             if (topFace)
             {
-                Vector2[] texPos = GetTexturePositions(TileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)topFace.TileNumber, topFace.Rotation, topFace.Flip);
                 Vector2 center = GetCenterPosition(ref texPos[3], ref texPos[0], slopeScalar);
                 Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
@@ -152,7 +152,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Bottom face
             if (bottomFace)
             {
-                Vector2[] texPos = GetTexturePositions(TileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)bottomFace.TileNumber, bottomFace.Rotation, bottomFace.Flip);
                 Vector2 center = GetCenterPosition(ref texPos[2], ref texPos[1], slopeScalar);
                 Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomRight, Vector3.Zero, center));
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));
@@ -167,7 +167,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Right face
             if (rightFace) //this face is not supported by GTA2, the editor removes this face.
             {
-                Vector2[] texPos = GetTexturePositions(TileAtlas[rightFace.TileNumber], rightFace.Rotation, rightFace.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)rightFace.TileNumber, rightFace.Rotation, rightFace.Flip);
                 Vector2 center = GetCenterPosition(ref texPos[1], ref texPos[2], slopeScalar);
                 Coors.Add(new VertexPositionNormalTexture(middleCoordinates.TopRight, Vector3.Zero, center));
                 center = GetCenterPosition(ref texPos[0], ref texPos[3], slopeScalar);
@@ -258,7 +258,7 @@ namespace Hiale.GTA2NET.Core.Map
             {
                 RotationType lidRotation = Lid.Rotation;
                 lidRotation = RotateEnum(lidRotation, rotation);
-                Vector2[] texPos = GetTexturePositions(TileAtlas[Lid.TileNumber], lidRotation, Lid.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip);
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, texPos[2]));
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, texPos[1]));
                 Coors.Add(new VertexPositionNormalTexture(middleCoordinates.BottomLeft, Vector3.Zero, texPos[0]));
@@ -308,7 +308,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Top face
             if (topFace)
             {
-                Vector2[] texPos = GetTexturePositions(TileAtlas[topFace.TileNumber], topFace.Rotation, topFace.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)topFace.TileNumber, topFace.Rotation, topFace.Flip);
                 Vector2 center = GetCenterPosition(ref texPos[0], ref texPos[3], frontSlopeScalar);
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.TopRight, Vector3.Zero, center)); //was 3
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.TopRight, Vector3.Zero, texPos[0]));
@@ -328,7 +328,7 @@ namespace Hiale.GTA2NET.Core.Map
             //Bottom face
             if (bottomFace)
             {
-                Vector2[] texPos = GetTexturePositions(TileAtlas[bottomFace.TileNumber], bottomFace.Rotation, bottomFace.Flip);
+                Vector2[] texPos = textures.GetNormalTexture((UInt32)bottomFace.TileNumber, bottomFace.Rotation, bottomFace.Flip);
                 Vector2 center = GetCenterPosition(ref texPos[2], ref texPos[1], frontSlopeScalar);
                 Coors.Add(new VertexPositionNormalTexture(frontCoordinates.BottomRight, Vector3.Zero, center)); //was texPos[2]
                 Coors.Add(new VertexPositionNormalTexture(backCoordinates.BottomRight, Vector3.Zero, texPos[1]));

@@ -380,6 +380,9 @@ namespace Hiale.GTA2NET.Core.Map
             return texturePosition;
         }
 
+
+        public Textures textures;
+
         protected virtual ILineObstacle GetDefaultLeftCollison()
         {
             return LineObstacle.DefaultLeft((int) Position.X, (int) Position.Y, (int) Position.Z);
@@ -512,7 +515,7 @@ namespace Hiale.GTA2NET.Core.Map
             if (!Lid)
                 return;
 
-            Vector2[] texPos = GetTexturePositions(TileAtlas[Lid.TileNumber], Lid.Rotation, Lid.Flip);
+            Vector2[] texPos = textures.GetNormalTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip);
             Coors.Add(new VertexPositionNormalTexture(lidCoords.TopRight, Vector3.Zero, texPos[2]));
             Coors.Add(new VertexPositionNormalTexture(lidCoords.BottomRight, Vector3.Zero, texPos[1]));
             Coors.Add(new VertexPositionNormalTexture(lidCoords.TopLeft, Vector3.Zero, texPos[3]));
@@ -537,7 +540,7 @@ namespace Hiale.GTA2NET.Core.Map
             if (!Top)
                 return;
 
-            Vector2[] texPos = GetTexturePositions(TileAtlas[Top.TileNumber], Top.Rotation, Top.Flip);
+            Vector2[] texPos = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
             Coors.Add(new VertexPositionNormalTexture(frontCoords.TopRight, Vector3.Zero, texPos[2]));
             Coors.Add(new VertexPositionNormalTexture(backCoords.TopLeft, Vector3.Zero, texPos[0]));
             Coors.Add(new VertexPositionNormalTexture(backCoords.TopRight, Vector3.Zero, texPos[1]));
@@ -557,7 +560,7 @@ namespace Hiale.GTA2NET.Core.Map
             if (!Bottom)
                 return;
 
-            Vector2[] texPos = GetTexturePositions(TileAtlas[Bottom.TileNumber], Bottom.Rotation, Bottom.Flip);
+            Vector2[] texPos = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
             Coors.Add(new VertexPositionNormalTexture(frontCoords.BottomRight, Vector3.Zero, texPos[2]));
             Coors.Add(new VertexPositionNormalTexture(backCoords.BottomRight, Vector3.Zero, texPos[1]));
             Coors.Add(new VertexPositionNormalTexture(backCoords.BottomLeft, Vector3.Zero, texPos[0]));
@@ -589,7 +592,7 @@ namespace Hiale.GTA2NET.Core.Map
                 newFront = CorrectLeftRightVertices(frontCoords, false);
                 newBack = CorrectLeftRightVertices(backCoords, false);
             }
-            Vector2[] texPos = GetTexturePositions(TileAtlas[Left.TileNumber], Left.Rotation, Left.Flip);
+            Vector2[] texPos = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
             Coors.Add(new VertexPositionNormalTexture(newFront.TopRight, Vector3.Zero, texPos[3]));
             Coors.Add(new VertexPositionNormalTexture(newBack.BottomRight, Vector3.Zero, texPos[1]));
             Coors.Add(new VertexPositionNormalTexture(newFront.BottomRight, Vector3.Zero, texPos[2]));
@@ -623,7 +626,7 @@ namespace Hiale.GTA2NET.Core.Map
                 newBack = CorrectLeftRightVertices(backCoords, true);
             }
             //ToDo: Add more rotation codes...
-            Vector2[] texPos = GetTexturePositions(TileAtlas[Right.TileNumber], Right.Rotation, Right.Flip);
+            Vector2[] texPos = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
             Coors.Add(new VertexPositionNormalTexture(newFront.TopLeft, Vector3.Zero, texPos[2]));
             Coors.Add(new VertexPositionNormalTexture(newFront.BottomLeft, Vector3.Zero, texPos[3]));
             Coors.Add(new VertexPositionNormalTexture(newBack.BottomLeft, Vector3.Zero, texPos[0]));
@@ -761,8 +764,8 @@ namespace Hiale.GTA2NET.Core.Map
         /// </summary>
         /// <param name="frontCoords">The coordinates of the top face of the cube</param>
         /// <param name="backCoords">The coordinates of the botton face of the cube</param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name="x">X position of the TopLeft corner.</param>
+        /// <param name="y">Y position of the TopLeft corner.</param>
         /// <param name="width"></param>
         /// <param name="height"></param>
         protected void PrepareCoordinates(float x, float y, float width, float height, out FaceCoordinates frontCoords, out FaceCoordinates backCoords)
@@ -771,16 +774,16 @@ namespace Hiale.GTA2NET.Core.Map
             position.Y *= -1;
 
             //Coordinates of the cube
-            Vector3 topLeftFront = (new Vector3(x, y, 1f) + position)*GlobalScalar;
-            Vector3 topRightFront = (new Vector3(width, y, 1f) + position)*GlobalScalar;
-            Vector3 bottomLeftFront = (new Vector3(x, -height, 1f) + position)*GlobalScalar;
-            Vector3 bottomRightFront = (new Vector3(width, -height, 1f) + position)*GlobalScalar;
+            Vector3 topLeftFront = (new Vector3(x, -y, 1f) + position) * GlobalScalar;
+            Vector3 topRightFront = (new Vector3(x + width, -y, 1f) + position) * GlobalScalar;
+            Vector3 bottomLeftFront = (new Vector3(x, -(y + height), 1f) + position) * GlobalScalar;
+            Vector3 bottomRightFront = (new Vector3(x + width, -(y + height), 1f) + position) * GlobalScalar;
             frontCoords = new FaceCoordinates(topLeftFront, topRightFront, bottomRightFront, bottomLeftFront);
 
-            Vector3 topLeftBack = (new Vector3(x, y, 0.0f) + position)*GlobalScalar;
-            Vector3 topRightBack = (new Vector3(width, y, 0.0f) + position)*GlobalScalar;
-            Vector3 bottomLeftBack = (new Vector3(x, -height, 0.0f) + position)*GlobalScalar;
-            Vector3 bottomRightBack = (new Vector3(width, -height, 0.0f) + position)*GlobalScalar;
+            Vector3 topLeftBack = (new Vector3(x, -y, 0.0f) + position) * GlobalScalar;
+            Vector3 topRightBack = (new Vector3(x + width, -y, 0.0f) + position) * GlobalScalar;
+            Vector3 bottomLeftBack = (new Vector3(x, -(y + height), 0.0f) + position) * GlobalScalar;
+            Vector3 bottomRightBack = (new Vector3(x + width, -(y + height), 0.0f) + position) * GlobalScalar;
             backCoords = new FaceCoordinates(topLeftBack, topRightBack, bottomRightBack, bottomLeftBack);
         }
 

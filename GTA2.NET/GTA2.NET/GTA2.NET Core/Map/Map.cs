@@ -276,6 +276,8 @@ namespace Hiale.GTA2NET.Core.Map
         }
         #endregion
         #region Textures
+        private Textures texture = new Textures("bil");
+
 
         private Dictionary<int, CompactRectangle> tileAtlas;
 
@@ -303,6 +305,7 @@ namespace Hiale.GTA2NET.Core.Map
                         Block a = _cityBlocks[i, j, k];
                         //a.Position = new Vector3(i, j, k);
                         a.TileAtlas = tileAtlas;
+                        a.textures = texture;
                         a.SetUpCube();
                         int idx = 0;
                         foreach (VertexPositionNormalTexture vx in a.Coors)
