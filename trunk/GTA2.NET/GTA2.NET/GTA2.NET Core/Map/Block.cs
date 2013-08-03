@@ -81,8 +81,6 @@ namespace Hiale.GTA2NET.Core.Map
         protected Vector3 GlobalScalar = new Vector3(1, 1, 0.5f);
         protected BlockStructure BlockStructure;
 
-        public Dictionary<int, CompactRectangle> TileAtlas;
-
         protected Block(BlockStructure blockStructure, Vector3 pos)
         {
             BlockStructure = blockStructure;
