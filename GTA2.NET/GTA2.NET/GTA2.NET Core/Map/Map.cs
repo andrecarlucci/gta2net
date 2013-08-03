@@ -92,7 +92,6 @@ namespace Hiale.GTA2NET.Core.Map
         {
             ReadFromFile(fileName);
             Filename = fileName;
-            LoadTexture();
         }
 
         /// <summary>
@@ -180,7 +179,6 @@ namespace Hiale.GTA2NET.Core.Map
                 blockStructure.Arrows = reader.ReadByte();
                 blockStructure.SlopeType = reader.ReadByte();
                 Block block = BlockFactory.Build(blockStructure, Vector3.One);
-                block.TileAtlas = this.tileAtlas;
                 blocks[i] = block;
             }
             CreateUncompressedMap(baseOffsets, columns, blocks);
@@ -277,16 +275,6 @@ namespace Hiale.GTA2NET.Core.Map
         #endregion
         #region Textures
         private Textures texture = new Textures("bil");
-
-
-        private Dictionary<int, CompactRectangle> tileAtlas;
-
-        private void LoadTexture()
-        {
-            var atlasPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + "bil" + Globals.TilesSuffix + Globals.XmlFormat; //TODO: not use "bil" hardcoded.
-            var dict = TextureAtlas.Deserialize<TextureAtlasTiles>(atlasPath);
-            tileAtlas = dict.TileDictionary;
-        }
         #endregion
         #region Draw
         public List<VertexPositionNormalTexture> Coors { get; private set; }
@@ -304,7 +292,6 @@ namespace Hiale.GTA2NET.Core.Map
                             Console.Read();
                         Block a = _cityBlocks[i, j, k];
                         //a.Position = new Vector3(i, j, k);
-                        a.TileAtlas = tileAtlas;
                         a.textures = texture;
                         a.SetUpCube();
                         int idx = 0;
