@@ -130,34 +130,10 @@ namespace Hiale.GTA2NET
 
         public void SetPosition(ISprite baseObject)
         {
-            Vector3 center = baseObject.Position3;
-            float rotation = baseObject.RotationAngle;
-
-            TopLeft = TranslatePosition(new Vector3(center.X + baseObject.SpriteTopLeft.X, center.Y + baseObject.SpriteTopLeft.Y, baseObject.Position3.Z));
-            TopRight = TranslatePosition(new Vector3(center.X + baseObject.SpriteTopRight.X, center.Y + baseObject.SpriteTopRight.Y, baseObject.Position3.Z));
-            BottomRight = TranslatePosition(new Vector3(center.X + baseObject.SpriteBottomRight.X, center.Y + baseObject.SpriteBottomRight.Y, baseObject.Position3.Z));
-            BottomLeft = TranslatePosition(new Vector3(center.X + baseObject.SpriteBottomLeft.X, center.Y + baseObject.SpriteBottomLeft.Y, baseObject.Position3.Z));
-
-
-            //Vector3 currentPoint = new Vector3(center.X - _widthHalf, center.Y - _heightHalf, center.Z);
-            //currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
-            //TranslatePosition(ref currentPoint);
-            ////TopLeft = currentPoint;
-
-            //currentPoint = new Vector3(center.X + _widthHalf, center.Y - _heightHalf, center.Z);
-            //currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
-            //TranslatePosition(ref currentPoint);
-            ////TopRight = currentPoint;
-
-            //currentPoint = new Vector3(center.X + _widthHalf, center.Y + _heightHalf, center.Z);
-            //currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
-            //TranslatePosition(ref currentPoint);
-            ////BottomRight = currentPoint;
-
-            //currentPoint = new Vector3(center.X - _widthHalf, center.Y + _heightHalf, center.Z);
-            //currentPoint = MainGame.RotatePoint3(currentPoint, center, rotation);
-            //TranslatePosition(ref currentPoint);
-            ////BottomLeft = currentPoint;
+            TopLeft = TranslatePosition(new Vector3(baseObject.SpriteTopLeft.X, baseObject.SpriteTopLeft.Y, baseObject.Position3.Z));
+            TopRight = TranslatePosition(new Vector3(baseObject.SpriteTopRight.X, baseObject.SpriteTopRight.Y, baseObject.Position3.Z));
+            BottomRight = TranslatePosition(new Vector3(baseObject.SpriteBottomRight.X, baseObject.SpriteBottomRight.Y, baseObject.Position3.Z));
+            BottomLeft = TranslatePosition(new Vector3(baseObject.SpriteBottomLeft.X, baseObject.SpriteBottomLeft.Y, baseObject.Position3.Z));
         }
 
 

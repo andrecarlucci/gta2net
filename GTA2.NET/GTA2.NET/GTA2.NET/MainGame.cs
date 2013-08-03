@@ -270,12 +270,16 @@ namespace Hiale.GTA2NET
             var input = new ParticipantInput();
             for (var i = 0; i < Cars.Count; i++)
             {
+                if (Cars[i] == ChasingObject)
+                    continue;
                 Cars[i].Update(input, elapsedGameTime);
             }
 
             //Update all pedestrians
             for (var i = 0; i < Pedestrians.Count; i++)
             {
+                if (Pedestrians[i] == ChasingObject)
+                    continue;
                 Pedestrians[i].Update(input, elapsedGameTime);
             }
         }
@@ -298,12 +302,12 @@ namespace Hiale.GTA2NET
             if (Input.KeyboardLeftPressed)
             {
                 //_playerRotationDelta = -RotationScalar * _elapsedGameTime;
-                playerInput.Rotation = -1;
+                playerInput.Rotation = 1;
             }
             if (Input.KeyboardRightPressed)
             {
                 //_playerRotationDelta = RotationScalar * _elapsedGameTime;
-                playerInput.Rotation = 1;
+                playerInput.Rotation = -1;
             }
 
             //float a = 0;
