@@ -86,25 +86,32 @@ namespace Hiale.GTA2NET.Core.Logic
         }
 
 
+        private Vector2 GetSpriteVector(int index)
+        {
+            Transform transform;
+            _body.GetTransform(out transform);
+            var vector = MathUtils.Multiply(ref transform, _spriteShape.Vertices[index]);
+            return vector.ToBlockUnits();
+        }
 
         public override Vector2 SpriteTopLeft
         {
-            get { return _spriteShape.Vertices[0].ToBlockUnits(); }
+            get { return GetSpriteVector(0); }
         }
 
         public override Vector2 SpriteTopRight
         {
-            get { return _spriteShape.Vertices[1].ToBlockUnits(); }
+            get { return GetSpriteVector(1); }
         }
 
         public override Vector2 SpriteBottomLeft
         {
-            get { return _spriteShape.Vertices[3].ToBlockUnits(); }
+            get { return GetSpriteVector(3); }
         }
 
         public override Vector2 SpriteBottomRight
         {
-            get { return _spriteShape.Vertices[2].ToBlockUnits(); }
+            get { return GetSpriteVector(2); }
         }
 
         public override float SpriteWidth
@@ -115,6 +122,11 @@ namespace Hiale.GTA2NET.Core.Logic
         public override float SpriteHeight
         {
             get { return _spriteHeight; }
+        }
+
+        public new float RotationAngle
+        {
+            get { return _body.Rotation; }
         }
 
         public override void SetDimensions(float width, float height)
@@ -164,10 +176,6 @@ namespace Hiale.GTA2NET.Core.Logic
             _spriteShape = new PolygonShape(spriteVertices.ToMeters(), 0.1f);
             var spriteFixture = _body.CreateFixture(_spriteShape);
             spriteFixture.IsSensor = true;
-
-            //Joint
-            //JointFactory.CreateRevoluteJoint(_b)
-
 
             float maxForwardSpeed = 300;
             float maxBackwardSpeed = -40;

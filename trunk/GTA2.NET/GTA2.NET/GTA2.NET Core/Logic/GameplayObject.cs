@@ -34,12 +34,12 @@ namespace Hiale.GTA2NET.Core.Logic
         /// <summary>
         /// Current position of this object. It represents the center of the object.
         /// </summary>
-        public virtual Vector3 Position3 { get; protected set; }
+        public Vector3 Position3 { get; protected set; }
 
         /// <summary>
         /// 2D position of the object.
         /// </summary>
-        public virtual Vector2 Position2
+        public Vector2 Position2
         {
             get
             {
@@ -53,7 +53,7 @@ namespace Hiale.GTA2NET.Core.Logic
         /// <summary>
         /// Current rotation angle in radians.
         /// </summary>
-        public virtual float RotationAngle
+        public float RotationAngle
         {
             get { return _rotationAngle; }
             set
