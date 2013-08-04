@@ -40,6 +40,8 @@
     <Compile Include="XboxController.cs" />
     <Compile Include="XboxControllerStateChangedEventArgs.cs" />
     <Compile Include="XInput.cs" />
+    <Compile Include="XInput910.cs" />
+    <Compile Include="XInput14.cs" />
     <Compile Include="XInputBatteryInformation.cs" />
     <Compile Include="XInputCapabilities.cs" />
     <Compile Include="XInputConstants.cs" />
