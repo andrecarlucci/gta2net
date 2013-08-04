@@ -45,23 +45,26 @@ namespace Hiale.GTA2NET.Core.Map.Blocks
         }
 
         public override void SetUpCube()
-        {
+        {     
             FaceCoordinates frontCoordinates;
             FaceCoordinates backCoordinates;
-            var centreBlockScalar = CentreBlockScalar;
-            var partialBlockScalar = PartialBlockScalar;
-            PrepareCoordinates(centreBlockScalar, centreBlockScalar, partialBlockScalar, partialBlockScalar, out frontCoordinates, out backCoordinates);
+            PrepareCoordinates(CentreBlockScalar, CentreBlockScalar, PartialBlockScalar, PartialBlockScalar, out frontCoordinates, out backCoordinates);
+            Vector2[] texture = textures.GetNormalTexture((UInt32)Lid.TileNumber, Lid.Rotation, Lid.Flip);
 
-            CreateFrontVertices(frontCoordinates);
+            CreateFrontVertices(frontCoordinates, texture);
 
             // Top face
-            CreateTopVertices(frontCoordinates, backCoordinates);
+            texture = textures.GetNormalTexture((UInt32)Top.TileNumber, Top.Rotation, Top.Flip);
+            CreateTopVertices(frontCoordinates, backCoordinates, texture);
             // Bottom face
-            CreateBottomVertices(frontCoordinates, backCoordinates);
+            texture = textures.GetNormalTexture((UInt32)Bottom.TileNumber, Bottom.Rotation, Bottom.Flip);
+            CreateBottomVertices(frontCoordinates, backCoordinates, texture);
             // Left face
-            CreateLeftVertices(frontCoordinates, backCoordinates, 0);
+            texture = textures.GetNormalTexture((UInt32)Left.TileNumber, Left.Rotation, Left.Flip);
+            CreateLeftVertices(frontCoordinates, backCoordinates, texture);
             // Right face
-            CreateRightVertices(frontCoordinates, backCoordinates, 0);
+            texture = textures.GetNormalTexture((UInt32)Right.TileNumber, Right.Rotation, Right.Flip);
+            CreateRightVertices(frontCoordinates, backCoordinates, texture);
         }
 
         public override void GetCollision(List<ILineObstacle> obstacles, bool bulletWall)
