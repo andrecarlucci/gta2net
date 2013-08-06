@@ -242,7 +242,7 @@ namespace Hiale.GTA2NET
             var elapsedGameTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             var input = new PlayerInput();
-            HandleInput(ref input);
+            HandleInput(ref input, controller);
             ChasingObject.Update(input, elapsedGameTime);
             
 
@@ -286,25 +286,25 @@ namespace Hiale.GTA2NET
 
 
 
-        private void HandleInput(ref PlayerInput playerInput)
+        private void HandleInput(ref PlayerInput playerInput, XboxController controller)
         {
             //Vector3 cameraPos = BaseGame.CameraPos;
-            if (Input.KeyboardUpPressed)
+            if (Input.KeyboardUpPressed || controller.RightTrigger > 0)
             {
                 //_playerForwardDelta = ForwardScalar * _elapsedGameTime;
                 playerInput.Forward = 1;
             }
-            if (Input.KeyboardDownPressed)
+            else if (Input.KeyboardDownPressed || controller.LeftTrigger > 0)
             {
                 //_playerForwardDelta = -ForwardScalar * _elapsedGameTime;
                 playerInput.Forward = -1;
             }
-            if (Input.KeyboardLeftPressed)
+            if (Input.KeyboardLeftPressed || controller.IsDPadLeftPressed)
             {
                 //_playerRotationDelta = -RotationScalar * _elapsedGameTime;
                 playerInput.Rotation = 1;
             }
-            if (Input.KeyboardRightPressed)
+            else if (Input.KeyboardRightPressed || controller.IsDPadRightPressed)
             {
                 //_playerRotationDelta = RotationScalar * _elapsedGameTime;
                 playerInput.Rotation = -1;

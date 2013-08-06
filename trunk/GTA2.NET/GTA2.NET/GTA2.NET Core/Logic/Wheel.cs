@@ -111,23 +111,18 @@ namespace Hiale.GTA2NET.Core.Logic
             return Vector2.Dot(currentForwardNormal, Body.LinearVelocity)*currentForwardNormal;
         }
 
-        public void UpdateFriction()
+        public void Update(float acceleration, float elapsedTime)
         {
             //angulat velocity
             Body.ApplyAngularImpulse(_mCurrentTraction * 0.1f * Body.Inertia * -Body.AngularVelocity);
-            
+
             //forward linear velocity
             var currentForwardNormal = GetForwardVelocity();
-            Geometry.SafeNormalize(ref currentForwardNormal);
             float currentForwardSpeed = Geometry.SafeNormalize(ref currentForwardNormal);
-            float dragForceMagnitude = -0.25f*currentForwardSpeed;
+            float dragForceMagnitude = -0.25f * currentForwardSpeed;
             dragForceMagnitude *= _mCurrentDrag;
             Body.ApplyForce(_mCurrentTraction * dragForceMagnitude * currentForwardNormal, Body.WorldCenter);
 
-        }
-
-        public void UpdateDrive(float acceleration)
-        {
             //find desired speed
             float desiredSpeed = 0;
             if (acceleration > 0)
@@ -136,8 +131,8 @@ namespace Hiale.GTA2NET.Core.Logic
                 desiredSpeed = _mMaxBackwardSpeed;
 
             //find current speed in forward direction
-            var currentForwardNormal = Body.GetWorldVector(Vector2.UnitY);
-            float currentSpeed = Vector2.Dot(GetForwardVelocity(), currentForwardNormal);
+            var worldVector = Body.GetWorldVector(Vector2.UnitY);
+            float currentSpeed = Vector2.Dot(GetForwardVelocity(), worldVector);
 
             //apply necessary force
             float force = 0;
@@ -151,7 +146,7 @@ namespace Hiale.GTA2NET.Core.Logic
 
             float speedFactor = currentSpeed/120;
 
-            var driveImpulse = (force/60f)*currentForwardNormal;
+            var driveImpulse = (force*elapsedTime)*worldVector;
             if (driveImpulse.Length() > _mMaxLateralImpulse)
                 driveImpulse *= _mMaxLateralImpulse/driveImpulse.Length();
 
