@@ -28,6 +28,7 @@ using System;
 using FarseerPhysics.Collision.Shapes;
 using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
+using FarseerPhysics.Dynamics.Contacts;
 using FarseerPhysics.Dynamics.Joints;
 using FarseerPhysics.Factories;
 using Hiale.GTA2NET.Core.Helper;
@@ -35,9 +36,21 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
+    /// <summary>
+    /// Represents a car.
+    /// See Car physics.png:
+    /// Steering mechanism joints - The front wheels rotate on these points. Angle is locked from -35 degrees to +35 degrees (subject to change).
+    /// Front wheels - Are needed to determine in which angle the car should drive; not displayed to the player, only exists as physics engine object
+    /// Sprite area (whole gray area) - Any sprite data is drawn on this layer. Usually bigger than the collsions box, because it can also contain door information for example.
+    /// Collision box - determines the area for collision detection. Usually smaller than the sprite area.
+    /// Rear wheels - Fixed angle wheels. Invisible. Force is applied to these wheels which moves the whole car as a consequence,
+    /// </summary>
     public class Car : Vehicle
     {
         public CarInfo CarInfo { get; private set; }
+
+        private const float angleLock = 35f;
+        private const float lockToLockTime = 500; //from lock to lock in 0.5 seconds
 
         private Body _body;
         private PolygonShape _shape;
@@ -64,6 +77,8 @@ namespace Hiale.GTA2NET.Core.Logic
         {
             get { return _collisionHeight; }
         }
+
+        public override event EventHandler Collided;
 
         public override Vector2 CollisionTopLeft
         {
@@ -162,6 +177,7 @@ namespace Hiale.GTA2NET.Core.Logic
             vertices.Add(new Vector2(-halfWidth, halfHeight)); //Bottom-Left
             _shape = new PolygonShape(vertices.ToMeters(), 0.1f);
             var fixture = _body.CreateFixture(_shape); //shape, density
+            fixture.OnCollision += OnCollision;
 
             //SpriteId Fixture
             //var spriteHalfWidth = (float) CarInfo.Sprite.Rectangle.CollisionWidth/2; //ToDo
@@ -213,6 +229,13 @@ namespace Hiale.GTA2NET.Core.Logic
             _frontRightJoint = CreateJoint(_body, wheel.Body, wheelOffsetPosition, world);
         }
 
+        private bool OnCollision(Fixture fixtureA, Fixture fixtureB, Contact contact)
+        {
+            if (Collided != null)
+                Collided(this, EventArgs.Empty);
+            return true;
+        }
+
         private static RevoluteJoint CreateJoint(Body carBody, Body wheelBody, Vector2 anchor, World world)
         {
             var joint = JointFactory.CreateRevoluteJoint(carBody, wheelBody, Vector2.Zero);
@@ -232,14 +255,13 @@ namespace Hiale.GTA2NET.Core.Logic
             Position3 = new Vector3(position.X, position.Y, Position3.Z);
             foreach (var wheel in _wheels)
             {
-                wheel.UpdateFriction();
-                wheel.UpdateDrive(input.Forward);
+                wheel.Update(input.Forward, elapsedTime);
             }
 
             //control steering
-            var lockAngle = MathHelper.ToRadians(35);
-            var turnSpeedPerSec = MathHelper.ToRadians(320); //from lock to lock in 0.25s
-            var turnPerTimeSpep = turnSpeedPerSec / 60f;
+            var lockAngle = MathHelper.ToRadians(angleLock);
+            var turnSpeedPerSec = MathHelper.ToRadians((angleLock*2)/(lockToLockTime/1000));
+            var turnPerTimeSpep = turnSpeedPerSec*elapsedTime;
             var desiredAngle = 0f;
             if (input.Rotation < 0)
                 desiredAngle = lockAngle;

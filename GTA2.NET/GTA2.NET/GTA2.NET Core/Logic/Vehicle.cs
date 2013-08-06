@@ -49,6 +49,8 @@ namespace Hiale.GTA2NET.Core.Logic
             set { throw new NotSupportedException("Set Position3 instead."); }
         }
 
+        public abstract event EventHandler Collided; //ToDo: change EventHandler to something more specific...
+
         public abstract Vector2 CollisionTopLeft { get; }
         public abstract Vector2 CollisionTopRight { get; }
         public abstract Vector2 CollisionBottomRight { get; }
