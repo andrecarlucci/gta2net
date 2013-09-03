@@ -72,6 +72,7 @@
     <Compile Include="Helper\ModelData.cs" />
     <Compile Include="Helper\ObjectReferenceEqualityComparer.cs" />
     <Compile Include="Helper\RectangleF.cs" />
+    <Compile Include="Helper\Sprites.cs" />
     <Compile Include="Helper\VersionAttribute.cs" />
     <Compile Include="Helper\VerticesEx.cs" />
     <Compile Include="Logic\Car.cs" />
