@@ -88,7 +88,7 @@ namespace Hiale.GTA2NET.Renderer
             var atlasPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + MainGame.StyleName + Globals.TilesSuffix + Globals.XmlFormat;
             var dict = TextureAtlas.Deserialize<TextureAtlasTiles>(atlasPath);
             _tileAtlas = dict.TileDictionary;
-            var fs = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + dict.ImagePath, FileMode.Open);
+            var fs = new FileStream(Globals.GraphicsSubDir + Path.DirectorySeparatorChar + dict.ImagePath, FileMode.Open, FileAccess.Read); //hack, for some reason when open this file sometimes fail because is already open.
             _cityTexture = Texture2D.FromStream(BaseGame.Device, fs);
             fs.Close();
         }

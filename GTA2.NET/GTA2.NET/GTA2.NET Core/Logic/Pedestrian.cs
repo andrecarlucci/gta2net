@@ -29,7 +29,7 @@ using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
-    public class Pedestrian : GameplayObject
+    public class Pedestrian : GameObject
     {
         private Color _color;
 

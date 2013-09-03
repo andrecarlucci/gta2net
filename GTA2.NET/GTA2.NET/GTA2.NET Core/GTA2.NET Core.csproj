@@ -75,7 +75,7 @@
     <Compile Include="Helper\VerticesEx.cs" />
     <Compile Include="Logic\Car.cs" />
     <Compile Include="Logic\CarWeapon.cs" />
-    <Compile Include="Logic\GameplayObject.cs" />
+    <Compile Include="Logic\GameObject.cs" />
     <Compile Include="Logic\IGameplayObject.cs" />
     <Compile Include="Logic\IPhysicsBehaviour.cs" />
     <Compile Include="Logic\ISprite.cs" />
