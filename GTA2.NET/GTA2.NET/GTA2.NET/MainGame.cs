@@ -195,7 +195,7 @@ namespace Hiale.GTA2NET
 
         private void LoadMap()
         {
-            Map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
+            Map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp", "bil");
             StyleName = "bil";
 
             var carInfo = CarInfo.Deserialize(Globals.MiscSubDir + "\\car" + Globals.XmlFormat);
@@ -401,11 +401,11 @@ namespace Hiale.GTA2NET
 
         public static int GetHighestPoint(int x, int y)
         {
-            if (x >= 0 && x < Map.CityBlocks.GetLength(0) && y >= 0 && y < Map.CityBlocks.GetLength(1))
+            if (x >= 0 && x < Map.Width && y >= 0 && y < Map.Length)
             {
-                for (int z = Map.CityBlocks.GetLength(2) - 1; z >= 0; z--)
+                for (int z = Map.Height - 1; z >= 0; z--)
                 {
-                    if (!Map.CityBlocks[x, y, z].IsEmpty)
+                    if (!Map.GetBlock(new Vector3(x, y, z)).IsEmpty)
                         return z;
                 }
             }
@@ -414,9 +414,9 @@ namespace Hiale.GTA2NET
 
         public static float GetHighestPointF(float x, float y) //not used at the moment
         {
-            if (x >= 0 && x < Map.CityBlocks.GetLength(0) && y >= 0 && y < Map.CityBlocks.GetLength(1))
+            if (x >= 0 && x < Map.Width && y >= 0 && y < Map.Length)
             {
-                for (int z = Map.CityBlocks.GetLength(2) - 1; z >= 0; z--)
+                for (int z = Map.Height - 1; z >= 0; z--)
                 {
                     float currentZ = GetHeightF(ref x, ref y, ref z);
                     if (currentZ > -1)
@@ -428,7 +428,7 @@ namespace Hiale.GTA2NET
 
         public static float GetHeightF(ref float x, ref float y, ref int z)
         {
-            Block block = Map.CityBlocks[(int)x, (int)y, z];
+            Block block = Map.GetBlock(new Vector3(x, y, z));
             if (!block.IsEmpty)
                 return block.IsMovableSlope ? GetSlopeHeight(ref block, ref x, ref y, ref z) : z;
             return -1;

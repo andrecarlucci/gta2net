@@ -24,26 +24,27 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
-using System.Collections.Generic;
-using Microsoft.Xna.Framework;
 using Hiale.GTA2NET.Core.Map.Blocks;
-using Hiale.GTA2NET.Core.Helper;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Hiale.GTA2NET.Core.Map
 {
     public class Map
     {
-        public const int MaxWidth = 256;
-        public const int MaxLength = 256;
-        public const int MaxHeight = 8;
+        private const int MaxWidth = 256;
+        private const int MaxLength = 256;
+        private const int MaxHeight = 8;
 
         public string Filename { get; private set; }
 
-        private bool _loaded;
-        private Block[, ,] _cityBlocks;
+        private Block[, ,] cityBlocks;
+
+        private Textures texture;
 
         private readonly List<Zone> Zones;
         private List<MapObject> Objects;
@@ -52,65 +53,74 @@ namespace Hiale.GTA2NET.Core.Map
       
         public int Width //x
         {
-            get { return CityBlocks.GetLength(0); }
+            get { return cityBlocks.GetLength(0); }
         }
 
         public int Length //y
         {
-            get { return CityBlocks.GetLength(1); }
+            get { return cityBlocks.GetLength(1); }
         }
 
         public int Height //z
         {
-            get { return CityBlocks.GetLength(2); }
+            get { return cityBlocks.GetLength(2); }
         }
 
-        public Map()
+        private Map()
         {
-            _cityBlocks = new Block[MaxWidth, MaxLength, MaxHeight];
+            cityBlocks = new Block[MaxWidth, MaxLength, MaxHeight];
 
             Filename = string.Empty;
 
             Zones = new List<Zone>();
             Objects = new List<MapObject>();
             Animations = new List<TileAnimation>();
-            Lights = new List<Light>();            
+            Lights = new List<Light>();
 
-            for (var i = 0; i < _cityBlocks.GetLength(0); i++)
+            for (var i = 0; i < Width; i++)
             {
-                for (var j = 0; j < _cityBlocks.GetLength(1); j++)
+                for (var j = 0; j < Length; j++)
                 {
-                    for (var k = 0; k < _cityBlocks.GetLength(2); k++)
+                    for (var k = 0; k < Height; k++)
                     {
-                        _cityBlocks[i, j, k] = new EmptyBlock(new Vector3(i,j,k));
+                        cityBlocks[i, j, k] = new EmptyBlock(new Vector3(i, j, k));
                     }
-                }
+                }                
             }          
         }
 
-        public Map(string fileName) : this()
+        public Map(string fileName, string styleName) : this()
         {
             ReadFromFile(fileName);
             Filename = fileName;
+            texture = new Textures(styleName);
         }
 
         /// <summary>
-        /// 
+        /// Test if a position is inside the map.
         /// </summary>
-        public Block[, ,] CityBlocks
+        /// <param name="pos">The position to test.</param>
+        /// <returns>True in case the position is on the map, False outherwise.</returns>
+        [Pure]
+        public Boolean ValidPosition(Vector3 pos)
         {
-            get
-            {
-                if (!_loaded)
-                    throw new ArgumentException();
-                return _cityBlocks;
-            }
-            internal set {
-                _cityBlocks = value;
-                _loaded = true;
-            }
+            return (pos.X >=0 && pos.X < Width || pos.Y >= 0 && pos.Y < Length || pos.Z >= 0 && pos.Z < Height);
         }
 
+        /// <summary>
+        /// Get a Block from the map.
+        /// </summary>
+        /// <param name="pos">The position of the block to return.</param>
+        /// <returns>The block from pos.</returns>
+        [Pure]
+        public Block GetBlock(Vector3 pos)
+        {
+            Contract.Requires(ValidPosition(pos));
+            Contract.Ensures(Contract.Result<Block>() != null);
+
+            return cityBlocks[(int)pos.X, (int)pos.Y, (int)pos.Z];
+        }
+        
         #region Map Read
         public void ReadFromFile(string fileName)
         {
@@ -151,7 +161,6 @@ namespace Hiale.GTA2NET.Core.Map
             }
             reader.Close();
             //BlockFaceEdgeWallFix.FixAllMismatchTiles();
-            _loaded = true;
         }
 
         private void ReadDMAP(BinaryReader reader)
@@ -265,16 +274,13 @@ namespace Hiale.GTA2NET.Core.Map
                     {
                         if (k >= offset)
                         {
-                            _cityBlocks[i, j, k] = blocks[columns[columnIndex + k - offset + 1]].DeepCopy();
-                            _cityBlocks[i, j, k].Position = new Vector3(i, j, k);
+                            cityBlocks[i, j, k] = blocks[columns[columnIndex + k - offset + 1]].DeepCopy();
+                            cityBlocks[i, j, k].Position = new Vector3(i, j, k);
                         }
                     }
                 }
             }
         }
-        #endregion
-        #region Textures
-        private Textures texture = new Textures("bil");
         #endregion
         #region Draw
         public List<VertexPositionNormalTexture> Coors { get; private set; }
@@ -288,10 +294,7 @@ namespace Hiale.GTA2NET.Core.Map
                 for (int i = 0; i < Width; i++)
                     for (int j = 0; j < Length; j++)
                     {
-                        if (i == 72 && j == 182)
-                            Console.Read();
-                        Block a = _cityBlocks[i, j, k];
-                        //a.Position = new Vector3(i, j, k);
+                        Block a = cityBlocks[i, j, k];
                         a.textures = texture;
                         a.SetUpCube();
                         int idx = 0;
