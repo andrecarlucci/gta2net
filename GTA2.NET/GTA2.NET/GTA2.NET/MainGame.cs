@@ -74,7 +74,7 @@ namespace Hiale.GTA2NET
         /// <summary>
         /// The object (guy or car) which the player is controlling. The camera chases this object.
         /// </summary>
-        public static GameObject ChasingObject { get; private set; }
+        public static Car ChasingObject { get; private set; }
 
         public const float RotationScalar = 50; //was 0.05
         public const float ForwardScalar = 10;
