@@ -109,7 +109,7 @@ namespace Hiale.GTA2NET.Core.Collision
                 {
                     for (var x = (int)minX; x < maxX; x++)
                     {
-                        var block = map.CityBlocks[x, y, layer];
+                        var block = map.GetBlock(new Vector3(x, y, layer));
                         List<Vector2> blockPoints;
                         if (!blockPointsDictionary.TryGetValue(block, out blockPoints))
                         {
@@ -147,7 +147,7 @@ namespace Hiale.GTA2NET.Core.Collision
             }
             for (var z = (int)block.Position.Z + 1; z < 8; z++)
             {
-                if (map.CityBlocks[(int)block.Position.X, (int)block.Position.Y, z].Lid)
+                if (map.GetBlock(new Vector3(block.Position.X, block.Position.Y, z)).Lid)
                     return true;
 
                 var blockFilled = false;

@@ -82,7 +82,7 @@ namespace Hiale.GTA2NET.Core.Collision
             {
                 for (var y = 0; y < _map.Length; y++)
                 {
-                    _map.CityBlocks[x, y, z].GetCollision(obstacles, false);
+                    _map.GetBlock(new Vector3(x, y, z)).GetCollision(obstacles, false);
                 }
             }
             return obstacles;

@@ -44,7 +44,7 @@ namespace Hiale.GTA2NET.Core.Helper
         {
             try
             {
-                var map = new Map.Map(Globals.MapsSubDir + "\\MP1-comp.gmp");
+                var map = new Map.Map(Globals.MapsSubDir + "\\MP1-comp.gmp", "bil");
                 //var map = new Map.Map(Globals.MapsSubDir + "\\bil.gmp");
                 var collision = new CollisionMap(map);
                 var obstacles = collision.GetObstacles();
