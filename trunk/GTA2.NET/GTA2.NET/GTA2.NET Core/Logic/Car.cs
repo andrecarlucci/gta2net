@@ -276,5 +276,15 @@ namespace Hiale.GTA2NET.Core.Logic
             _frontRightJoint.LowerLimit = newAngle;
             _frontRightJoint.UpperLimit = newAngle;
         }
+
+        public override ModelData Draw()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Update(float elapsedTime)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

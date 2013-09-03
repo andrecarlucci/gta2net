@@ -32,7 +32,7 @@ namespace Hiale.GTA2NET.Core.Logic
 {
     public abstract class Vehicle : GameObject, IPhysicsBehaviour, ISprite
     {
-        protected Vehicle(Vector3 startUpPosition, float startUpRotation) : base(startUpPosition, startUpRotation)
+        protected Vehicle(Vector3 startUpPosition, float startUpRotation) : base(startUpPosition, startUpRotation, new Helper.CompactRectangle())
         {
 
         }
