@@ -64,6 +64,7 @@
     <Compile Include="Collision\SwitchPoint.cs" />
     <Compile Include="Direction.cs" />
     <Compile Include="Globals.cs" />
+    <Compile Include="GTA2Game.cs" />
     <Compile Include="Helper\CompactRectangle.cs" />
     <Compile Include="Helper\ConvertUnits.cs" />
     <Compile Include="Helper\Debug.cs" />
