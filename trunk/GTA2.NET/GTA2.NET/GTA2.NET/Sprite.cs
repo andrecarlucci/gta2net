@@ -79,7 +79,7 @@ namespace Hiale.GTA2NET
 
         private readonly float _heightHalf;
 
-        public Sprite(GameplayObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
+        public Sprite(GameObject baseObject, Vector3 position, int spriteIndex, Texture2D texture, IDictionary<int, SpriteItem> spriteDictionary)
         {
             var item = new SpriteItem(SpriteType.Car);
 

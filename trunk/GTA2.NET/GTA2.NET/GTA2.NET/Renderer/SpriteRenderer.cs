@@ -42,7 +42,7 @@ namespace Hiale.GTA2NET.Renderer
         //Sprite stuff
         Texture2D spriteTexture;
         //List<Sprite> sprites;
-        Dictionary<GameplayObject, Sprite> sprites;
+        Dictionary<GameObject, Sprite> sprites;
         Dictionary<int, SpriteItem> spriteAtlas;
         
 
@@ -56,7 +56,7 @@ namespace Hiale.GTA2NET.Renderer
         public SpriteRenderer()
         {
             effect = new BasicEffect(BaseGame.Device);
-            sprites = new Dictionary<GameplayObject, Sprite>();
+            sprites = new Dictionary<GameObject, Sprite>();
             verticesCollection = new List<VertexPositionNormalTexture>();
             indicesCollection = new List<int>();
         }
