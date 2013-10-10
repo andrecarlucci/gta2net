@@ -1,5 +1,3 @@
-#List od things left to implement
-
 = Introduction =
 This are a few things that from the top of my head are left to do and all the infrastruture to do them are in place.
 
