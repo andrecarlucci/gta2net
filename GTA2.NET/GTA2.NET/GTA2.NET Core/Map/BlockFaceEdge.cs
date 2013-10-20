@@ -24,9 +24,9 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
+using Hiale.GTA2NET.Core.Helper;
 using System.Collections.Generic;
 using System.Linq;
-using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -61,7 +61,7 @@ namespace Hiale.GTA2NET.Core.Map
     {
         private class TileWallCollisionFix
         {
-            public int TileNumber;
+            public uint TileNumber;
             public int CollisionCount;
             public int NoBulletCollision;
             public int NoCollisionCount;
@@ -73,8 +73,8 @@ namespace Hiale.GTA2NET.Core.Map
             }
         }
 
-        private static readonly Dictionary<int, TileWallCollisionFix> TileWallCollisionFixes = new Dictionary<int, TileWallCollisionFix>();
-        private static readonly List<int> MismatchTiles = new List<int>(); 
+        private static readonly Dictionary<uint, TileWallCollisionFix> TileWallCollisionFixes = new Dictionary<uint, TileWallCollisionFix>();
+        private static readonly List<uint> MismatchTiles = new List<uint>(); 
 
         public static void FixTileWallCollision(this BlockFaceEdge blockFace)
         {
