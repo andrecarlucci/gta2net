@@ -23,9 +23,8 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
-using System.IO;
 using Hiale.GTA2NET.Core.Helper;
+using System;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -37,24 +36,18 @@ namespace Hiale.GTA2NET.Core.Map
         Rotate270
     }
 
-    public enum BlockFaceDirection : byte
-    {
-        Left,
-        Right,
-        Top,
-        Bottom,
-        Lid
-    }
-
     public abstract class BlockFace
     {
         /// <summary>
-        /// Tile graphic number simply indicates which of the possible 1024 tile graphics to draw on this surface. It serves as an index into the tile information in the style file. A value of 0 means leave it blank. 992-1022 are reserved for internal use by the game engine. 1023 is used as a dummy tile number to mark 3-sided diagonal slopes.
+        /// Tile graphic number simply indicates which of the possible 1024 tile graphics to draw on this surface. 
+        /// It serves as an index into the tile information in the style file. A value of 0 means leave it blank. 
+        /// 992-1022 are reserved for internal use by the game engine. 1023 is used as a dummy tile number to mark 3-sided diagonal slopes.
         /// </summary>
-        public int TileNumber { get; private set; }
+        public uint TileNumber { get; private set; }
 
         /// <summary>
-        /// Flat indicates whether or not this tile should be treated as a flat. This means that it gets drawn transparently, and (except for a lid ) the tile opposite is used as the graphic for the reverse side.
+        /// Flat indicates whether or not this tile should be treated as a flat. 
+        /// This means that it gets drawn transparently, and (except for a lid ) the tile opposite is used as the graphic for the reverse side.
         /// If both matching sides of a block (i.e. top and bottom or left and right) are flat, then both tiles are drawn at both positions.
         /// </summary>
         public bool Flat { get; private set; }
@@ -88,9 +81,9 @@ namespace Hiale.GTA2NET.Core.Map
 
             //parse ushort value
             //Bits 0-9: Tile number
-            var tile = 0;
+            uint tile = 0;
             for (var i = 0; i < 10; i++)
-                tile = tile + (value & (int)Math.Pow(2, i));
+                tile = tile + (value & (uint)Math.Pow(2, i));
             TileNumber = tile;
 
             Flat = BitHelper.CheckBit(value, 12); //Bit 12
