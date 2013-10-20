@@ -24,12 +24,12 @@
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
-using System;
-using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Collision;
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 
 namespace Hiale.GTA2NET.Core.Map
 {
@@ -76,9 +76,20 @@ namespace Hiale.GTA2NET.Core.Map
 
         #endregion
 
-        protected float PartialScalar = 0.375f;
+        /// <summary>
+        /// Size of a PartialBlocks
+        /// </summary>
+        static protected float PartialBlockScalar = 0.375f;
+        /// <summary>
+        /// Size of the blocks
+        /// </summary>
+        static protected Vector3 GlobalScalar = new Vector3(1, 1, 0.5f);
+        /// <summary>
+        /// Used to retrive the Texture to the faces of block.
+        /// </summary>
+        static public Textures textures;
 
-        protected Vector3 GlobalScalar = new Vector3(1, 1, 0.5f);
+
         protected BlockStructure BlockStructure;
 
         protected Block(BlockStructure blockStructure, Vector3 pos)
@@ -112,9 +123,9 @@ namespace Hiale.GTA2NET.Core.Map
             IndexBufferCollection = new List<int>();
         }
 
-        ///// <summary>
-        ///// Position of this block in a map.
-        ///// </summary>
+        /// <summary>
+        /// Position of this block in a map.
+        /// </summary>
         public Vector3 Position { get; set; }
 
         public BlockFaceEdge Left { get; set; }
@@ -310,76 +321,7 @@ namespace Hiale.GTA2NET.Core.Map
             return "Type: " + SlopeType + positionString + " Lid: " + Lid + " Left: " + Left + " Top: " + Top + " Right: " + Right + " Bottom: " + Bottom + " Ground: " + GroundType;
         }
 
-        /// <summary>
-        ///     Gets the coordinates for the texture acording to its rotation and flip.
-        /// </summary>
-        /// <param name="sourceRectangle">Represents the position and size of the texture.</param>
-        /// <param name="rotation">The rotation to aply to the texture.</param>
-        /// <param name="flip">If the Texture must be fliped.</param>
-        /// <returns>A array with 4 positions where each position represent one of the vertices od the texture.</returns>
-        protected Vector2[] GetTexturePositions(CompactRectangle sourceRectangle, RotationType rotation, bool flip)
-        {
-            double pixelPerWidth = 1f/2048; //TODO: this values must be equals to the tiles size.
-            double pixelPerHeight = 1f/4096;
-            var texturePosition = new Vector2[4];
-
-            var texTopLeft = new Vector2((float) ((sourceRectangle.X + 1)*pixelPerWidth), (float) ((sourceRectangle.Y + 1)*pixelPerHeight));
-            var texTopRight = new Vector2((float) ((sourceRectangle.X + sourceRectangle.Width - 1)*pixelPerWidth), (float) ((sourceRectangle.Y + 1)*pixelPerHeight));
-            var texBottomLeft = new Vector2((float) ((sourceRectangle.X + 1)*pixelPerWidth), (float) ((sourceRectangle.Y + sourceRectangle.Height - 1)*pixelPerHeight));
-            var texBottomRight = new Vector2((float) ((sourceRectangle.X + sourceRectangle.Width - 1)*pixelPerWidth), (float) ((sourceRectangle.Y + sourceRectangle.Height - 1)*pixelPerHeight));
-
-            if (flip)
-            {
-                Vector2 helper = texTopLeft;
-                texTopLeft = texTopRight;
-                texTopRight = helper;
-
-                helper = texBottomLeft;
-                texBottomLeft = texBottomRight;
-                texBottomRight = helper;
-
-                if (rotation == RotationType.Rotate90) //special cases.
-                {
-                    rotation = RotationType.Rotate270;
-                }
-                else if (rotation == RotationType.Rotate270)
-                {
-                    rotation = RotationType.Rotate90;
-                }
-            }
-
-            switch (rotation)
-            {
-                case RotationType.RotateNone:
-                    texturePosition[0] = texBottomLeft;
-                    texturePosition[1] = texBottomRight;
-                    texturePosition[2] = texTopRight;
-                    texturePosition[3] = texTopLeft;
-                    break;
-                case RotationType.Rotate90:
-                    texturePosition[3] = texBottomLeft;
-                    texturePosition[0] = texBottomRight;
-                    texturePosition[1] = texTopRight;
-                    texturePosition[2] = texTopLeft;
-                    break;
-                case RotationType.Rotate180:
-                    texturePosition[2] = texBottomLeft;
-                    texturePosition[3] = texBottomRight;
-                    texturePosition[0] = texTopRight;
-                    texturePosition[1] = texTopLeft;
-                    break;
-                case RotationType.Rotate270:
-                    texturePosition[1] = texBottomLeft;
-                    texturePosition[2] = texBottomRight;
-                    texturePosition[3] = texTopRight;
-                    texturePosition[0] = texTopLeft;
-                    break;
-            }
-            return texturePosition;
-        }
-
-
-        public Textures textures;
+        
 
         protected virtual ILineObstacle GetDefaultLeftCollison()
         {
@@ -463,7 +405,7 @@ namespace Hiale.GTA2NET.Core.Map
 
         #region Not Used
 
-        public static float PartialBlockScalar = 0.375f;
+
 
         //Created but never used.
         public byte SlopeSubTyp

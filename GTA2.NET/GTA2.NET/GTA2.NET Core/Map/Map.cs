@@ -94,6 +94,7 @@ namespace Hiale.GTA2NET.Core.Map
             ReadFromFile(fileName);
             Filename = fileName;
             texture = new Textures(styleName);
+            Block.textures = texture;
         }
 
         /// <summary>
@@ -295,7 +296,6 @@ namespace Hiale.GTA2NET.Core.Map
                     for (int j = 0; j < Length; j++)
                     {
                         Block a = cityBlocks[i, j, k];
-                        a.textures = texture;
                         a.SetUpCube();
                         int idx = 0;
                         foreach (VertexPositionNormalTexture vx in a.Coors)
