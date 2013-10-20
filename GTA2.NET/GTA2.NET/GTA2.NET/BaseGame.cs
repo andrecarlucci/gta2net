@@ -23,11 +23,9 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
-using System;
-using Hiale.GTA2NET.Helper;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework;
+using System;
 
 
 namespace Hiale.GTA2NET
@@ -41,7 +39,7 @@ namespace Hiale.GTA2NET
         /// <summary>
         /// Background color
         /// </summary>
-        private static readonly Color BackgroundColor = Color.Red;
+        private static readonly Color BackgroundColor = Color.Black;
 
         /// <summary>
         /// Field of view and near and far plane distances for the
@@ -49,7 +47,6 @@ namespace Hiale.GTA2NET
         /// </summary>
         private const float FieldOfView = MathHelper.PiOver2, //PiOver2 = 90°C
                             NearPlane = 1,
-                            //FarPlane = 1750;
                             FarPlane = 20;
 
         /// <summary>
@@ -57,21 +54,6 @@ namespace Hiale.GTA2NET
         /// the GraphicsDevice.
         /// </summary>
         public static GraphicsDeviceManager GraphicsManager = null;
-
-        /// <summary>
-        /// Our screen resolution: Width and height of visible render area.
-        /// </summary>
-        protected static int width;
-
-        /// <summary>
-        /// Our screen resolution: Width and height of visible render area.
-        /// </summary>
-        protected static int height;
-
-        /// <summary>
-        /// Aspect ratio of our current resolution
-        /// </summary>
-        private static float aspectRatio = 1.0f;
 
         /// <summary>
         /// Matrices for shaders. Used in a similar way than in Rocket Commander,
@@ -96,11 +78,7 @@ namespace Hiale.GTA2NET
         /// </summary>
         private static float startTimeThisSecond = 0;
 
-        private static BlendState _alphaBlendState;
-        public static BlendState AlphaBlendingState
-        {
-            get { return _alphaBlendState; }
-        }
+        public static BlendState AlphaBlendingState { get; set; }
 
         /// <summary>
         /// For more accurate frames per second calculations,
@@ -113,17 +91,6 @@ namespace Hiale.GTA2NET
             totalFrameCount = 0,
             fpsLastSecond = 60;
 
-        /// <summary>
-        /// Return true every checkMilliseconds.
-        /// </summary>
-        /// <param name="checkMilliseconds">Check ms</param>
-        /// <returns>Bool</returns>
-        public static bool EveryMillisecond(int checkMilliseconds)
-        {
-            return (int)(lastFrameTotalTimeMs / checkMilliseconds) !=
-                (int)(totalTimeMs / checkMilliseconds);
-        }
-
         static public GraphicsDevice Device
         {
             get
@@ -135,53 +102,19 @@ namespace Hiale.GTA2NET
         /// <summary>
         /// Back buffer depth format
         /// </summary>
-        static DepthFormat backBufferDepthFormat = DepthFormat.Depth24; //XNA 3.1, was Depth32
-        /// <summary>
-        /// Back buffer depth format
-        /// </summary>
-        /// <returns>Surface format</returns>
-        public static DepthFormat BackBufferDepthFormat
-        {
-            get
-            {
-                return backBufferDepthFormat;
-            }
-        }
-
-        /// <summary>
-        /// Fullscreen
-        /// </summary>
-        /// <returns>Bool</returns>
-        public static bool Fullscreen
-        {
-            get
-            {
-                return GraphicsManager.IsFullScreen;
-            }
-        }
-
+        static DepthFormat backBufferDepthFormat = DepthFormat.Depth24;
+        
         /// <summary>
         /// Width
         /// </summary>
         /// <returns>Int</returns>
-        public static int Width
-        {
-            get
-            {
-                return width;
-            }
-        }
+        public static int Width { get; set; }
+
         /// <summary>
         /// Height
         /// </summary>
         /// <returns>Int</returns>
-        public static int Height
-        {
-            get
-            {
-                return height;
-            }
-        }
+        public static int Height { get; set; }
 
         /// <summary>
         /// Aspect ratio
@@ -191,7 +124,7 @@ namespace Hiale.GTA2NET
         {
             get
             {
-                return aspectRatio;
+                return Width / (float)Height;
             }
         }
 
@@ -212,66 +145,6 @@ namespace Hiale.GTA2NET
         /// Obviously goes down if our framerate is low.
         /// </summary>
         private static float fpsInterpolated = 100.0f;
-
-        /// <summary>
-        /// Total frames
-        /// </summary>
-        /// <returns>Int</returns>
-        public static int TotalFrames
-        {
-            get
-            {
-                return totalFrameCount;
-            }
-        }
-
-        /// <summary>
-        /// Elapsed time this frame in ms
-        /// </summary>
-        /// <returns>Int</returns>
-        public static float ElapsedTimeThisFrameInMilliseconds
-        {
-            get
-            {
-                return elapsedTimeThisFrameInMs;
-            }
-        }
-
-        /// <summary>
-        /// Total time in seconds
-        /// </summary>
-        /// <returns>Int</returns>
-        public static float TotalTime
-        {
-            get
-            {
-                return totalTimeMs / 1000.0f;
-            }
-        }
-
-        /// <summary>
-        /// Total time ms
-        /// </summary>
-        /// <returns>Float</returns>
-        public static float TotalTimeMilliseconds
-        {
-            get
-            {
-                return totalTimeMs;
-            }
-        }
-
-        /// <summary>
-        /// Move factor per second, when we got 1 fps, this will be 1.0f,
-        /// when we got 100 fps, this will be 0.01f.
-        /// </summary>
-        public static float MoveFactorPerSecond
-        {
-            get
-            {
-                return elapsedTimeThisFrameInMs / 1000.0f;
-            }
-        }
 
         /// <summary>
         /// World matrix
@@ -430,23 +303,7 @@ namespace Hiale.GTA2NET
         /// </summary>
         protected override void Initialize()
         {
-            #if !XBOX360
-            // Add screenshot capturer. Note: Don't do this in constructor,
-            // we need the correct window name for screenshots!
-            //this.Components.Add(new ScreenshotCapturer(this));
-            #endif
-
             base.Initialize();
-
-            //GameSettings.Initialize(); --> ToDo
-            //ApplyResolutionChange();
-            //Sound.SetVolumes(GameSettings.Default.SoundVolume, GameSettings.Default.MusicVolume);
-
-            //Init the static screens
-            //Highscores.Initialize();
-
-            // Replaces static Constructors with simple inits.
-            //Log.Initialize();
 
             // Set depth format
             backBufferDepthFormat = GraphicsManager.PreferredDepthStencilFormat;
@@ -463,9 +320,7 @@ namespace Hiale.GTA2NET
             // ViewMatrix is updated in camera class
             ViewMatrix = Matrix.CreateLookAt(new Vector3(0, 0, 250), Vector3.Zero, Vector3.Up);
 
-            _alphaBlendState = CreateAlphaBlendingState();
-
-            // Projection matrix is set by DeviceReset
+            AlphaBlendingState = CreateAlphaBlendingState();
         }
 
         /// <summary>
@@ -479,7 +334,6 @@ namespace Hiale.GTA2NET
             Input.Update();
 
             lastFrameTotalTimeMs = totalTimeMs;
-            //elapsedTimeThisFrameInMs = (float)gameTime.ElapsedRealTime.TotalMilliseconds; //XNA 3.1
             elapsedTimeThisFrameInMs = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             totalTimeMs += elapsedTimeThisFrameInMs;
 
@@ -495,35 +349,14 @@ namespace Hiale.GTA2NET
             if (totalTimeMs - startTimeThisSecond > 1000.0f)
             {
                 // Calc fps
-                fpsLastSecond = (int)(frameCountThisSecond * 1000.0f /
-                    (totalTimeMs - startTimeThisSecond));
+                fpsLastSecond = (int)(frameCountThisSecond * 1000.0f / (totalTimeMs - startTimeThisSecond));
 
                 // Reset startSecondTick and repaintCountSecond
                 startTimeThisSecond = totalTimeMs;
                 frameCountThisSecond = 0;
 
-                fpsInterpolated =
-                    MathHelper.Lerp(fpsInterpolated, fpsLastSecond, 0.1f);
-
-                // Check out if our framerate is running very low. Then we can improve
-                // rendering by reducing the number of objects we draw.
-                //if (fpsInterpolated < 5)
-                //    Model.MaxViewDistance = 50;
-                //else if (fpsInterpolated < 12)
-                //    Model.MaxViewDistance = 70;
-                //else if (fpsInterpolated < 16)
-                //    Model.MaxViewDistance = 90;
-                //else if (fpsInterpolated < 20)
-                //    Model.MaxViewDistance = 120;
-                //else if (fpsInterpolated < 25)
-                //    Model.MaxViewDistance = 150;
-                //else if (fpsInterpolated < 30 ||
-                //    HighDetail == false)
-                //    Model.MaxViewDistance = 175;
+                fpsInterpolated = MathHelper.Lerp(fpsInterpolated, fpsLastSecond, 0.1f);
             }
-
-            // Update sound and music
-            //Sound.Update();
         }
 
         /// <summary>
@@ -545,55 +378,10 @@ namespace Hiale.GTA2NET
 
                 // Handle custom user render code
                 Render();
-
-                // Render all models we remembered this frame.
-                //meshRenderManager.Render();
-
-                // Render all 3d lines
-                //lineManager3D.Render();
-
-                // Render UI and font texts, this also handles all collected
-                // screen sprites (on top of 3d game code)
-                //UIRenderer.Render(lineManager2D);
-
-                //PostUIRender();
-
-                //Handle drawing the Trophy
-                //if (RacingGameManager.InGame && RacingGameManager.Player.Victory)
-                //{
-                //    Texture.alphaSprite.Begin(SpriteBlendMode.AlphaBlend);
-
-                //    int rank = GameScreens.Highscores.GetRankFromCurrentTime(
-                //        RacingGameManager.Player.LevelNum,
-                //        (int)RacingGameManager.Player.BestTimeMilliseconds);
-
-                //    // Show one of the trophies
-                //    BaseGame.UI.GetTrophyTexture(
-                //        // Select right one
-                //        rank == 0 ? UIRenderer.TrophyType.Gold :
-                //        rank == 1 ? UIRenderer.TrophyType.Silver :
-                //        UIRenderer.TrophyType.Bronze).
-                //        RenderOnScreen(new Rectangle(
-                //        BaseGame.Width / 2 - BaseGame.Width / 8,
-                //        BaseGame.Height / 2 - BaseGame.YToRes(10),
-                //        BaseGame.Width / 4, BaseGame.Height * 2 / 5));
-
-                //    Texture.alphaSprite.End();
-                //}
-
-                //ui.RenderTextsAndMouseCursor();
             }
             // Only catch exceptions here in release mode, when debugging
             // we want to see the source of the error. In release mode
             // we want to play and not be annoyed by some bugs ^^
-            #if !DEBUG
-            catch (Exception ex)
-            {
-                //Log.Write("Render loop error: " + ex.ToString());
-                //if (renderLoopErrorCount++ > 100)
-                //    throw;
-            }
-            #endif
             finally
             {
                 // Dummy block to prevent error in debug mode
@@ -623,9 +411,7 @@ namespace Hiale.GTA2NET
         public static void ClearBackground()
         {
             Device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, BackgroundColor, 1.0f, 0);
-            //Device.Clear(ClearOptions.Target, BackgroundColor, 0.0f, 0);
         }
-
 
         private void GraphicsPrepareDevice(object sender, PreparingDeviceSettingsEventArgs e)
         {
@@ -635,30 +421,15 @@ namespace Hiale.GTA2NET
                     e.GraphicsDeviceInformation.PresentationParameters;
 
                 presentParams.RenderTargetUsage = RenderTargetUsage.PlatformContents;
-                if (GraphicsManager.PreferredBackBufferHeight == 720)
-                {
-                    //presentParams.MultiSampleType = MultiSampleType.FourSamples; //XNA 3.1
-                    #if !DEBUG
-                    presentParams.PresentationInterval = PresentInterval.One;
-                    #endif
-                }
-                else
-                {
-                    //presentParams.MultiSampleType = MultiSampleType.TwoSamples; //XNA 3.1
-                    #if !DEBUG
-                    presentParams.PresentationInterval = PresentInterval.Two;
-                    #endif
-                }
             }
         }
 
         private static void GraphicsDeviceReset(object sender, EventArgs e)
         {
             // Update width and height
-            width = Device.Viewport.Width;
-            height = Device.Viewport.Height;
-            aspectRatio = width / (float)height;
-            ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(FieldOfView, aspectRatio, NearPlane, FarPlane);
+            Width = Device.Viewport.Width;
+            Height = Device.Viewport.Height;
+            ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(FieldOfView, AspectRatio, NearPlane, FarPlane);
 
             // Re-Set device
             // Restore z buffer state
@@ -673,10 +444,6 @@ namespace Hiale.GTA2NET
             //Disabled by Hiale, use fixed for now
             int resolutionWidth = 1600;
             int resolutionHeight = 900;
-            //int resolutionWidth = GameSettings.Default == null ? 0 :
-            //    GameSettings.Default.ResolutionWidth;
-            //int resolutionHeight = GameSettings.Default == null ? 0 :
-            //    GameSettings.Default.ResolutionHeight;
 
             // Use current desktop resolution if autodetect is selected.
             if (resolutionWidth <= 0 || resolutionHeight <= 0)
@@ -685,20 +452,11 @@ namespace Hiale.GTA2NET
                 resolutionHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
             }
 
-            #if XBOX360
-            // Xbox 360 graphics settings are fixed
-            graphicsManager.IsFullScreen = true;
-            graphicsManager.PreferredBackBufferWidth =
-                GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
-            graphicsManager.PreferredBackBufferHeight =
-                GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
-            #else
             GraphicsManager.PreferredBackBufferWidth = resolutionWidth;
             GraphicsManager.PreferredBackBufferHeight = resolutionHeight;
             GraphicsManager.IsFullScreen = false;
 
             mustApplyDeviceChanges = true;
-            #endif
         }
 
         public static BlendState CreateAlphaBlendingState()
@@ -713,115 +471,10 @@ namespace Hiale.GTA2NET
             return blendState;
         }
 
-        #region Helper methods for 3d-calculations
-        /// <summary>
-        /// Epsilon (1/1000000) for comparing stuff which is nearly equal.
-        /// </summary>
-        public const float Epsilon = 0.000001f;
-
-        /// <summary>
-        /// Convert 3D vector to 2D vector, this is kinda the oposite of
-        /// GetScreenPlaneVector (not shown here). This can be useful for user
-        /// input/output, because we will often need the actual position on screen
-        /// of an object in 3D space from the users view to handle it the right
-        /// way. Used for lens flare and asteroid optimizations.
-        /// </summary>
-        /// <param name="point">3D world position</param>
-        /// <return>Resulting 2D screen position</return>
-        public static Point Convert3DPointTo2D(Vector3 point)
-        {
-            Vector4 result4 = Vector4.Transform(point,
-                ViewProjectionMatrix);
-
-            if (result4.W == 0)
-                result4.W = BaseGame.Epsilon;
-            Vector3 result = new Vector3(
-                result4.X / result4.W,
-                result4.Y / result4.W,
-                result4.Z / result4.W);
-
-            // Output result from 3D to 2D
-            return new Point(
-                (int)Math.Round(+result.X * (width / 2)) + (width / 2),
-                (int)Math.Round(-result.Y * (height / 2)) + (height / 2));
-        }
-
-        public static Vector3 Convert2DPointTo3D(Vector2 point)
-        {
-            return Device.Viewport.Unproject(new Vector3(point.X, point.Y, 0), projectionMatrix, viewMatrix, worldMatrix);
-        }
-
-        /// <summary>
-        /// Is point in front of camera?
-        /// </summary>
-        /// <param name="point">Position to check.</param>
-        /// <returns>Bool</returns>
-        public static bool IsInFrontOfCamera(Vector3 point)
-        {
-            Vector4 result = Vector4.Transform(
-                new Vector4(point.X, point.Y, point.Z, 1),
-                ViewProjectionMatrix);
-
-            // Is result in front?
-            return result.Z > result.W - NearPlane;
-        }
-
-        /// <summary>
-        /// Helper to check if a 3d-point is visible on the screen.
-        /// Will basically do the same as IsInFrontOfCamera and Convert3DPointTo2D,
-        /// but requires less code and is faster. Also returns just an bool.
-        /// Will return true if point is visble on screen, false otherwise.
-        /// Use the offset parameter to include points into the screen that are
-        /// only a couple of pixel outside of it.
-        /// </summary>
-        /// <param name="point">Point</param>
-        /// <param name="checkOffset">Check offset in percent of total
-        /// screen</param>
-        /// <returns>Bool</returns>
-        public static bool IsVisible(Vector3 point, float checkOffset)
-        {
-            Vector4 result = Vector4.Transform(
-                new Vector4(point.X, point.Y, point.Z, 1),
-                ViewProjectionMatrix);
-
-            // Point must be in front of camera, else just skip everything.
-            if (result.Z > result.W - NearPlane)
-            {
-                Vector2 screenPoint = new Vector2(
-                    result.X / result.W, result.Y / result.W);
-
-                // Change checkOffset depending on how depth we are into the scene
-                // for very near objects (z < 5) pass all tests!
-                // for very far objects (z >> 5) only pass if near to +- 1.0f
-                float zDist = Math.Abs(result.Z);
-                if (zDist < 5.0f)
-                    return true;
-                checkOffset = 1.0f + (checkOffset / zDist);
-
-                return
-                    screenPoint.X >= -checkOffset && screenPoint.X <= +checkOffset &&
-                    screenPoint.Y >= -checkOffset && screenPoint.Y <= +checkOffset;
-            }
-
-            // Point is not in front of camera, return false.
-            return false;
-        }
-        #endregion
-
         #region Application active
         // Check if app is currently active
         static bool isAppActive = true;
-        /// <summary>
-        /// Is app active
-        /// </summary>
-        /// <returns>Bool</returns>
-        public static bool IsAppActive
-        {
-            get
-            {
-                return isAppActive;
-            }
-        }
+
 
         /// <summary>
         /// On activated
