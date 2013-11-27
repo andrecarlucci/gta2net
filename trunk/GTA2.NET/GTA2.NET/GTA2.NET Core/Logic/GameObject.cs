@@ -39,7 +39,7 @@ namespace Hiale.GTA2NET.Core.Logic
         /// <summary>
         /// Dictionary that contains all the sprites.
         /// </summary>
-        private static Sprites spriteAtlas;
+        public static Sprites spriteAtlas;
 
         /// <summary>
         /// Current position of this object. It represents the center of the object.
@@ -56,11 +56,6 @@ namespace Hiale.GTA2NET.Core.Logic
                 return new Vector2(Position3.X, Position3.Y);
             }
         }
-
-        /// <summary>
-        /// Store the Sprite ID for this object
-        /// </summary>
-        private uint spritID;
 
         private float rotationAngle;
         /// <summary>
@@ -79,6 +74,11 @@ namespace Hiale.GTA2NET.Core.Logic
                 spriteRotation = rotationAngle + MathHelper.PiOver2;
             }
         }
+
+        /// <summary>
+        /// Store the Sprite ID for this object
+        /// </summary>
+        protected uint spriteID;        
 
         /// <summary>
         /// The rotation of the sprite.
@@ -105,7 +105,34 @@ namespace Hiale.GTA2NET.Core.Logic
         /// Creates all the necessary things to draw the object
         /// </summary>
         /// <returns>A ModelData with the data to draw the object</returns>
-        public abstract Frame Draw();
+        public virtual Frame Draw() 
+        {
+            verticesCollection.Clear();
+            indicesCollection.Clear();
+
+            // calculate the coordinates of the for vertices.
+            Vector3 tLeft = new Vector3(Position3.X, -Position3.Y, Position3.Z + 0.5f);
+            Vector3 tRight = new Vector3(Position3.X + 1, -Position3.Y, Position3.Z + 0.5f);
+            Vector3 bLeft = new Vector3(Position3.X, -Position3.Y - 1, Position3.Z + 0.5f);
+            Vector3 bRight = new Vector3(Position3.X + 1, -Position3.Y - 1, Position3.Z + 0.5f);
+
+            Vector2[] texture = spriteAtlas.GetSprite(spriteID);              
+
+            verticesCollection.Add(new VertexPositionNormalTexture(tRight, Vector3.Zero, texture[2]));
+            verticesCollection.Add(new VertexPositionNormalTexture(bRight, Vector3.Zero, texture[1]));
+            verticesCollection.Add(new VertexPositionNormalTexture(tLeft, Vector3.Zero, texture[3]));
+            verticesCollection.Add(new VertexPositionNormalTexture(bLeft, Vector3.Zero, texture[0]));
+
+            int startIndex = verticesCollection.Count - 4;
+            indicesCollection.Add(startIndex);
+            indicesCollection.Add(startIndex + 1);
+            indicesCollection.Add(startIndex + 2);
+            indicesCollection.Add(startIndex + 1);
+            indicesCollection.Add(startIndex + 3);
+            indicesCollection.Add(startIndex + 2);
+
+            return new Frame(null, null, verticesCollection, indicesCollection);
+        }
 
         /// <summary>
         /// Updates the state of the Object
@@ -124,6 +151,7 @@ namespace Hiale.GTA2NET.Core.Logic
             Position3 = startUpPosition;
             RotationAngle = startUpRotation;
             this.shape = shape;
+            this.spriteID = 0;
             verticesCollection = new List<VertexPositionNormalTexture>();
             indicesCollection = new List<int>();
         }
