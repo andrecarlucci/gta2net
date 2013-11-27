@@ -42,10 +42,19 @@ namespace Hiale.GTA2NET.Core.Logic
         /// </summary>
         public static Sprites spriteAtlas;
 
+        private Vector3 postition;
         /// <summary>
         /// Current position of this object. It represents the center of the object.
         /// </summary>
-        public Vector3 Position3 { get; protected set; }
+        public Vector3 Position3
+        {
+            get { return postition; }
+            protected set 
+            {
+                postition = value;
+                drawCoordinates.CenterPos = postition;
+            }
+        }
 
         /// <summary>
         /// 2D position of the object
@@ -121,10 +130,10 @@ namespace Hiale.GTA2NET.Core.Logic
 
             Vector2[] texture = spriteAtlas.GetSprite(spriteID);              
 
-            verticesCollection.Add(new VertexPositionNormalTexture(tRight, Vector3.Zero, texture[2]));
-            verticesCollection.Add(new VertexPositionNormalTexture(bRight, Vector3.Zero, texture[1]));
-            verticesCollection.Add(new VertexPositionNormalTexture(tLeft, Vector3.Zero, texture[3]));
-            verticesCollection.Add(new VertexPositionNormalTexture(bLeft, Vector3.Zero, texture[0]));
+            verticesCollection.Add(new VertexPositionNormalTexture(tRight, Vector3.Zero, texture[1]));
+            verticesCollection.Add(new VertexPositionNormalTexture(bRight, Vector3.Zero, texture[0]));
+            verticesCollection.Add(new VertexPositionNormalTexture(tLeft, Vector3.Zero, texture[2]));
+            verticesCollection.Add(new VertexPositionNormalTexture(bLeft, Vector3.Zero, texture[3]));
 
             int startIndex = verticesCollection.Count - 4;
             indicesCollection.Add(startIndex);
@@ -151,11 +160,11 @@ namespace Hiale.GTA2NET.Core.Logic
         /// <param name="shape">The shape of the object</param>
         protected GameObject(Vector3 startUpPosition, float startUpRotation, CompactRectangle shape)
         {
+            drawCoordinates = new FaceCoordinates(startUpPosition, shape.Width, shape.Height);
             Position3 = startUpPosition;
             RotationAngle = startUpRotation;
             this.shape = shape;
             this.spriteID = 0;
-            drawCoordinates = new FaceCoordinates(startUpPosition, shape.Width, shape.Height);
             verticesCollection = new List<VertexPositionNormalTexture>();
             indicesCollection = new List<int>();
         }
