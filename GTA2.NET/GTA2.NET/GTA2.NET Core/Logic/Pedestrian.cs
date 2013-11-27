@@ -41,15 +41,9 @@ namespace Hiale.GTA2NET.Core.Logic
 
         private Weapon _currentWeapon; //selected weapon
 
-        public Pedestrian(Vector3 startUpPosition) : base(startUpPosition, 0, new Helper.CompactRectangle())
+        public Pedestrian(Vector3 startUpPosition) : base(startUpPosition, 0, new Helper.CompactRectangle(0, 0, 1, 1))
         {
             //Velocity = 1f;
-        }
-
-
-        public override Helper.ModelData Draw()
-        {
-            throw new System.NotImplementedException();
         }
 
         public override void Update(float elapsedTime)

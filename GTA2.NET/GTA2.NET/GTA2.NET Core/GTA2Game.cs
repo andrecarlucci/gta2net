@@ -79,7 +79,7 @@ namespace Hiale.GTA2NET.Core
         /// <param name="pos">The center of square</param>
         /// <param name="size">The size of the square</param>
         /// <returns></returns>
-        public ModelData getPosition(Vector2 pos, uint size = 10)
+        public Frame getPosition(Vector2 pos, uint size = 10)
         {
             Contract.Requires(map.ValidPosition(new Vector3(pos, 2)));
 
@@ -108,7 +108,7 @@ namespace Hiale.GTA2NET.Core
                     }
                 }
             }
-            return new ModelData(VertexPosList, IndexBufferList, null, null);
+            return new Frame(VertexPosList, IndexBufferList, null, null);
         }
     }
 }

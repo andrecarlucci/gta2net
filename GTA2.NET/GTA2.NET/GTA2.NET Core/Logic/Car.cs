@@ -277,7 +277,7 @@ namespace Hiale.GTA2NET.Core.Logic
             _frontRightJoint.UpperLimit = newAngle;
         }
 
-        public override ModelData Draw()
+        public override Frame Draw()
         {
             throw new NotImplementedException();
         }
