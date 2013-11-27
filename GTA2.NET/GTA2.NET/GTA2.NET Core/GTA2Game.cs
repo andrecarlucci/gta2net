@@ -42,8 +42,9 @@ namespace Hiale.GTA2NET.Core
         //Physic stuff
         private Physics _physics;
         private Sprites sprites;
-        private List<CarInfo> CarInfoList;
         private PlayerInput playerInput;
+
+        private List<Pedestrian> pedList;
 
         public GTA2Game(string mapName, string styleName)
         {
@@ -54,6 +55,10 @@ namespace Hiale.GTA2NET.Core
             _physics.Initialize(map);
 
             sprites = new Sprites();
+            GameObject.spriteAtlas = sprites;
+            pedList = new List<Pedestrian>();
+            pedList.Add(new Pedestrian(new Vector3(65, 180, 5)));
+
         }
 
         /// <summary>
@@ -71,6 +76,7 @@ namespace Hiale.GTA2NET.Core
         /// <param name="elapsedTime">The time elapsed from the las update.</param>
         public void Update(float elapsedTime) //ToDo: put this method private. Before is necessary to create a simulation thread.
         {
+            pedList[0].Update(playerInput, elapsedTime);
         }
 
         /// <summary>
@@ -108,7 +114,32 @@ namespace Hiale.GTA2NET.Core
                     }
                 }
             }
-            return new Frame(VertexPosList, IndexBufferList, null, null);
+
+            List<VertexPositionNormalTexture> objectsVertexPosList = new List<VertexPositionNormalTexture>();
+            List<int> objectsIndexBufferList = new List<int>();
+
+            foreach (Pedestrian ped in pedList)
+            {
+                Frame md = ped.Draw();
+                int idx = 0;
+                foreach (VertexPositionNormalTexture vx in md.ObjectVertexList)
+                {
+                    objectsVertexPosList.Add(vx);
+                    idx++;
+                }
+                int c = objectsVertexPosList.Count - idx;
+                foreach (int ib in md.ObjectIndexList)
+                {
+                    objectsIndexBufferList.Add(c + ib);
+                }
+
+            }
+            return new Frame(VertexPosList, IndexBufferList, objectsVertexPosList, objectsIndexBufferList, pos);
+        }
+
+        public Frame getPosition()
+        {
+            return getPosition(pedList[0].Position2);
         }
     }
 }

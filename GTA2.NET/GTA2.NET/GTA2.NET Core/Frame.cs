@@ -25,6 +25,7 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace Hiale.GTA2NET.Core
 {
@@ -33,12 +34,13 @@ namespace Hiale.GTA2NET.Core
     /// </summary>
     public class Frame
     {
-        public Frame(List<VertexPositionNormalTexture> mapVertexList, List<int> mapIndexList, List<VertexPositionNormalTexture> objectVertexList, List<int> objectIndexList)
+        public Frame(List<VertexPositionNormalTexture> mapVertexList, List<int> mapIndexList, List<VertexPositionNormalTexture> objectVertexList, List<int> objectIndexList, Vector2 position)
         {
             this.MapVertexList = mapVertexList;
             this.MapIndexList = mapIndexList;
             this.ObjectVertexList = objectVertexList;
             this.ObjectIndexList = objectIndexList;
+            this.Position = position;
         }
 
         /// <summary>
@@ -60,5 +62,10 @@ namespace Hiale.GTA2NET.Core
         /// The way that the objects vertices's should be grouped.
         /// </summary>
         public List<int> ObjectIndexList { get; private set; }
+
+        /// <summary>
+        /// The center position of this frame.
+        /// </summary>
+        public Vector2 Position { get; private set; }
     }
 }

@@ -143,7 +143,7 @@ namespace Hiale.GTA2NET.Core.Logic
             indicesCollection.Add(startIndex + 3);
             indicesCollection.Add(startIndex + 2);
 
-            return new Frame(null, null, verticesCollection, indicesCollection);
+            return new Frame(null, null, verticesCollection, indicesCollection, new Vector2());
         }
 
         /// <summary>
