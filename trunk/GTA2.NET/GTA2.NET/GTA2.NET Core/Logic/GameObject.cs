@@ -1,4 +1,5 @@
-﻿// GTA2.NET
+﻿using FarseerPhysics.Collision.Shapes;
+// GTA2.NET
 // 
 // File: GameplayObject.cs
 // Created: 14.07.2013
@@ -101,6 +102,7 @@ namespace Hiale.GTA2NET.Core.Logic
         /// </summary>
         protected CompactRectangle shape;  //ToDo: its may be a good idea to used something other than a rectangle...
 
+        protected FaceCoordinates drawCoordinates;
         /// <summary>
         /// Creates all the necessary things to draw the object
         /// </summary>
@@ -110,11 +112,12 @@ namespace Hiale.GTA2NET.Core.Logic
             verticesCollection.Clear();
             indicesCollection.Clear();
 
+            FaceCoordinates rotetedCoords = drawCoordinates.Rotate(RotationAngle);
             // calculate the coordinates of the for vertices.
-            Vector3 tLeft = new Vector3(Position3.X, -Position3.Y, Position3.Z + 0.5f);
-            Vector3 tRight = new Vector3(Position3.X + 1, -Position3.Y, Position3.Z + 0.5f);
-            Vector3 bLeft = new Vector3(Position3.X, -Position3.Y - 1, Position3.Z + 0.5f);
-            Vector3 bRight = new Vector3(Position3.X + 1, -Position3.Y - 1, Position3.Z + 0.5f);
+            Vector3 tLeft = rotetedCoords.TopLeft;
+            Vector3 tRight = rotetedCoords.TopRight;
+            Vector3 bLeft = rotetedCoords.BottomLeft;
+            Vector3 bRight = rotetedCoords.BottomRight;
 
             Vector2[] texture = spriteAtlas.GetSprite(spriteID);              
 
@@ -152,6 +155,7 @@ namespace Hiale.GTA2NET.Core.Logic
             RotationAngle = startUpRotation;
             this.shape = shape;
             this.spriteID = 0;
+            drawCoordinates = new FaceCoordinates(startUpPosition, shape.Width, shape.Height);
             verticesCollection = new List<VertexPositionNormalTexture>();
             indicesCollection = new List<int>();
         }
