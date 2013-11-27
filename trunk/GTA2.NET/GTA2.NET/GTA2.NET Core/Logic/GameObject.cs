@@ -26,6 +26,7 @@
 using Hiale.GTA2NET.Core.Helper;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 
 namespace Hiale.GTA2NET.Core.Logic
@@ -104,7 +105,7 @@ namespace Hiale.GTA2NET.Core.Logic
         /// Creates all the necessary things to draw the object
         /// </summary>
         /// <returns>A ModelData with the data to draw the object</returns>
-        public abstract ModelData Draw();
+        public abstract Frame Draw();
 
         /// <summary>
         /// Updates the state of the Object

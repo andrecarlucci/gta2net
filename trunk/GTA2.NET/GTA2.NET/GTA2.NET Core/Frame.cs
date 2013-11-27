@@ -26,14 +26,14 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Hiale.GTA2NET.Core.Helper
+namespace Hiale.GTA2NET.Core
 {
     /// <summary>
     /// Responsible for the transfer the information to draw.
     /// </summary>
-    public class ModelData
+    public class Frame
     {
-        public ModelData(List<VertexPositionNormalTexture> mapVertexList, List<int> mapIndexList, List<VertexPositionNormalTexture> objectVertexList, List<int> objectIndexList)
+        public Frame(List<VertexPositionNormalTexture> mapVertexList, List<int> mapIndexList, List<VertexPositionNormalTexture> objectVertexList, List<int> objectIndexList)
         {
             this.MapVertexList = mapVertexList;
             this.MapIndexList = mapIndexList;
