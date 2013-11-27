@@ -53,28 +53,6 @@ namespace Hiale.GTA2NET.Core.Map
     /// </summary>
     public abstract class Block
     {
-        #region FaceCoordinates
-
-        /// <summary>
-        ///     Represents the coordinates of the 4 vertices of each face from the block.
-        /// </summary>
-        protected struct FaceCoordinates
-        {
-            public Vector3 BottomLeft;
-            public Vector3 BottomRight;
-            public Vector3 TopLeft;
-            public Vector3 TopRight;
-
-            public FaceCoordinates(Vector3 topLeft, Vector3 topRight, Vector3 bottomRight, Vector3 bottomLeft)
-            {
-                TopLeft = topLeft;
-                TopRight = topRight;
-                BottomRight = bottomRight;
-                BottomLeft = bottomLeft;
-            }
-        }
-
-        #endregion
 
         /// <summary>
         /// Size of a PartialBlocks

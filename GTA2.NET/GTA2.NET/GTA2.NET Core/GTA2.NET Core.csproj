@@ -68,6 +68,7 @@
     <Compile Include="Helper\CompactRectangle.cs" />
     <Compile Include="Helper\ConvertUnits.cs" />
     <Compile Include="Helper\Debug.cs" />
+    <Compile Include="Helper\FaceCoordinates.cs" />
     <Compile Include="Helper\Geometry.cs" />
     <Compile Include="Helper\IndexFile.cs" />
     <Compile Include="Frame.cs" />

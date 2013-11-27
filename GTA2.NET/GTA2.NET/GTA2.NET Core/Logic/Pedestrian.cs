@@ -53,7 +53,10 @@ namespace Hiale.GTA2NET.Core.Logic
 
         public override void Update(ParticipantInput input, float elapsedTime)
         {
-            throw new System.NotImplementedException();
+            //float x, y;
+            //x = input.Forward + Position3.X;
+            RotationAngle += MathHelper.PiOver4;
+            //Position3 = new Vector3(x, y, Position3.Z);
         }
     }
 }
