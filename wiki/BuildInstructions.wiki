@@ -20,3 +20,8 @@ The following instructions are one way to build the project from source using Vi
  # Install Windows Phone SDK 7.1.1 Update
  # Follow the instructions in [http://stackoverflow.com/questions/10881005/how-to-install-xna-game-studio-on-visual-studio-2012 XNA in VS2012]
  # Install MonoGame
+
+===Source===
+http://blogs.msdn.com/b/astebner/archive/2012/02/29/10274694.aspx
+
+http://stackoverflow.com/questions/10881005/how-to-install-xna-game-studio-on-visual-studio-2012
