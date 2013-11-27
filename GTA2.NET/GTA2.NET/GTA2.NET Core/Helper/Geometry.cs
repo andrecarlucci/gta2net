@@ -82,8 +82,8 @@ namespace Hiale.GTA2NET.Core.Helper
 
         private static void RotatePointInternal(float inX, float inY, float originX, float originY, float rotation, ref float outX, ref float outY)
         {
-            outX = (float)(originX + (inX - originX) * Math.Cos(rotation) - (inY - originY) * Math.Sin(rotation));
-            outY = (float)(originY + (inY - originY) * Math.Cos(rotation) + (inX - originX) * Math.Sin(rotation));
+            outX = (float)(((inX - originX) * Math.Cos(rotation) - (inY - originY) * Math.Sin(rotation)) + originX);
+            outY = (float)(((inX - originX) * Math.Sin(rotation) + (inY - originY) * Math.Cos(rotation)) + originY);
         }
     }
 }

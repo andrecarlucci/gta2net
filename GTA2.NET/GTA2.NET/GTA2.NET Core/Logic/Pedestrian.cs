@@ -26,6 +26,7 @@
 
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using System;
 
 namespace Hiale.GTA2NET.Core.Logic
 {
@@ -53,10 +54,12 @@ namespace Hiale.GTA2NET.Core.Logic
 
         public override void Update(ParticipantInput input, float elapsedTime)
         {
-            //float x, y;
-            //x = input.Forward + Position3.X;
-            RotationAngle += MathHelper.PiOver4;
-            //Position3 = new Vector3(x, y, Position3.Z);
+            float x, y;
+            RotationAngle += input.Rotation;
+
+            x = (float)(Position3.X + input.Forward * Math.Cos(RotationAngle));
+            y = (float)(Position3.Y - input.Forward * Math.Sin(RotationAngle));
+            Position3 = new Vector3(x, y, Position3.Z);
         }
     }
 }
