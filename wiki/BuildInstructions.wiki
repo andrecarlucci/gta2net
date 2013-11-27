@@ -12,3 +12,11 @@ The following instructions are one way to build the project from source using Vi
   # Checkout the source code using the URL found on the [https://code.google.com/p/gta2net/source/checkout Source page] using TortoiseSVN to a directory on your local machine.
   # Download and install GTA2 from [http://gtamp.com/gta2/ here] or [http://www.rockstargames.com/classics/ here].
   # Compile and run the project. You may be asked to locate the GTA2 assets on the first run.
+
+
+=Install in Windows 8.1 with VS2012=
+ # Download and install the lastest Games for Windows – LIVE Redistributable
+ # Install Windows Phone SDK 7.1
+ # Install Windows Phone SDK 7.1.1 Update
+ # Follow the instructions in [http://stackoverflow.com/questions/10881005/how-to-install-xna-game-studio-on-visual-studio-2012 XNA in VS2012]
+ # Install MonoGame
