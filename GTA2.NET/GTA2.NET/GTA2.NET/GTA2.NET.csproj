@@ -50,15 +50,12 @@
     </Compile>
     <Compile Include="BaseGame.cs" />
     <Compile Include="GameScreens\IGameScreen.cs" />
-    <Compile Include="GameScreens\InGameScreen.cs" />
     <Compile Include="Helper\FaceCoordinates.cs" />
     <Compile Include="Helper\RandomHelper.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="MainGame.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Renderer\CityRenderer.cs" />
-    <Compile Include="Renderer\SpriteRenderer.cs" />
     <Compile Include="Renderer\UIRenderer.cs" />
     <Compile Include="Sprite.cs" />
   </ItemGroup>
