@@ -62,7 +62,7 @@ namespace Hiale.GTA2NET
         /// calling a shader. Inside a shader you have to update the shader
         /// parameter too, just setting the WorldMatrix alone does not work.
         /// </summary>
-        private static Matrix worldMatrix,
+        private Matrix worldMatrix,
             viewMatrix,
             projectionMatrix;
 
@@ -150,7 +150,7 @@ namespace Hiale.GTA2NET
         /// World matrix
         /// </summary>
         /// <returns>Matrix</returns>
-        public static Matrix WorldMatrix
+        public Matrix WorldMatrix
         {
             get
             {
@@ -166,7 +166,7 @@ namespace Hiale.GTA2NET
         /// View matrix
         /// </summary>
         /// <returns>Matrix</returns>
-        public static Matrix ViewMatrix
+        public Matrix ViewMatrix
         {
             get
             {
@@ -179,7 +179,7 @@ namespace Hiale.GTA2NET
 
                 // Update camera pos and rotation, used all over the game!
                 invViewMatrix = Matrix.Invert(viewMatrix);
-                camPos = invViewMatrix.Translation;
+                CameraPos = invViewMatrix.Translation;
                 cameraRotation = Vector3.TransformNormal(
                     new Vector3(0, 0, 1), invViewMatrix);
             }
@@ -189,7 +189,7 @@ namespace Hiale.GTA2NET
         /// Projection matrix
         /// </summary>
         /// <returns>Matrix</returns>
-        public static Matrix ProjectionMatrix
+        public Matrix ProjectionMatrix
         {
             get
             {
@@ -202,35 +202,22 @@ namespace Hiale.GTA2NET
         }
 
         /// <summary>
-        /// Camera pos, updated each frame in ViewMatrix!
-        /// Public to allow easy access from everywhere, will be called a lot each
-        /// frame, for example Model.Render uses this for distance checks.
-        /// </summary>
-        private static Vector3 camPos;
-
-        /// <summary>
         /// Get camera position from inverse view matrix. Similar to method
         /// used in shader. Works only if ViewMatrix is correctly set.
         /// </summary>
         /// <returns>Vector 3</returns>
-        public static Vector3 CameraPos
-        {
-            get
-            {
-                return camPos;
-            }
-        }
+        public Vector3 CameraPos { get; set; }
 
         /// <summary>
         /// Camera rotation, used to compare objects for visibility.
         /// </summary>
-        private static Vector3 cameraRotation = new Vector3(0, 0, 1);
+        private Vector3 cameraRotation = new Vector3(0, 0, 1);
 
         /// <summary>
         /// Camera rotation
         /// </summary>
         /// <returns>Vector 3</returns>
-        public static Vector3 CameraRotation
+        public Vector3 CameraRotation
         {
             get
             {
@@ -242,13 +229,13 @@ namespace Hiale.GTA2NET
         /// <summary>
         /// Remember inverse view matrix.
         /// </summary>
-        private static Matrix invViewMatrix;
+        private Matrix invViewMatrix;
 
         /// <summary>
         /// Inverse view matrix
         /// </summary>
         /// <returns>Matrix</returns>
-        public static Matrix InverseViewMatrix
+        public Matrix InverseViewMatrix
         {
             get
             {
@@ -260,7 +247,7 @@ namespace Hiale.GTA2NET
         /// View projection matrix
         /// </summary>
         /// <returns>Matrix</returns>
-        public static Matrix ViewProjectionMatrix
+        public Matrix ViewProjectionMatrix
         {
             get
             {
@@ -272,7 +259,7 @@ namespace Hiale.GTA2NET
         /// World view projection matrix
         /// </summary>
         /// <returns>Matrix</returns>
-        public static Matrix WorldViewProjectionMatrix
+        public Matrix WorldViewProjectionMatrix
         {
             get
             {
@@ -408,7 +395,7 @@ namespace Hiale.GTA2NET
         /// <summary>
         /// Clear background
         /// </summary>
-        public static void ClearBackground()
+        public void ClearBackground()
         {
             Device.Clear(ClearOptions.Target | ClearOptions.DepthBuffer, BackgroundColor, 1.0f, 0);
         }
@@ -424,7 +411,7 @@ namespace Hiale.GTA2NET
             }
         }
 
-        private static void GraphicsDeviceReset(object sender, EventArgs e)
+        private void GraphicsDeviceReset(object sender, EventArgs e)
         {
             // Update width and height
             Width = Device.Viewport.Width;
@@ -438,12 +425,12 @@ namespace Hiale.GTA2NET
             Device.BlendState = CreateAlphaBlendingState();
         }
 
-        private static bool mustApplyDeviceChanges = false;
-        internal static void ApplyResolutionChange()
+        private  bool mustApplyDeviceChanges = false;
+        internal void ApplyResolutionChange()
         {
             //Disabled by Hiale, use fixed for now
-            int resolutionWidth = 1600;
-            int resolutionHeight = 900;
+            int resolutionWidth = 1024;
+            int resolutionHeight = 720;
 
             // Use current desktop resolution if autodetect is selected.
             if (resolutionWidth <= 0 || resolutionHeight <= 0)
@@ -459,7 +446,7 @@ namespace Hiale.GTA2NET
             mustApplyDeviceChanges = true;
         }
 
-        public static BlendState CreateAlphaBlendingState()
+        public BlendState CreateAlphaBlendingState()
         {
             var blendState = new BlendState();
             blendState.ColorBlendFunction = BlendFunction.Add;

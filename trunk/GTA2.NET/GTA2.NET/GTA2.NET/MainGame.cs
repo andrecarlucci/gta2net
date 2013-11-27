@@ -25,55 +25,31 @@
 // Grand Theft Auto (GTA) is a registred trademark of Rockstar Games.
 
 using Hiale.GTA2NET.Core;
+using Hiale.GTA2NET.Core.Helper;
 using Hiale.GTA2NET.Core.Logic;
 using Hiale.GTA2NET.Core.Map;
 using Hiale.GTA2NET.GameScreens;
 using J2i.Net.XInputWrapper;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
 
 namespace Hiale.GTA2NET
 {
     public class MainGame : BaseGame
     {
-        private static readonly Stack<IGameScreen> GameScreens = new Stack<IGameScreen>();
-
         /// <summary>
         /// Scalar of the scene
         /// </summary>
         public static Vector3 GlobalScalar { get; set; }
 
-        public static Map Map { get; internal set; }
-
-        /// <summary>
-        /// Current style (Maybe this will be deleted later, when all information are extracted)
-        /// </summary>
-        public static string StyleName { get; set; }
-
-        /// <summary>
-        /// All available car data.
-        /// </summary>
-        public static List<CarInfo> CarInfoList { get; private set; }
-
-        /// <summary>
-        /// The cars currently drive on the map.
-        /// </summary>
-        public static ObservableCollection<Car> Cars { get; private set; }
-
-        /// <summary>
-        /// The object (guy or car) which the player is controlling. The camera chases this object.
-        /// </summary>
-        public static Car ChasingObject { get; private set; }
-
         public const float RotationScalar = 50; //was 0.05
         public const float ForwardScalar = 10;
-
-        //Physic stuff
-        private Physics _physics;
 
         private static string _windowTitle;
         /// <summary>
@@ -99,54 +75,71 @@ namespace Hiale.GTA2NET
         /// </summary>
         public MainGame() : base()
         {
+            mapName = "MP1-comp";
+            styleName = "bil";
+            mapPath = Globals.MapsSubDir + Path.DirectorySeparatorChar + mapName + Globals.MapFileExtension; 
+            stylePath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + styleName + Globals.TilesSuffix + Globals.TextureImageFormat;
+            spritesPath = Globals.GraphicsSubDir + Path.DirectorySeparatorChar + "sprites" + Globals.TextureImageFormat;
         }
 
-        Renderer.UiRenderer uiRenderer; //ToDo: intigrate better!!!
-        
-        static MainGame()
-        {
-            GlobalScalar = Vector3.One;
-        }
-        
+        private GTA2Game game;
+        private Frame frame;
+        private Effect mapEffect;
+        private Effect spritesEffect;
+
+        /// <summary>
+        /// Textures used in the map blocks
+        /// </summary>
+        private Texture2D tiles;
+        /// <summary>
+        /// Textures used in "moving" parts i.e peds, powerups, cars, etc.
+        /// </summary>
+        private Texture2D sprites;
+
+        private String mapName;
+        private String styleName;
+        private String mapPath;
+        private String stylePath;
+        private String spritesPath;
+
+        private VertexBuffer mapVertexBuffer;
+        private IndexBuffer mapIndexBuffer;
+        private VertexBuffer spritesVertexBuffer;
+        private IndexBuffer spritesIndexBuffer;
+
         /// <summary>
         /// Load stuff
         /// </summary>
         protected override void Initialize()
         {
             base.Initialize();
+
             var handle = WinUI.NativeWin32.FindWindow(null, Window.Title); //Window.Handle seems to be wrong!
             WinUI.NativeWin32.SetWindowPos(handle, 0, 0, 0, Width, Height, 0);
 
-            ViewMatrix = Matrix.CreateLookAt(new Vector3(65, -181, 10), new Vector3(65, -181, 0), Vector3.Up);
+            LoadTexture();
+            game = new GTA2Game(mapPath, styleName);
 
-            uiRenderer = new Renderer.UiRenderer();
+            mapEffect = Content.Load<Effect>(@"Content\Effect2");
+            mapEffect.Parameters["ModelTexture"].SetValue(tiles);
 
-            LoadMap();
+            spritesEffect = Content.Load<Effect>(@"Content\Effect1");
+            spritesEffect.Parameters["ModelTexture"].SetValue(sprites);
+
+            CameraPos = new Vector3(65, -180, 8);
+            ViewMatrix = Matrix.CreateLookAt(CameraPos, new Vector3(CameraPos.X, CameraPos.Y, 0), Vector3.Up);
         }
 
-        private void LoadMap()
+        private void LoadTexture()
         {
-            Map = new Map(Globals.MapsSubDir + "\\MP1-comp.gmp", "bil");
-            StyleName = "bil";
+            //TODO: handle the case where the fiel don't exist.
+            var fs = new FileStream(stylePath, FileMode.Open, FileAccess.Read);
+            tiles = Texture2D.FromStream(BaseGame.Device, fs);
+            fs.Close();
 
-            var carInfo = CarInfo.Deserialize(Globals.MiscSubDir + "\\car" + Globals.XmlFormat);
-
-            _physics = new Physics();
-            _physics.Initialize(Map);
-
-            var carPhysics = CarPhysicReader.ReadFromFile();
-            CarInfoList = CarInfo.CreateCarInfoCollection(carInfo, carPhysics);
-
-            Cars = new ObservableCollection<Car>();
-
-            ChasingObject = new Car(new Vector3(70, 186, GetHighestPoint(70, 186)), 0, CarInfoList[10]);
-            ChasingObject.PlayerControlled = true;
-            _physics.AddObject((Car)ChasingObject);
-            Cars.Add((Car) ChasingObject);
-
-            _physics.Debug((Car) ChasingObject);
-
-            GameScreens.Push(new InGameScreen());
+            fs = new FileStream(spritesPath, FileMode.Open, FileAccess.Read);
+            sprites = Texture2D.FromStream(BaseGame.Device, fs);
+            fs.Close();
         }
 
         /// <summary>
@@ -162,7 +155,6 @@ namespace Hiale.GTA2NET
 
             if (controller.IsBackPressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
             {
-                _physics.SaveWorld("GTA2NET_update.json");
                 Exit();
             }
 
@@ -170,20 +162,45 @@ namespace Hiale.GTA2NET
 
             var input = new PlayerInput();
             HandleInput(ref input, controller);
-            ChasingObject.Update(input, elapsedGameTime);
-           
-            if (ChasingObject != null)
+            
+            if (Input.KeyboardUpPressed || controller.RightTrigger > 0)
             {
-                Vector3 lookAt = ChasingObject.Position3;
-                lookAt.Y *= -1;
-                Vector3 cameraPos = lookAt;
-                cameraPos.Z += 10 * GlobalScalar.Z;
-                ViewMatrix = Matrix.CreateLookAt(cameraPos, lookAt, Vector3.Up);
+                //_playerForwardDelta = ForwardScalar * _elapsedGameTime;
+                CameraPos = new Vector3(CameraPos.X, CameraPos.Y + 1, CameraPos.Z);
             }
+            else if (Input.KeyboardDownPressed || controller.LeftTrigger > 0)
+            {
+                //_playerForwardDelta = -ForwardScalar * _elapsedGameTime;
+                CameraPos = new Vector3(CameraPos.X , CameraPos.Y - 1, CameraPos.Z);
+            }
+            if (Input.KeyboardLeftPressed || controller.IsDPadLeftPressed)
+            {
+                //_playerRotationDelta = -RotationScalar * _elapsedGameTime;
+                CameraPos = new Vector3(CameraPos.X - 1, CameraPos.Y, CameraPos.Z);
+            }
+            else if (Input.KeyboardRightPressed || controller.IsDPadRightPressed)
+            {
+                //_playerRotationDelta = RotationScalar * _elapsedGameTime;
+                CameraPos = new Vector3(CameraPos.X +1, CameraPos.Y, CameraPos.Z);
+            }
+            if (Input.Keyboard.IsKeyDown(Keys.X))
+            {
+                //_playerForwardDelta = ForwardScalar * _elapsedGameTime;
+                CameraPos = new Vector3(CameraPos.X, CameraPos.Y, CameraPos.Z + 1);
+            }
+            else if (Input.Keyboard.IsKeyDown(Keys.Z))
+            {
+                //_playerForwardDelta = -ForwardScalar * _elapsedGameTime;
+                CameraPos = new Vector3(CameraPos.X, CameraPos.Y, CameraPos.Z - 1);
+            }
+            
+            game.Input(input);
+            game.Update(elapsedGameTime);
+            frame = game.getPosition(new Vector2(CameraPos.X, -CameraPos.Y));
 
-            _physics.Update(gameTime);
+            ViewMatrix = Matrix.CreateLookAt(CameraPos, new Vector3(CameraPos.X, CameraPos.Y, 0), Vector3.Up);
 
-            Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString(CultureInfo.InvariantCulture) + " fps";
+            Window.Title = "GTA2.NET - " + WindowTitle + Fps.ToString(CultureInfo.InvariantCulture) + " fps X: " + CameraPos.X.ToString() + "Y: " + CameraPos.Y.ToString() + "Z: " +CameraPos.Z;
         }
 
         private void HandleInput(ref PlayerInput playerInput, XboxController controller)
@@ -216,32 +233,63 @@ namespace Hiale.GTA2NET
         /// </summary>
         protected override void Render()
         {
-            // No more game screens?
-            if (GameScreens.Count == 0)
-            {
-                Exit();
-                return;
-            }
+            mapEffect.Parameters["World"].SetValue(WorldMatrix);
+            mapEffect.Parameters["View"].SetValue(ViewMatrix);
+            mapEffect.Parameters["Projection"].SetValue(ProjectionMatrix);
 
-            // Handle current screen
-            if (GameScreens.Peek().Render())
-            {
-                GameScreens.Pop();
-            }
-            uiRenderer.DrawMouseMounter();
+            spritesEffect.Parameters["World"].SetValue(WorldMatrix);
+            spritesEffect.Parameters["View"].SetValue(ViewMatrix);
+            spritesEffect.Parameters["Projection"].SetValue(ProjectionMatrix);
+
+            // Used to show the "map" inWireframe
+            RasterizerState r = new RasterizerState();
+            r.FillMode = FillMode.WireFrame;
+            //spritesEffect.GraphicsDevice.RasterizerState = r;
+
+            drawMap();
+            drawObjects();
         }
 
-        public static int GetHighestPoint(int x, int y)
+        void drawMap()
         {
-            if (x >= 0 && x < Map.Width && y >= 0 && y < Map.Length)
+            var cubeVertices = frame.MapVertexList.ToArray();
+
+            mapVertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), cubeVertices.Length, BufferUsage.None);
+            mapVertexBuffer.SetData(cubeVertices);
+
+            var indexBufferData = frame.MapIndexList.ToArray();
+            mapIndexBuffer = new IndexBuffer(BaseGame.Device, typeof(int), indexBufferData.Length, BufferUsage.None);
+            mapIndexBuffer.SetData(indexBufferData);
+
+            mapEffect.GraphicsDevice.SetVertexBuffer(mapVertexBuffer);
+            mapEffect.GraphicsDevice.Indices = mapIndexBuffer;
+
+            foreach (var pass in mapEffect.CurrentTechnique.Passes)
             {
-                for (int z = Map.Height - 1; z >= 0; z--)
-                {
-                    if (!Map.GetBlock(new Vector3(x, y, z)).IsEmpty)
-                        return z;
-                }
+                pass.Apply();
+                mapEffect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, frame.MapVertexList.Count, 0, frame.MapIndexList.Count / 3);
             }
-            return -1;
+        }
+
+        void drawObjects()
+        {
+            var cubeVertices = frame.ObjectVertexList.ToArray();
+
+            spritesVertexBuffer = new VertexBuffer(BaseGame.Device, typeof(VertexPositionNormalTexture), cubeVertices.Length, BufferUsage.None);
+            spritesVertexBuffer.SetData(cubeVertices);
+
+            var indexBufferData = frame.ObjectIndexList.ToArray();
+            spritesIndexBuffer = new IndexBuffer(BaseGame.Device, typeof(int), indexBufferData.Length, BufferUsage.None);
+            spritesIndexBuffer.SetData(indexBufferData);
+
+            spritesEffect.GraphicsDevice.SetVertexBuffer(spritesVertexBuffer);
+            spritesEffect.GraphicsDevice.Indices = spritesIndexBuffer;
+
+            foreach (var pass in spritesEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                spritesEffect.GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, frame.ObjectVertexList.Count, 0, frame.ObjectIndexList.Count / 3);
+            }
         }
     }
 }
