@@ -162,41 +162,12 @@ namespace Hiale.GTA2NET
 
             var input = new PlayerInput();
             HandleInput(ref input, controller);
-            
-            if (Input.KeyboardUpPressed || controller.RightTrigger > 0)
-            {
-                //_playerForwardDelta = ForwardScalar * _elapsedGameTime;
-                CameraPos = new Vector3(CameraPos.X, CameraPos.Y + 1, CameraPos.Z);
-            }
-            else if (Input.KeyboardDownPressed || controller.LeftTrigger > 0)
-            {
-                //_playerForwardDelta = -ForwardScalar * _elapsedGameTime;
-                CameraPos = new Vector3(CameraPos.X , CameraPos.Y - 1, CameraPos.Z);
-            }
-            if (Input.KeyboardLeftPressed || controller.IsDPadLeftPressed)
-            {
-                //_playerRotationDelta = -RotationScalar * _elapsedGameTime;
-                CameraPos = new Vector3(CameraPos.X - 1, CameraPos.Y, CameraPos.Z);
-            }
-            else if (Input.KeyboardRightPressed || controller.IsDPadRightPressed)
-            {
-                //_playerRotationDelta = RotationScalar * _elapsedGameTime;
-                CameraPos = new Vector3(CameraPos.X +1, CameraPos.Y, CameraPos.Z);
-            }
-            if (Input.Keyboard.IsKeyDown(Keys.X))
-            {
-                //_playerForwardDelta = ForwardScalar * _elapsedGameTime;
-                CameraPos = new Vector3(CameraPos.X, CameraPos.Y, CameraPos.Z + 1);
-            }
-            else if (Input.Keyboard.IsKeyDown(Keys.Z))
-            {
-                //_playerForwardDelta = -ForwardScalar * _elapsedGameTime;
-                CameraPos = new Vector3(CameraPos.X, CameraPos.Y, CameraPos.Z - 1);
-            }
-            
+           
             game.Input(input);
             game.Update(elapsedGameTime);
-            frame = game.getPosition(new Vector2(CameraPos.X, -CameraPos.Y));
+            frame = game.getPosition();
+
+            CameraPos = new Vector3(frame.Position.X, -frame.Position.Y, CameraPos.Z);
 
             ViewMatrix = Matrix.CreateLookAt(CameraPos, new Vector3(CameraPos.X, CameraPos.Y, 0), Vector3.Up);
 
@@ -209,22 +180,22 @@ namespace Hiale.GTA2NET
             if (Input.KeyboardUpPressed || controller.RightTrigger > 0)
             {
                 //_playerForwardDelta = ForwardScalar * _elapsedGameTime;
-                playerInput.Forward = 1;
+                playerInput.Forward = 0.5f;
             }
             else if (Input.KeyboardDownPressed || controller.LeftTrigger > 0)
             {
                 //_playerForwardDelta = -ForwardScalar * _elapsedGameTime;
-                playerInput.Forward = -1;
+                playerInput.Forward = -0.5f;
             }
             if (Input.KeyboardLeftPressed || controller.IsDPadLeftPressed)
             {
                 //_playerRotationDelta = -RotationScalar * _elapsedGameTime;
-                playerInput.Rotation = 1;
+                playerInput.Rotation = 0.5f;
             }
             else if (Input.KeyboardRightPressed || controller.IsDPadRightPressed)
             {
                 //_playerRotationDelta = RotationScalar * _elapsedGameTime;
-                playerInput.Rotation = -1;
+                playerInput.Rotation = -0.5f;
             }
         }
 
