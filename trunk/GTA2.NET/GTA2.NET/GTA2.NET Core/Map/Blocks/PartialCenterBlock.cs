@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using Hiale.GTA2NET.Core.Collision;
 using Microsoft.Xna.Framework;
+using Hiale.GTA2NET.Core.Helper;
 
 namespace Hiale.GTA2NET.Core.Map.Blocks
 {
