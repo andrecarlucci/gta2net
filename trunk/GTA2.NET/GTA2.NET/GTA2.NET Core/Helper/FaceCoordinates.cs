@@ -12,7 +12,22 @@ namespace Hiale.GTA2NET.Core.Helper
         public Vector3 BottomRight;
         public Vector3 TopLeft;
         public Vector3 TopRight;
-        public Vector3 CenterPos { get; set; }
+
+        private float width;
+        private float height;
+        private Vector3 centerPos;
+        public Vector3 CenterPos 
+        { 
+            get { return centerPos; }
+            set 
+            { 
+                centerPos = value;
+                TopLeft = new Vector3(centerPos.X - (width / 2), -(centerPos.Y - (height / 2)), centerPos.Z);
+                TopRight = new Vector3(centerPos.X + (width / 2), -(centerPos.Y - (height / 2)), centerPos.Z);
+                BottomRight = new Vector3(centerPos.X + (width / 2), -(centerPos.Y + (height / 2)), centerPos.Z);
+                BottomLeft = new Vector3(centerPos.X - (width / 2), -(centerPos.Y + (height / 2)), centerPos.Z);
+            } 
+        }
 
         public FaceCoordinates(Vector3 topLeft, Vector3 topRight, Vector3 bottomRight, Vector3 bottomLeft)
         {
@@ -24,11 +39,9 @@ namespace Hiale.GTA2NET.Core.Helper
 
         public FaceCoordinates(Vector3 centerPos, float width, float height)
         {
-            TopLeft     = new Vector3(centerPos.X - (width / 2), -(centerPos.Y - (height / 2)), centerPos.Z);
-            TopRight    = new Vector3(centerPos.X + (width / 2), -(centerPos.Y - (height / 2)), centerPos.Z);
-            BottomRight = new Vector3(centerPos.X + (width / 2), -(centerPos.Y + (height / 2)), centerPos.Z);
-            BottomLeft  = new Vector3(centerPos.X - (width / 2), -(centerPos.Y + (height / 2)), centerPos.Z);
             CenterPos = centerPos;
+            this.width = width;
+            this.height = height;
         }
 
         /// <summary>
